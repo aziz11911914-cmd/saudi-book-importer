@@ -269,7 +269,7 @@ export async function fetchShopBySlug(slug: string): Promise<ShopFull | null> {
   full.barbers = (full.barbers ?? []).filter(
     (b) => (b as never as { status: string }).status === "active",
   );
-  return full;
+  return rewriteUrls(full);
 }
 
 export type DemoReviewRow = {
