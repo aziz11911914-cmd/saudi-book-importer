@@ -104,7 +104,7 @@ export async function fetchFeaturedBarbers(): Promise<
     .order("rating_avg", { ascending: false })
     .limit(12);
   if (error) throw error;
-  return (data ?? []) as never;
+  return rewriteUrls((data ?? []) as never);
 }
 
 export async function fetchFeaturedShops(): Promise<Shop[]> {
@@ -116,7 +116,7 @@ export async function fetchFeaturedShops(): Promise<Shop[]> {
     .order("rating_avg", { ascending: false })
     .limit(8);
   if (error) throw error;
-  return (data ?? []) as Shop[];
+  return rewriteUrls((data ?? []) as Shop[]);
 }
 
 export async function fetchBarbersList(specialtySlug?: string) {
@@ -140,7 +140,7 @@ export async function fetchBarbersList(specialtySlug?: string) {
       b.barber_specialties.some((bs) => bs.specialty.slug === specialtySlug),
     );
   }
-  return rows;
+  return rewriteUrls(rows);
 }
 
 export async function fetchBarberFull(barberId: string) {
@@ -156,7 +156,7 @@ export async function fetchBarberFull(barberId: string) {
     .eq("id", barberId)
     .maybeSingle();
   if (error) throw error;
-  return data as never as
+  return rewriteUrls(data as never) as never as
     | (Barber & {
         shop: Shop;
         barber_specialties: { specialty: Specialty }[];
@@ -216,7 +216,7 @@ export async function fetchPortfolioFeed(
       (a, b) => Number(b.barber.rating_avg) - Number(a.barber.rating_avg),
     );
   }
-  return rows;
+  return rewriteUrls(rows);
 }
 
 export async function fetchBarberAvailability(barberId: string) {
@@ -236,7 +236,7 @@ export async function fetchAllShops(): Promise<Shop[]> {
     .order("featured", { ascending: false })
     .order("rating_avg", { ascending: false });
   if (error) throw error;
-  return (data ?? []) as Shop[];
+  return rewriteUrls((data ?? []) as Shop[]);
 }
 
 export type ShopHour = { day_of_week: number; opens_at: string; closes_at: string };
