@@ -3,8 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 const SITE_NAME = "Qassah";
-const SENDER_DOMAIN = "notify.mail.taalemx.com";
-const FROM_DOMAIN = "notify.mail.taalemx.com";
+const SENDER_DOMAIN = "notify.auth.mail.taalemx.com";
+const FROM_DOMAIN = "notify.auth.mail.taalemx.com";
 const OTP_TTL_MINUTES = 10;
 const MAX_VERIFY_ATTEMPTS = 5;
 
@@ -102,14 +102,20 @@ async function renderOtpEmail({
 }) {
   const React = await import("react");
   const { render } = await import("@react-email/components");
-  const { SignupEmail } = await import("@/lib/email-templates/signup");
-  const { MagicLinkEmail } = await import("@/lib/email-templates/magic-link");
+  const { OtpEmail } = await import("@/lib/email-templates/_otp-email");
 
-  const EmailTemplate = verificationType === "signup" ? SignupEmail : MagicLinkEmail;
-  const element = React.createElement(EmailTemplate, {
+  const isSignup = verificationType === "signup";
+  const element = React.createElement(OtpEmail, {
     siteName: SITE_NAME,
     token: code,
-    recipient: email,
+    headingEn: isSignup ? "Confirm your email" : "Your sign-in code",
+    headingAr: isSignup ? "تأكيد بريدك الإلكتروني" : "رمز تسجيل الدخول",
+    introEn: isSignup
+      ? `Use the code below to finish creating your ${SITE_NAME} account.`
+      : `Use the code below to sign in to ${SITE_NAME}.`,
+    introAr: isSignup
+      ? `استخدم الرمز أدناه لإكمال إنشاء حسابك في ${SITE_NAME}.`
+      : `استخدم الرمز أدناه لتسجيل الدخول إلى ${SITE_NAME}.`,
     expiryMinutes: OTP_TTL_MINUTES,
   });
 
