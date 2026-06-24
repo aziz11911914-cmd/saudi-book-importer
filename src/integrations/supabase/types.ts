@@ -23,7 +23,6 @@ export type Database = {
           email: string
           expires_at: string
           id: string
-          last_sent_at: string
           revoked_at: string | null
           token_hash: string
           user_id: string | null
@@ -37,7 +36,6 @@ export type Database = {
           email: string
           expires_at: string
           id?: string
-          last_sent_at?: string
           revoked_at?: string | null
           token_hash: string
           user_id?: string | null
@@ -51,7 +49,6 @@ export type Database = {
           email?: string
           expires_at?: string
           id?: string
-          last_sent_at?: string
           revoked_at?: string | null
           token_hash?: string
           user_id?: string | null
@@ -200,7 +197,7 @@ export type Database = {
           rating_count: number
           shop_id: string
           slug: string
-          status: Database["public"]["Enums"]["barber_status"]
+          status: Database["public"]["Enums"]["entity_status"]
           title_ar: string
           title_en: string
           updated_at: string
@@ -222,7 +219,7 @@ export type Database = {
           rating_count?: number
           shop_id: string
           slug: string
-          status?: Database["public"]["Enums"]["barber_status"]
+          status?: Database["public"]["Enums"]["entity_status"]
           title_ar?: string
           title_en?: string
           updated_at?: string
@@ -244,7 +241,7 @@ export type Database = {
           rating_count?: number
           shop_id?: string
           slug?: string
-          status?: Database["public"]["Enums"]["barber_status"]
+          status?: Database["public"]["Enums"]["entity_status"]
           title_ar?: string
           title_en?: string
           updated_at?: string
@@ -274,6 +271,7 @@ export type Database = {
           shop_id: string
           starts_at: string
           status: Database["public"]["Enums"]["booking_status"]
+          updated_at: string
         }
         Insert: {
           barber_id: string
@@ -288,6 +286,7 @@ export type Database = {
           shop_id: string
           starts_at: string
           status?: Database["public"]["Enums"]["booking_status"]
+          updated_at?: string
         }
         Update: {
           barber_id?: string
@@ -302,6 +301,7 @@ export type Database = {
           shop_id?: string
           starts_at?: string
           status?: Database["public"]["Enums"]["booking_status"]
+          updated_at?: string
         }
         Relationships: [
           {
@@ -372,93 +372,6 @@ export type Database = {
           },
         ]
       }
-      email_send_log: {
-        Row: {
-          created_at: string
-          error_message: string | null
-          id: string
-          message_id: string | null
-          metadata: Json | null
-          recipient_email: string
-          status: string
-          template_name: string
-        }
-        Insert: {
-          created_at?: string
-          error_message?: string | null
-          id?: string
-          message_id?: string | null
-          metadata?: Json | null
-          recipient_email: string
-          status: string
-          template_name: string
-        }
-        Update: {
-          created_at?: string
-          error_message?: string | null
-          id?: string
-          message_id?: string | null
-          metadata?: Json | null
-          recipient_email?: string
-          status?: string
-          template_name?: string
-        }
-        Relationships: []
-      }
-      email_send_state: {
-        Row: {
-          auth_email_ttl_minutes: number
-          batch_size: number
-          id: number
-          retry_after_until: string | null
-          send_delay_ms: number
-          transactional_email_ttl_minutes: number
-          updated_at: string
-        }
-        Insert: {
-          auth_email_ttl_minutes?: number
-          batch_size?: number
-          id?: number
-          retry_after_until?: string | null
-          send_delay_ms?: number
-          transactional_email_ttl_minutes?: number
-          updated_at?: string
-        }
-        Update: {
-          auth_email_ttl_minutes?: number
-          batch_size?: number
-          id?: number
-          retry_after_until?: string | null
-          send_delay_ms?: number
-          transactional_email_ttl_minutes?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      email_unsubscribe_tokens: {
-        Row: {
-          created_at: string
-          email: string
-          id: string
-          token: string
-          used_at: string | null
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          id?: string
-          token: string
-          used_at?: string | null
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          id?: string
-          token?: string
-          used_at?: string | null
-        }
-        Relationships: []
-      }
       favorites: {
         Row: {
           created_at: string
@@ -483,10 +396,10 @@ export type Database = {
       invites: {
         Row: {
           created_at: string
-          created_by: string | null
           email: string
           expires_at: string
           id: string
+          invited_by: string | null
           role: Database["public"]["Enums"]["app_role"]
           shop_id: string | null
           token: string
@@ -494,10 +407,10 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          created_by?: string | null
           email: string
           expires_at: string
           id?: string
+          invited_by?: string | null
           role: Database["public"]["Enums"]["app_role"]
           shop_id?: string | null
           token: string
@@ -505,24 +418,16 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          created_by?: string | null
           email?: string
           expires_at?: string
           id?: string
+          invited_by?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           shop_id?: string | null
           token?: string
           used_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "invites_shop_id_fkey"
-            columns: ["shop_id"]
-            isOneToOne: false
-            referencedRelation: "shops"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       portfolio_photo_specialties: {
         Row: {
@@ -597,7 +502,7 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "portfolio_photos_service_id_fkey"
+            foreignKeyName: "portfolio_photos_service_fk"
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "services"
@@ -702,7 +607,7 @@ export type Database = {
       services: {
         Row: {
           active: boolean
-          category: Database["public"]["Enums"]["service_category"]
+          category: string
           created_at: string
           description_ar: string | null
           description_en: string | null
@@ -715,20 +620,20 @@ export type Database = {
         }
         Insert: {
           active?: boolean
-          category?: Database["public"]["Enums"]["service_category"]
+          category?: string
           created_at?: string
           description_ar?: string | null
           description_en?: string | null
-          duration_min: number
+          duration_min?: number
           id?: string
           name_ar: string
           name_en: string
-          price_sar: number
+          price_sar?: number
           shop_id: string
         }
         Update: {
           active?: boolean
-          category?: Database["public"]["Enums"]["service_category"]
+          category?: string
           created_at?: string
           description_ar?: string | null
           description_en?: string | null
@@ -833,7 +738,7 @@ export type Database = {
           rating_avg: number
           rating_count: number
           slug: string
-          status: Database["public"]["Enums"]["shop_status"]
+          status: Database["public"]["Enums"]["entity_status"]
           updated_at: string
         }
         Insert: {
@@ -855,7 +760,7 @@ export type Database = {
           rating_avg?: number
           rating_count?: number
           slug: string
-          status?: Database["public"]["Enums"]["shop_status"]
+          status?: Database["public"]["Enums"]["entity_status"]
           updated_at?: string
         }
         Update: {
@@ -877,13 +782,14 @@ export type Database = {
           rating_avg?: number
           rating_count?: number
           slug?: string
-          status?: Database["public"]["Enums"]["shop_status"]
+          status?: Database["public"]["Enums"]["entity_status"]
           updated_at?: string
         }
         Relationships: []
       }
       specialties: {
         Row: {
+          created_at: string
           id: string
           label_ar: string
           label_en: string
@@ -891,6 +797,7 @@ export type Database = {
           sort_order: number
         }
         Insert: {
+          created_at?: string
           id?: string
           label_ar: string
           label_en: string
@@ -898,35 +805,12 @@ export type Database = {
           sort_order?: number
         }
         Update: {
+          created_at?: string
           id?: string
           label_ar?: string
           label_en?: string
           slug?: string
           sort_order?: number
-        }
-        Relationships: []
-      }
-      suppressed_emails: {
-        Row: {
-          created_at: string
-          email: string
-          id: string
-          metadata: Json | null
-          reason: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          id?: string
-          metadata?: Json | null
-          reason: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          id?: string
-          metadata?: Json | null
-          reason?: string
         }
         Relationships: []
       }
@@ -956,14 +840,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      delete_email: {
-        Args: { message_id: number; queue_name: string }
-        Returns: boolean
-      }
-      enqueue_email: {
-        Args: { payload: Json; queue_name: string }
-        Returns: number
-      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -971,36 +847,17 @@ export type Database = {
         }
         Returns: boolean
       }
-      move_to_dlq: {
-        Args: {
-          dlq_name: string
-          message_id: number
-          payload: Json
-          source_queue: string
-        }
-        Returns: number
-      }
-      read_email_batch: {
-        Args: { batch_size: number; queue_name: string; vt: number }
-        Returns: {
-          message: Json
-          msg_id: number
-          read_ct: number
-        }[]
-      }
     }
     Enums: {
-      app_role: "customer" | "barber" | "manager" | "admin" | "salon_owner"
-      barber_status: "pending" | "active" | "inactive"
+      app_role: "customer" | "barber" | "manager" | "admin"
       booking_status:
         | "pending"
         | "confirmed"
         | "completed"
         | "cancelled"
         | "no_show"
+      entity_status: "active" | "inactive" | "pending"
       favorite_target: "barber" | "shop"
-      service_category: "hair" | "beard" | "package" | "membership"
-      shop_status: "pending" | "active" | "suspended"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1128,8 +985,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["customer", "barber", "manager", "admin", "salon_owner"],
-      barber_status: ["pending", "active", "inactive"],
+      app_role: ["customer", "barber", "manager", "admin"],
       booking_status: [
         "pending",
         "confirmed",
@@ -1137,9 +993,8 @@ export const Constants = {
         "cancelled",
         "no_show",
       ],
+      entity_status: ["active", "inactive", "pending"],
       favorite_target: ["barber", "shop"],
-      service_category: ["hair", "beard", "package", "membership"],
-      shop_status: ["pending", "active", "suspended"],
     },
   },
 } as const
