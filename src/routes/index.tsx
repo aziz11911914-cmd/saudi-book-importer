@@ -72,7 +72,7 @@ function HomePage() {
           <div
             className="absolute inset-x-0 top-0 h-[520px] bg-cover bg-center opacity-25"
             style={{
-              backgroundImage: "url(/__l5e/assets-v1/83c00df9-8e73-45e8-863a-93d9463c78b9/skin-fade-high-volume.jpg)",
+              backgroundImage: "url(/haircuts/skin-fade-high-volume.jpg)",
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/85 to-background" />
@@ -327,7 +327,7 @@ function HaircutCard({
           loading="lazy"
           onError={(e) => {
             const img = e.currentTarget;
-            img.src = "/__l5e/assets-v1/56f0940e-69ea-4969-ab12-cb00e9e7c0a8/skin-fade.jpg";
+            img.src = "/haircuts/skin-fade.jpg";
           }}
           className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
         />

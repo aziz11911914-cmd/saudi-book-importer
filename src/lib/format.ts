@@ -3,6 +3,18 @@ export function formatPrice(value: number | string, _locale: string) {
   return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n);
 }
 
+/**
+ * Rewrites legacy Lovable asset URLs (/__l5e/assets-v1/<uuid>/<file>) to
+ * local files served from /haircuts/<file>. Returns the original URL
+ * unchanged if it doesn't match.
+ */
+export function resolveAssetUrl(url: string | null | undefined): string {
+  if (!url) return "";
+  const m = url.match(/\/__l5e\/assets-v1\/[^/]+\/([^/?#]+)/);
+  if (m) return `/haircuts/${m[1]}`;
+  return url;
+}
+
 export function haversineKm(
   a: { lat: number; lng: number },
   b: { lat: number; lng: number },
