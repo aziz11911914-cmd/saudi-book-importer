@@ -9,38 +9,258 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as FavoritesIndexRouteImport } from './routes/favorites.index'
+import { Route as BookingsIndexRouteImport } from './routes/bookings.index'
+import { Route as BarbersIndexRouteImport } from './routes/barbers.index'
+import { Route as ShopsSlugRouteImport } from './routes/shops.$slug'
+import { Route as BookingsBookingIdRouteImport } from './routes/bookings.$bookingId'
+import { Route as BookBarberIdRouteImport } from './routes/book.$barberId'
+import { Route as BarbersBarberIdRouteImport } from './routes/barbers.$barberId'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as BookingsBookingIdRescheduleRouteImport } from './routes/bookings.$bookingId.reschedule'
+import { Route as BookShopShopSlugRouteImport } from './routes/book.shop.$shopSlug'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FavoritesIndexRoute = FavoritesIndexRouteImport.update({
+  id: '/favorites/',
+  path: '/favorites/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookingsIndexRoute = BookingsIndexRouteImport.update({
+  id: '/bookings/',
+  path: '/bookings/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BarbersIndexRoute = BarbersIndexRouteImport.update({
+  id: '/barbers/',
+  path: '/barbers/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShopsSlugRoute = ShopsSlugRouteImport.update({
+  id: '/shops/$slug',
+  path: '/shops/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookingsBookingIdRoute = BookingsBookingIdRouteImport.update({
+  id: '/bookings/$bookingId',
+  path: '/bookings/$bookingId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookBarberIdRoute = BookBarberIdRouteImport.update({
+  id: '/book/$barberId',
+  path: '/book/$barberId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BarbersBarberIdRoute = BarbersBarberIdRouteImport.update({
+  id: '/barbers/$barberId',
+  path: '/barbers/$barberId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const BookingsBookingIdRescheduleRoute =
+  BookingsBookingIdRescheduleRouteImport.update({
+    id: '/reschedule',
+    path: '/reschedule',
+    getParentRoute: () => BookingsBookingIdRoute,
+  } as any)
+const BookShopShopSlugRoute = BookShopShopSlugRouteImport.update({
+  id: '/book/shop/$shopSlug',
+  path: '/book/shop/$shopSlug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/profile': typeof AuthenticatedProfileRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/barbers/$barberId': typeof BarbersBarberIdRoute
+  '/book/$barberId': typeof BookBarberIdRoute
+  '/bookings/$bookingId': typeof BookingsBookingIdRouteWithChildren
+  '/shops/$slug': typeof ShopsSlugRoute
+  '/barbers/': typeof BarbersIndexRoute
+  '/bookings/': typeof BookingsIndexRoute
+  '/favorites/': typeof FavoritesIndexRoute
+  '/book/shop/$shopSlug': typeof BookShopShopSlugRoute
+  '/bookings/$bookingId/reschedule': typeof BookingsBookingIdRescheduleRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/profile': typeof AuthenticatedProfileRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/barbers/$barberId': typeof BarbersBarberIdRoute
+  '/book/$barberId': typeof BookBarberIdRoute
+  '/bookings/$bookingId': typeof BookingsBookingIdRouteWithChildren
+  '/shops/$slug': typeof ShopsSlugRoute
+  '/barbers': typeof BarbersIndexRoute
+  '/bookings': typeof BookingsIndexRoute
+  '/favorites': typeof FavoritesIndexRoute
+  '/book/shop/$shopSlug': typeof BookShopShopSlugRoute
+  '/bookings/$bookingId/reschedule': typeof BookingsBookingIdRescheduleRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/barbers/$barberId': typeof BarbersBarberIdRoute
+  '/book/$barberId': typeof BookBarberIdRoute
+  '/bookings/$bookingId': typeof BookingsBookingIdRouteWithChildren
+  '/shops/$slug': typeof ShopsSlugRoute
+  '/barbers/': typeof BarbersIndexRoute
+  '/bookings/': typeof BookingsIndexRoute
+  '/favorites/': typeof FavoritesIndexRoute
+  '/book/shop/$shopSlug': typeof BookShopShopSlugRoute
+  '/bookings/$bookingId/reschedule': typeof BookingsBookingIdRescheduleRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/profile'
+    | '/settings'
+    | '/barbers/$barberId'
+    | '/book/$barberId'
+    | '/bookings/$bookingId'
+    | '/shops/$slug'
+    | '/barbers/'
+    | '/bookings/'
+    | '/favorites/'
+    | '/book/shop/$shopSlug'
+    | '/bookings/$bookingId/reschedule'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
+    | '/lovable/email/queue/process'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/profile'
+    | '/settings'
+    | '/barbers/$barberId'
+    | '/book/$barberId'
+    | '/bookings/$bookingId'
+    | '/shops/$slug'
+    | '/barbers'
+    | '/bookings'
+    | '/favorites'
+    | '/book/shop/$shopSlug'
+    | '/bookings/$bookingId/reschedule'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
+    | '/lovable/email/queue/process'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/profile'
+    | '/_authenticated/settings'
+    | '/barbers/$barberId'
+    | '/book/$barberId'
+    | '/bookings/$bookingId'
+    | '/shops/$slug'
+    | '/barbers/'
+    | '/bookings/'
+    | '/favorites/'
+    | '/book/shop/$shopSlug'
+    | '/bookings/$bookingId/reschedule'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
+    | '/lovable/email/queue/process'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  BarbersBarberIdRoute: typeof BarbersBarberIdRoute
+  BookBarberIdRoute: typeof BookBarberIdRoute
+  BookingsBookingIdRoute: typeof BookingsBookingIdRouteWithChildren
+  ShopsSlugRoute: typeof ShopsSlugRoute
+  BarbersIndexRoute: typeof BarbersIndexRoute
+  BookingsIndexRoute: typeof BookingsIndexRoute
+  FavoritesIndexRoute: typeof FavoritesIndexRoute
+  BookShopShopSlugRoute: typeof BookShopShopSlugRoute
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
+  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +268,147 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/favorites/': {
+      id: '/favorites/'
+      path: '/favorites'
+      fullPath: '/favorites/'
+      preLoaderRoute: typeof FavoritesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bookings/': {
+      id: '/bookings/'
+      path: '/bookings'
+      fullPath: '/bookings/'
+      preLoaderRoute: typeof BookingsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/barbers/': {
+      id: '/barbers/'
+      path: '/barbers'
+      fullPath: '/barbers/'
+      preLoaderRoute: typeof BarbersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shops/$slug': {
+      id: '/shops/$slug'
+      path: '/shops/$slug'
+      fullPath: '/shops/$slug'
+      preLoaderRoute: typeof ShopsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bookings/$bookingId': {
+      id: '/bookings/$bookingId'
+      path: '/bookings/$bookingId'
+      fullPath: '/bookings/$bookingId'
+      preLoaderRoute: typeof BookingsBookingIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/book/$barberId': {
+      id: '/book/$barberId'
+      path: '/book/$barberId'
+      fullPath: '/book/$barberId'
+      preLoaderRoute: typeof BookBarberIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/barbers/$barberId': {
+      id: '/barbers/$barberId'
+      path: '/barbers/$barberId'
+      fullPath: '/barbers/$barberId'
+      preLoaderRoute: typeof BarbersBarberIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/bookings/$bookingId/reschedule': {
+      id: '/bookings/$bookingId/reschedule'
+      path: '/reschedule'
+      fullPath: '/bookings/$bookingId/reschedule'
+      preLoaderRoute: typeof BookingsBookingIdRescheduleRouteImport
+      parentRoute: typeof BookingsBookingIdRoute
+    }
+    '/book/shop/$shopSlug': {
+      id: '/book/shop/$shopSlug'
+      path: '/book/shop/$shopSlug'
+      fullPath: '/book/shop/$shopSlug'
+      preLoaderRoute: typeof BookShopShopSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
+interface BookingsBookingIdRouteChildren {
+  BookingsBookingIdRescheduleRoute: typeof BookingsBookingIdRescheduleRoute
+}
+
+const BookingsBookingIdRouteChildren: BookingsBookingIdRouteChildren = {
+  BookingsBookingIdRescheduleRoute: BookingsBookingIdRescheduleRoute,
+}
+
+const BookingsBookingIdRouteWithChildren =
+  BookingsBookingIdRoute._addFileChildren(BookingsBookingIdRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  BarbersBarberIdRoute: BarbersBarberIdRoute,
+  BookBarberIdRoute: BookBarberIdRoute,
+  BookingsBookingIdRoute: BookingsBookingIdRouteWithChildren,
+  ShopsSlugRoute: ShopsSlugRoute,
+  BarbersIndexRoute: BarbersIndexRoute,
+  BookingsIndexRoute: BookingsIndexRoute,
+  FavoritesIndexRoute: FavoritesIndexRoute,
+  BookShopShopSlugRoute: BookShopShopSlugRoute,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
+  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
