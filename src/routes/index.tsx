@@ -327,7 +327,7 @@ function HaircutCard({
           loading="lazy"
           onError={(e) => {
             const img = e.currentTarget;
-            img.src = "/__l5e/assets-v1/56f0940e-69ea-4969-ab12-cb00e9e7c0a8/skin-fade.jpg";
+            img.src = "/haircuts/skin-fade.jpg";
           }}
           className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
         />
