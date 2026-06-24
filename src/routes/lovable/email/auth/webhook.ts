@@ -11,16 +11,16 @@ import { RecoveryEmail } from '@/lib/email-templates/recovery'
 import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
-// Bilingual subjects (English · Arabic). NO mention of links/buttons.
 const EMAIL_SUBJECTS: Record<string, string> = {
-  signup: 'Your Qassah verification code · رمز التحقق الخاص بك',
-  invite: "You're invited to Qassah · دعوتك للانضمام إلى قَصّة",
-  magiclink: 'Your Qassah sign-in code · رمز تسجيل الدخول',
-  recovery: 'Your Qassah access code · رمز الدخول إلى حسابك',
-  email_change: 'Confirm your new email · تأكيد البريد الجديد',
-  reauthentication: 'Confirm it\'s you · تأكيد هويتك',
+  signup: 'Confirm your email',
+  invite: "You've been invited",
+  magiclink: 'Your login link',
+  recovery: 'Reset your password',
+  email_change: 'Confirm your new email',
+  reauthentication: 'Your verification code',
 }
 
+// Template mapping
 const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
   signup: SignupEmail,
   invite: InviteEmail,
@@ -30,9 +30,11 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
   reauthentication: ReauthenticationEmail,
 }
 
-const SITE_NAME = 'Qassah'
-const SENDER_DOMAIN = 'notify.mail.taalemx.com'
-const FROM_DOMAIN = 'notify.mail.taalemx.com'
+// Configuration
+const SITE_NAME = "Saudi Book Importer"
+const SENDER_DOMAIN = "notify.auth.mail.taalemx.com"
+const ROOT_DOMAIN = "auth.mail.taalemx.com"
+const FROM_DOMAIN = "notify.auth.mail.taalemx.com"
 
 function redactEmail(email: string | null | undefined): string {
   if (!email) return '***'
@@ -41,16 +43,21 @@ function redactEmail(email: string | null | undefined): string {
   return `${localPart[0]}***@${domain}`
 }
 
-export const Route = createFileRoute('/lovable/email/auth/webhook')({
+export const Route = createFileRoute("/lovable/email/auth/webhook")({
   server: {
     handlers: {
       POST: async ({ request }) => {
         const apiKey = process.env.LOVABLE_API_KEY
+
         if (!apiKey) {
           console.error('LOVABLE_API_KEY not configured')
-          return Response.json({ error: 'Server configuration error' }, { status: 500 })
+          return Response.json(
+            { error: 'Server configuration error' },
+            { status: 500 }
+          )
         }
 
+        // Verify signature + timestamp, then parse payload.
         let payload: any
         let run_id = ''
         try {
@@ -68,20 +75,46 @@ export const Route = createFileRoute('/lovable/email/auth/webhook')({
               case 'missing_timestamp':
               case 'invalid_timestamp':
               case 'stale_timestamp':
-                return Response.json({ error: 'Invalid signature' }, { status: 401 })
+                console.error('Invalid webhook signature', { error: error.message })
+                return Response.json(
+                  { error: 'Invalid signature' },
+                  { status: 401 }
+                )
               case 'invalid_payload':
               case 'invalid_json':
-                return Response.json({ error: 'Invalid webhook payload' }, { status: 400 })
+                console.error('Invalid webhook payload', { error: error.message })
+                return Response.json(
+                  { error: 'Invalid webhook payload' },
+                  { status: 400 }
+                )
             }
           }
+
           console.error('Webhook verification failed', { error })
-          return Response.json({ error: 'Invalid webhook payload' }, { status: 400 })
+          return Response.json(
+            { error: 'Invalid webhook payload' },
+            { status: 400 }
+          )
         }
 
-        if (!run_id || payload.version !== '1') {
-          return Response.json({ error: 'Invalid webhook payload' }, { status: 400 })
+        if (!run_id) {
+          console.error('Webhook payload missing run_id')
+          return Response.json(
+            { error: 'Invalid webhook payload' },
+            { status: 400 }
+          )
         }
 
+        if (payload.version !== '1') {
+          console.error('Unsupported payload version', { version: payload.version, run_id })
+          return Response.json(
+            { error: `Unsupported payload version: ${payload.version}` },
+            { status: 400 }
+          )
+        }
+
+        // The email action type is in payload.data.action_type (e.g., "signup", "recovery")
+        // payload.type is the hook event type ("auth")
         const emailType = payload.data.action_type
         console.log('Received auth event', {
           emailType,
@@ -92,41 +125,45 @@ export const Route = createFileRoute('/lovable/email/auth/webhook')({
         const EmailTemplate = EMAIL_TEMPLATES[emailType]
         if (!EmailTemplate) {
           console.error('Unknown email type', { emailType, run_id })
-          return Response.json({ error: `Unknown email type: ${emailType}` }, { status: 400 })
+          return Response.json(
+            { error: `Unknown email type: ${emailType}` },
+            { status: 400 }
+          )
         }
 
-        const token = String(payload.data.token || '').trim()
-        if (!/^\d{6}$/.test(token)) {
-          console.error('Auth payload missing 6-digit OTP token', {
-            emailType,
-            run_id,
-            tokenLength: token.length,
-          })
-          return Response.json({ error: 'Invalid OTP token in payload' }, { status: 400 })
-        }
-
+        // Build template props from payload.data (HookData structure)
         const templateProps = {
           siteName: SITE_NAME,
-          token,
+          siteUrl: `https://${ROOT_DOMAIN}`,
           recipient: payload.data.email,
+          confirmationUrl: payload.data.url,
+          token: payload.data.token,
+          email: payload.data.email,
           oldEmail: payload.data.old_email,
           newEmail: payload.data.new_email,
         }
 
+        // Render React Email to HTML and plain text
         const element = React.createElement(EmailTemplate, templateProps)
         const html = await render(element)
         const text = await render(element, { plainText: true })
 
+        // Enqueue email for async processing by the dispatcher (process-email-queue).
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
         const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
         if (!supabaseUrl || !supabaseServiceKey) {
           console.error('Missing Supabase environment variables')
-          return Response.json({ error: 'Server configuration error' }, { status: 500 })
+          return Response.json(
+            { error: 'Server configuration error' },
+            { status: 500 }
+          )
         }
 
         const supabase = createClient(supabaseUrl, supabaseServiceKey)
         const messageId = crypto.randomUUID()
 
+        // Log pending BEFORE enqueue so we have a record even if enqueue crashes
         await supabase.from('email_send_log').insert({
           message_id: messageId,
           template_name: emailType,
@@ -142,7 +179,7 @@ export const Route = createFileRoute('/lovable/email/auth/webhook')({
             to: payload.data.email,
             from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
             sender_domain: SENDER_DOMAIN,
-            subject: EMAIL_SUBJECTS[emailType] || 'Your verification code · رمز التحقق',
+            subject: EMAIL_SUBJECTS[emailType] || 'Notification',
             html,
             text,
             purpose: 'transactional',
@@ -160,10 +197,13 @@ export const Route = createFileRoute('/lovable/email/auth/webhook')({
             status: 'failed',
             error_message: 'Failed to enqueue email',
           })
-          return Response.json({ error: 'Failed to enqueue email' }, { status: 500 })
+          return Response.json(
+            { error: 'Failed to enqueue email' },
+            { status: 500 }
+          )
         }
 
-        console.log('Auth OTP email enqueued', {
+        console.log('Auth email enqueued', {
           emailType,
           email_redacted: redactEmail(payload.data.email),
           run_id,
