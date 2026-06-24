@@ -1,4 +1,28 @@
 import { supabase } from "@/integrations/supabase/client";
+import { resolveAssetUrl } from "@/lib/format";
+
+const URL_KEYS = new Set(["url", "photo_url", "cover_url", "image_url"]);
+
+function rewriteUrls<T>(value: T): T {
+  if (value == null) return value;
+  if (Array.isArray(value)) {
+    return value.map((v) => rewriteUrls(v)) as never;
+  }
+  if (typeof value === "object") {
+    const out: Record<string, unknown> = { ...(value as Record<string, unknown>) };
+    for (const k of Object.keys(out)) {
+      const v = out[k];
+      if (typeof v === "string" && URL_KEYS.has(k)) {
+        out[k] = resolveAssetUrl(v);
+      } else if (v && typeof v === "object") {
+        out[k] = rewriteUrls(v);
+      }
+    }
+    return out as never;
+  }
+  return value;
+}
+
 
 export type Specialty = {
   id: string;
