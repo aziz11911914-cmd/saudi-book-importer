@@ -36,13 +36,27 @@ function NewBarberPage() {
   }
 
   if (created) {
-    const url = `${typeof window !== "undefined" ? window.location.origin : ""}/auth?email=${encodeURIComponent(created.email)}`;
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const url = `${origin}/invite/${created.token}`;
+    const message = `You're invited to join Qassah as a barber.\n\nOpen this link to accept: ${url}\n\n(Use email: ${created.email})`;
     return (
       <div className="mx-auto max-w-2xl space-y-4 rounded-2xl border border-hairline bg-surface p-6">
         <h1 className="font-display text-2xl">Barber invited ✓</h1>
-        <p className="text-sm text-muted-foreground">Share this link with <b>{created.email}</b>. On first sign-in their Barber profile will be created at the assigned salon.</p>
-        <div className="flex items-center gap-2"><input readOnly value={url} className={input} /><button onClick={() => navigator.clipboard.writeText(url)} className="rounded-full bg-gold px-4 py-2 text-sm font-semibold text-primary-foreground">Copy</button></div>
-        <div className="flex gap-2"><Link to="/admin/barbers" className="rounded-full border border-hairline px-4 py-2 text-sm">Back</Link><button onClick={() => { setCreated(null); setForm({ email: "", full_name: "", phone: "", nationality: "", language: "ar", shop_id: "", notes: "" }); }} className="rounded-full border border-hairline px-4 py-2 text-sm">Invite another</button></div>
+        <p className="text-sm text-muted-foreground">
+          Share this link with <b>{created.email}</b>. When they open it and complete email OTP sign-in, their Barber profile will be created at the assigned salon.
+        </p>
+        <div className="flex items-center gap-2">
+          <input readOnly value={url} className={input} onFocus={(e) => e.currentTarget.select()} />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => navigator.clipboard.writeText(url)} className="rounded-full bg-gold px-4 py-2 text-sm font-semibold text-primary-foreground">Copy Link</button>
+          <button onClick={() => navigator.clipboard.writeText(message)} className="rounded-full border border-hairline px-4 py-2 text-sm">Copy Invitation</button>
+          <button disabled title="SMTP delivery — coming soon" className="rounded-full border border-hairline px-4 py-2 text-sm opacity-60 cursor-not-allowed">Send Email (coming soon)</button>
+        </div>
+        <div className="flex gap-2 pt-2">
+          <Link to="/admin/barbers" className="rounded-full border border-hairline px-4 py-2 text-sm">Back</Link>
+          <button onClick={() => { setCreated(null); setForm({ email: "", full_name: "", phone: "", nationality: "", language: "ar", shop_id: "", notes: "" }); }} className="rounded-full border border-hairline px-4 py-2 text-sm">Invite another</button>
+        </div>
       </div>
     );
   }
