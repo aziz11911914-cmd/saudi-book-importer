@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, ChevronLeft, ChevronRight, Clock } from "lucide-react";
 import { z } from "zod";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
@@ -100,7 +100,15 @@ function BookPage() {
     });
   }, [service, search.date, availability, barberId]);
 
-  const stepIdx = STEPS.indexOf(search.step as Step);
+  // Capture the visible step flow from the initial entry. When the user comes
+  // in with a service pre-selected (haircut/service entry points), we hide
+  // the "service" step entirely so the wizard doesn't ask twice.
+  const entryHadService = useRef<boolean>(!!search.service);
+  const visibleSteps = useMemo<readonly Step[]>(
+    () => (entryHadService.current ? (["date", "time", "review"] as const) : STEPS),
+    [],
+  );
+  const stepIdx = visibleSteps.indexOf(search.step as Step);
 
   function setStep(next: Step, extra: Partial<typeof search> = {}) {
     navigate({ search: (s: typeof search) => ({ ...s, ...extra, step: next }), params: { barberId } });
@@ -173,14 +181,18 @@ function BookPage() {
         <div className="mx-auto flex h-14 max-w-2xl items-center justify-between px-3">
           <button
             type="button"
-            onClick={() => (stepIdx > 0 ? setStep(STEPS[stepIdx - 1]) : router.history.back())}
+            onClick={() => {
+              const safeIdx = stepIdx < 0 ? 0 : stepIdx;
+              if (safeIdx > 0) setStep(visibleSteps[safeIdx - 1]);
+              else router.history.back();
+            }}
             className="inline-flex size-9 items-center justify-center rounded-full border border-hairline text-foreground hover:border-gold/50"
             aria-label={t("common.back")}
           >
             <ArrowBack className="size-4" />
           </button>
           <p className="text-xs text-muted-foreground">
-            {t("booking.step")} {stepIdx + 1} {t("booking.of")} {STEPS.length}
+            {t("booking.step")} {Math.max(stepIdx, 0) + 1} {t("booking.of")} {visibleSteps.length}
           </p>
           <Link
             to="/"
@@ -198,7 +210,7 @@ function BookPage() {
         </div>
         {/* Progress */}
         <div className="mx-auto flex max-w-2xl gap-1 px-3 pb-3">
-          {STEPS.map((_, i) => (
+          {visibleSteps.map((_, i) => (
             <div
               key={i}
               className={cn(
