@@ -25,7 +25,7 @@ function AdminDashboard() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-metrics"],
     queryFn: () => fn(),
-    refetchInterval: 30_000,
+    refetchInterval: 10_000,
     refetchOnWindowFocus: true,
   });
 
