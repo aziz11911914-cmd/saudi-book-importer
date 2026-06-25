@@ -58,8 +58,9 @@ function AuthPage() {
       setStep("name");
       return;
     }
-    navigate({ to: redirect && redirect.startsWith("/") ? (redirect as "/") : "/", replace: true });
-  }, [ready, session, profile, step, navigate, redirect]);
+    const target = roleRedirect(roles, redirect);
+    navigate({ to: target as any, replace: true });
+  }, [ready, session, profile, roles, step, navigate, redirect]);
 
   async function handleSendOtp(e: React.FormEvent) {
     e.preventDefault();
