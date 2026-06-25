@@ -268,6 +268,7 @@ const resources = {
         back: "Back",
         confirm: "Confirm booking",
         noSlots: "No slots available on this day",
+        lateNotice: "Notice: if you arrive more than 5 minutes after your appointment time, the booking will be automatically cancelled and marked as a No-Show.",
         pickDate: "Choose a date to book",
         pickService: "Pick a service to continue",
         pickTime: "Pick an available time",
