@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { LocaleProvider } from "@/lib/locale-provider";
 import { AuthProvider } from "@/lib/auth-provider";
 import { supabase } from "@/integrations/supabase/client";
+import { MaintenanceBanner } from "@/components/maintenance-banner";
 
 function NotFoundComponent() {
   return (
@@ -141,6 +142,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <LocaleProvider>
         <AuthProvider>
+          <MaintenanceBanner />
           <Outlet />
         </AuthProvider>
       </LocaleProvider>
