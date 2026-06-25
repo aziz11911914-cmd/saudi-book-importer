@@ -251,6 +251,7 @@ const resources = {
       },
       days: {
         short: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+        long: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
       },
       booking: {
         title: "Book your appointment",
