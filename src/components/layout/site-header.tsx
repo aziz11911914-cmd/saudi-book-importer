@@ -11,7 +11,8 @@ import { homeForRoles } from "@/lib/role-routing";
 export function SiteHeader({ transparent = false }: { transparent?: boolean }) {
   const { t } = useTranslation();
   const { lng, toggle, t: tt } = useLocale();
-  const { ready, user, profile, signOut } = useAuth();
+  const { ready, user, profile, roles, signOut } = useAuth();
+  const workspaceHome = homeForRoles(roles);
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
