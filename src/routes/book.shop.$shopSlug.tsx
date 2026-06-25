@@ -317,6 +317,7 @@ function ShopBookPage() {
             notes={notes} setNotes={setNotes}
             name={name} setName={setName}
             phone={phone} setPhone={setPhone}
+            isAuthed={!!session?.user}
             onConfirm={confirm}
           />
         )}
