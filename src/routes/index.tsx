@@ -1,13 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, MapPin, Search } from "lucide-react";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SpecialtyChip } from "@/components/specialty-chip";
 import { StarRating } from "@/components/star-rating";
 import { PortfolioLightbox } from "@/components/portfolio-lightbox";
 import { useLocale } from "@/lib/locale-provider";
+import { useAuth } from "@/lib/auth-provider";
+import { homeForRoles } from "@/lib/role-routing";
 import {
   fetchFeaturedBarbers,
   fetchFeaturedShops,
