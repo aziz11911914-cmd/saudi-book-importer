@@ -28,6 +28,14 @@ const emailSchema = z
   .email()
   .max(255);
 
+function roleRedirect(roles: string[], explicit?: string): string {
+  if (explicit && explicit.startsWith("/")) return explicit;
+  if (roles.includes("super_admin")) return "/admin";
+  if (roles.includes("owner")) return "/owner";
+  if (roles.includes("barber")) return "/barber";
+  return "/";
+}
+
 function AuthPage() {
   const { t } = useTranslation();
   const { rtl, t: tt } = useLocale();
