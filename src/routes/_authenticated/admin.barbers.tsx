@@ -22,7 +22,7 @@ function BarbersPage() {
         {(data ?? []).map((b: any) => (
           <div key={b.id} className="rounded-2xl border border-hairline bg-surface p-4">
             <div className="flex items-center gap-3">
-              {b.avatar_url ? <img src={b.avatar_url} alt="" className="size-12 rounded-full object-cover" /> : <div className="size-12 rounded-full bg-background" />}
+              {b.photo_url ? <img src={b.photo_url} alt="" className="size-12 rounded-full object-cover" /> : <div className="size-12 rounded-full bg-background" />}
               <div className="min-w-0">
                 <div className="truncate font-medium">{b.display_name_en}</div>
                 <div className="truncate text-xs text-muted-foreground">{b.shops?.name_en ?? "—"}</div>

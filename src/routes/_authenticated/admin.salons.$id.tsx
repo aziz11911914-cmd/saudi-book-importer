@@ -101,7 +101,7 @@ function SalonDetailPage() {
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {data.barbers.map((b: any) => (
             <div key={b.id} className="flex items-center gap-3 rounded-xl border border-hairline/60 p-3">
-              {b.avatar_url ? <img src={b.avatar_url} alt="" className="size-10 rounded-full object-cover" /> : <div className="size-10 rounded-full bg-background" />}
+              {b.photo_url ? <img src={b.photo_url} alt="" className="size-10 rounded-full object-cover" /> : <div className="size-10 rounded-full bg-background" />}
               <div className="min-w-0">
                 <div className="truncate text-sm font-medium">{b.display_name_en}</div>
                 <div className="truncate text-xs text-muted-foreground">{b.status}</div>

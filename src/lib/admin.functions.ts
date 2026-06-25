@@ -198,7 +198,7 @@ export const getSalon = createServerFn({ method: "GET" })
     await assertSuperAdmin(context.supabase, context.userId);
     const [shop, barbers, bookings, reviews, hours] = await Promise.all([
       context.supabase.from("shops").select("*").eq("id", data.id).maybeSingle(),
-      context.supabase.from("barbers").select("id, display_name_en, display_name_ar, avatar_url, status").eq("shop_id", data.id),
+      context.supabase.from("barbers").select("id, display_name_en, display_name_ar, photo_url, status").eq("shop_id", data.id),
       context.supabase.from("bookings").select("id, booking_ref, status, starts_at, price_sar").eq("shop_id", data.id).order("starts_at", { ascending: false }).limit(20),
       context.supabase.from("reviews").select("id, rating, comment, created_at").eq("shop_id", data.id).order("created_at", { ascending: false }).limit(10),
       context.supabase.from("shop_hours").select("*").eq("shop_id", data.id),
@@ -244,7 +244,7 @@ export const listBarbers = createServerFn({ method: "GET" })
     await assertSuperAdmin(context.supabase, context.userId);
     let q = context.supabase
       .from("barbers")
-      .select("id, display_name_en, display_name_ar, avatar_url, status, rating_avg, rating_count, shop_id, created_at, shops:shop_id(name_en, name_ar)")
+      .select("id, display_name_en, display_name_ar, photo_url, status, rating_avg, rating_count, shop_id, created_at, shops:shop_id(name_en, name_ar)")
       .order("created_at", { ascending: false })
       .limit(200);
     if (data.search) q = q.or(`display_name_en.ilike.%${data.search}%,display_name_ar.ilike.%${data.search}%`);
