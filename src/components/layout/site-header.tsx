@@ -104,6 +104,11 @@ export function SiteHeader({ transparent = false }: { transparent?: boolean }) {
                     </div>
                     <div className="mt-0.5 truncate" dir="ltr">{user.email}</div>
                   </div>
+                  {workspaceHome !== "/" && (
+                    <MenuItem to={workspaceHome} icon={LayoutDashboard} onClick={() => setMenuOpen(false)}>
+                      {tt("Dashboard", "لوحة التحكم")}
+                    </MenuItem>
+                  )}
                   <MenuItem to="/profile" icon={UserIcon} onClick={() => setMenuOpen(false)}>
                     {tt("Profile", "الملف الشخصي")}
                   </MenuItem>
