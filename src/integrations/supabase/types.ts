@@ -841,49 +841,171 @@ export type Database = {
           },
         ]
       }
-      services: {
+      service_categories: {
         Row: {
-          active: boolean
-          category: string
           created_at: string
-          description_ar: string | null
-          description_en: string | null
-          duration_min: number
           id: string
           name_ar: string
           name_en: string
-          price_sar: number
           shop_id: string
+          sort_order: number
+          updated_at: string
         }
         Insert: {
-          active?: boolean
-          category?: string
           created_at?: string
-          description_ar?: string | null
-          description_en?: string | null
-          duration_min?: number
           id?: string
           name_ar: string
           name_en: string
-          price_sar?: number
           shop_id: string
+          sort_order?: number
+          updated_at?: string
         }
         Update: {
-          active?: boolean
-          category?: string
           created_at?: string
-          description_ar?: string | null
-          description_en?: string | null
-          duration_min?: number
           id?: string
           name_ar?: string
           name_en?: string
-          price_sar?: number
           shop_id?: string
+          sort_order?: number
+          updated_at?: string
         }
         Relationships: [
           {
+            foreignKeyName: "service_categories_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      services: {
+        Row: {
+          active: boolean
+          buffer_minutes: number
+          category: string
+          category_id: string | null
+          cleanup_minutes: number
+          color: string | null
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          display_order: number
+          duration_min: number
+          featured: boolean
+          id: string
+          image_url: string | null
+          name_ar: string
+          name_en: string
+          popular: boolean
+          prep_minutes: number
+          price_sar: number
+          recommended: boolean
+          shop_id: string
+          status: Database["public"]["Enums"]["service_status"]
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          buffer_minutes?: number
+          category?: string
+          category_id?: string | null
+          cleanup_minutes?: number
+          color?: string | null
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          display_order?: number
+          duration_min?: number
+          featured?: boolean
+          id?: string
+          image_url?: string | null
+          name_ar: string
+          name_en: string
+          popular?: boolean
+          prep_minutes?: number
+          price_sar?: number
+          recommended?: boolean
+          shop_id: string
+          status?: Database["public"]["Enums"]["service_status"]
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          buffer_minutes?: number
+          category?: string
+          category_id?: string | null
+          cleanup_minutes?: number
+          color?: string | null
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          display_order?: number
+          duration_min?: number
+          featured?: boolean
+          id?: string
+          image_url?: string | null
+          name_ar?: string
+          name_en?: string
+          popular?: boolean
+          prep_minutes?: number
+          price_sar?: number
+          recommended?: boolean
+          shop_id?: string
+          status?: Database["public"]["Enums"]["service_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "services_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_holidays: {
+        Row: {
+          created_at: string
+          ends_on: string
+          id: string
+          kind: Database["public"]["Enums"]["holiday_kind"]
+          reason: string | null
+          shop_id: string
+          starts_on: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          ends_on: string
+          id?: string
+          kind?: Database["public"]["Enums"]["holiday_kind"]
+          reason?: string | null
+          shop_id: string
+          starts_on: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          ends_on?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["holiday_kind"]
+          reason?: string | null
+          shop_id?: string
+          starts_on?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_holidays_shop_id_fkey"
             columns: ["shop_id"]
             isOneToOne: false
             referencedRelation: "shops"
@@ -959,17 +1081,30 @@ export type Database = {
         Row: {
           accept_reviews: boolean
           address: string | null
+          archived_at: string | null
           booking_enabled: boolean
           booking_interval_minutes: number
           city: string | null
+          country: string | null
           cover_url: string | null
           created_at: string
+          deletion_requested_at: string | null
+          deletion_requested_by: string | null
           description_ar: string | null
           description_en: string | null
+          display_address: boolean
+          display_gallery: boolean
+          display_phone: boolean
+          display_services: boolean
+          display_team: boolean
+          display_whatsapp: boolean
           district: string | null
           email: string | null
           featured: boolean
+          full_address: string | null
+          google_maps_url: string | null
           id: string
+          instagram: string | null
           lat: number | null
           lng: number | null
           logo_url: string | null
@@ -977,11 +1112,15 @@ export type Database = {
           max_booking_window_days: number
           name_ar: string
           name_en: string
+          paused_bookings: boolean
           phone: string | null
+          published: boolean
           rating_avg: number
           rating_count: number
           slug: string
+          snapchat: string | null
           status: Database["public"]["Enums"]["entity_status"]
+          tiktok: string | null
           updated_at: string
           walkin_enabled: boolean
           website: string | null
@@ -990,17 +1129,30 @@ export type Database = {
         Insert: {
           accept_reviews?: boolean
           address?: string | null
+          archived_at?: string | null
           booking_enabled?: boolean
           booking_interval_minutes?: number
           city?: string | null
+          country?: string | null
           cover_url?: string | null
           created_at?: string
+          deletion_requested_at?: string | null
+          deletion_requested_by?: string | null
           description_ar?: string | null
           description_en?: string | null
+          display_address?: boolean
+          display_gallery?: boolean
+          display_phone?: boolean
+          display_services?: boolean
+          display_team?: boolean
+          display_whatsapp?: boolean
           district?: string | null
           email?: string | null
           featured?: boolean
+          full_address?: string | null
+          google_maps_url?: string | null
           id?: string
+          instagram?: string | null
           lat?: number | null
           lng?: number | null
           logo_url?: string | null
@@ -1008,11 +1160,15 @@ export type Database = {
           max_booking_window_days?: number
           name_ar: string
           name_en: string
+          paused_bookings?: boolean
           phone?: string | null
+          published?: boolean
           rating_avg?: number
           rating_count?: number
           slug: string
+          snapchat?: string | null
           status?: Database["public"]["Enums"]["entity_status"]
+          tiktok?: string | null
           updated_at?: string
           walkin_enabled?: boolean
           website?: string | null
@@ -1021,17 +1177,30 @@ export type Database = {
         Update: {
           accept_reviews?: boolean
           address?: string | null
+          archived_at?: string | null
           booking_enabled?: boolean
           booking_interval_minutes?: number
           city?: string | null
+          country?: string | null
           cover_url?: string | null
           created_at?: string
+          deletion_requested_at?: string | null
+          deletion_requested_by?: string | null
           description_ar?: string | null
           description_en?: string | null
+          display_address?: boolean
+          display_gallery?: boolean
+          display_phone?: boolean
+          display_services?: boolean
+          display_team?: boolean
+          display_whatsapp?: boolean
           district?: string | null
           email?: string | null
           featured?: boolean
+          full_address?: string | null
+          google_maps_url?: string | null
           id?: string
+          instagram?: string | null
           lat?: number | null
           lng?: number | null
           logo_url?: string | null
@@ -1039,11 +1208,15 @@ export type Database = {
           max_booking_window_days?: number
           name_ar?: string
           name_en?: string
+          paused_bookings?: boolean
           phone?: string | null
+          published?: boolean
           rating_avg?: number
           rating_count?: number
           slug?: string
+          snapchat?: string | null
           status?: Database["public"]["Enums"]["entity_status"]
+          tiktok?: string | null
           updated_at?: string
           walkin_enabled?: boolean
           website?: string | null
@@ -1199,8 +1372,10 @@ export type Database = {
         | "no_show"
       entity_status: "active" | "inactive" | "pending"
       favorite_target: "barber" | "shop"
+      holiday_kind: "vacation" | "holiday" | "temporary" | "emergency"
       invite_status: "pending" | "accepted" | "revoked" | "expired"
       profile_status: "active" | "suspended"
+      service_status: "active" | "hidden" | "unavailable" | "archived"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1345,8 +1520,10 @@ export const Constants = {
       ],
       entity_status: ["active", "inactive", "pending"],
       favorite_target: ["barber", "shop"],
+      holiday_kind: ["vacation", "holiday", "temporary", "emergency"],
       invite_status: ["pending", "accepted", "revoked", "expired"],
       profile_status: ["active", "suspended"],
+      service_status: ["active", "hidden", "unavailable", "archived"],
     },
   },
 } as const
