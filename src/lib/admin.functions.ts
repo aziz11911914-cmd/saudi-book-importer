@@ -163,7 +163,7 @@ export const updateSalon = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string; patch: Record<string, unknown> }) => d)
   .handler(async ({ context, data }) => {
     await assertSuperAdmin(context.supabase, context.userId);
-    const { error } = await context.supabase.from("shops").update(data.patch).eq("id", data.id);
+    const { error } = await context.supabase.from("shops").update(data.patch as any).eq("id", data.id);
     if (error) throw new Error(error.message);
     await audit(context.supabase, context.userId, context.claims?.email ?? null, "salon.updated", "shop", data.id, data.patch);
     return { ok: true };
