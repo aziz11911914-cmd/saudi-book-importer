@@ -151,7 +151,7 @@ function AuthPage() {
     }
     await refresh();
     router.invalidate();
-    navigate({ to: redirect && redirect.startsWith("/") ? (redirect as "/") : "/", replace: true });
+    navigate({ to: roleRedirect(roles, redirect) as any, replace: true });
   }
 
   async function handleResend() {
