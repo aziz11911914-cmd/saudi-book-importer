@@ -22,7 +22,12 @@ function StatCard({ icon: Icon, label, value, accent = false }: { icon: any; lab
 
 function AdminDashboard() {
   const fn = useServerFn(getAdminMetrics);
-  const { data, isLoading } = useQuery({ queryKey: ["admin-metrics"], queryFn: () => fn() });
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-metrics"],
+    queryFn: () => fn(),
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
+  });
 
   if (isLoading || !data) return <div className="text-muted-foreground">Loading dashboard…</div>;
   const t = data.totals;
