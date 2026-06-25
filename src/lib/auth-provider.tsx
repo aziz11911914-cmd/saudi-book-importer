@@ -42,6 +42,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
 
   const loadProfile = useCallback(async (userId: string) => {
+    // Apply any pending invites (assigns owner/barber role and links to shop) + bumps last_login_at
+    try { await supabase.rpc("consume_invites_for_current_user"); } catch {}
     const [{ data: p }, { data: r }] = await Promise.all([
       supabase
         .from("profiles")
