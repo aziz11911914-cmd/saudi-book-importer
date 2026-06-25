@@ -163,22 +163,50 @@ export function PortfolioLightbox({
             </div>
           )}
 
-          <Link
-            to="/book/$barberId"
-            params={{ barberId: photo.barber.id }}
-            search={
-              {
-                photo: photo.id,
-                ...(photo.service_id
-                  ? { service: photo.service_id, step: "date" }
-                  : { step: "service" }),
-              } as never
+          {(() => {
+            // The haircut is already selected — auto-resolve a service so the
+            // booking wizard skips the "choose service" step entirely.
+            let resolvedServiceId: string | undefined = photo.service_id ?? undefined;
+            if (!resolvedServiceId) {
+              const sp = photo.portfolio_photo_specialties[0]?.specialty;
+              const services = photo.barber.barber_services;
+              if (sp && services.length > 0) {
+                const enKey = (sp.label_en ?? "").toLowerCase().trim();
+                const arKey = (sp.label_ar ?? "").trim();
+                const slugKey = sp.slug.toLowerCase().replace(/[-_]/g, " ");
+                const match = services.find((bs) => {
+                  const en = (bs.service.name_en ?? "").toLowerCase();
+                  const ar = bs.service.name_ar ?? "";
+                  return (
+                    (enKey && en.includes(enKey)) ||
+                    (slugKey && en.includes(slugKey)) ||
+                    (arKey && ar.includes(arKey))
+                  );
+                });
+                resolvedServiceId = (match ?? services[0]).service.id;
+              } else if (services.length > 0) {
+                resolvedServiceId = services[0].service.id;
+              }
             }
-            onClick={onClose}
-            className="mt-5 inline-flex w-full items-center justify-center rounded-full bg-gold px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-gold-glow"
-          >
-            {t("barber.bookThisLook")}
-          </Link>
+            return (
+              <Link
+                to="/book/$barberId"
+                params={{ barberId: photo.barber.id }}
+                search={
+                  {
+                    photo: photo.id,
+                    ...(resolvedServiceId
+                      ? { service: resolvedServiceId, step: "date" }
+                      : { step: "service" }),
+                  } as never
+                }
+                onClick={onClose}
+                className="mt-5 inline-flex w-full items-center justify-center rounded-full bg-gold px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-gold-glow"
+              >
+                {t("barber.bookThisLook")}
+              </Link>
+            );
+          })()}
         </aside>
       </div>
     </div>

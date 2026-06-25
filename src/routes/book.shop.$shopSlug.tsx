@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -103,7 +103,18 @@ function ShopBookPage() {
     });
   }, [service, search.date, availability, slotBarberId]);
 
-  const stepIdx = STEPS.indexOf(search.step as Step);
+  // Capture entry context: hide steps the customer has already completed at
+  // the entry point (e.g. they picked a specific service on the salon page).
+  const entryHadService = useRef<boolean>(!!search.service);
+  const entryHadBarber = useRef<boolean>(!!search.barber);
+  const visibleSteps = useMemo<readonly Step[]>(() => {
+    const base = [...STEPS];
+    const skip = new Set<Step>();
+    if (entryHadService.current) skip.add("service");
+    if (entryHadBarber.current) skip.add("barber");
+    return base.filter((s) => !skip.has(s));
+  }, []);
+  const stepIdx = visibleSteps.indexOf(search.step as Step);
 
   function setStep(next: Step, extra: Partial<typeof search> = {}) {
     navigate({ search: (s: typeof search) => ({ ...s, ...extra, step: next }), params: { shopSlug } });
@@ -165,14 +176,18 @@ function ShopBookPage() {
         <div className="mx-auto flex h-14 max-w-2xl items-center justify-between px-3">
           <button
             type="button"
-            onClick={() => (stepIdx > 0 ? setStep(STEPS[stepIdx - 1]) : router.history.back())}
+            onClick={() => {
+              const safeIdx = stepIdx < 0 ? 0 : stepIdx;
+              if (safeIdx > 0) setStep(visibleSteps[safeIdx - 1]);
+              else router.history.back();
+            }}
             className="inline-flex size-9 items-center justify-center rounded-full border border-hairline text-foreground hover:border-gold/50"
             aria-label={t("common.back")}
           >
             <ArrowBack className="size-4" />
           </button>
           <p className="text-xs text-muted-foreground">
-            {t("booking.step")} {stepIdx + 1} {t("booking.of")} {STEPS.length}
+            {t("booking.step")} {Math.max(stepIdx, 0) + 1} {t("booking.of")} {visibleSteps.length}
           </p>
           <Link to="/" className="group inline-flex items-center gap-2 rounded-full border border-hairline px-2 py-1 transition-colors hover:border-gold/50" aria-label={t("brand")}>
             <span className="inline-flex size-7 items-center justify-center rounded-full border border-gold/40 gold-hairline">
@@ -182,7 +197,7 @@ function ShopBookPage() {
           </Link>
         </div>
         <div className="mx-auto flex max-w-2xl gap-1 px-3 pb-3">
-          {STEPS.map((_, i) => (
+          {visibleSteps.map((_, i) => (
             <div key={i} className={cn("h-0.5 flex-1 rounded-full", i <= stepIdx ? "bg-gold" : "bg-hairline")} />
           ))}
         </div>
