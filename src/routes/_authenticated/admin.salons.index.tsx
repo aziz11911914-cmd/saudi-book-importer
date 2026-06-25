@@ -26,7 +26,7 @@ function SalonsPage() {
           <h1 className="font-display text-3xl">Salons</h1>
           <p className="text-sm text-muted-foreground">Manage all salons on the platform.</p>
         </div>
-        <Link to="/_authenticated/admin/salons/new" className="inline-flex items-center gap-2 rounded-full bg-gold px-4 py-2 text-sm font-semibold text-primary-foreground">
+        <Link to="/admin/salons/new" className="inline-flex items-center gap-2 rounded-full bg-gold px-4 py-2 text-sm font-semibold text-primary-foreground">
           <Plus className="size-4" /> Create Salon
         </Link>
       </div>
@@ -100,7 +100,7 @@ function RowMenu({ salonId, status, onAction }: { salonId: string; status: strin
       <button onClick={() => setOpen((v) => !v)} className="rounded-lg p-1 hover:bg-background"><MoreVertical className="size-4" /></button>
       {open && (
         <div className="absolute end-0 z-10 mt-1 w-40 overflow-hidden rounded-xl border border-hairline bg-surface shadow-xl">
-          <Link to="/_authenticated/admin/salons/$id" params={{ id: salonId }} className="block px-3 py-2 text-sm hover:bg-background">View / Edit</Link>
+          <Link to="/admin/salons/$id" params={{ id: salonId }} className="block px-3 py-2 text-sm hover:bg-background">View / Edit</Link>
           {status === "active" ? (
             <button onClick={() => { setOpen(false); onAction("suspend"); }} className="block w-full px-3 py-2 text-start text-sm hover:bg-background">Suspend</button>
           ) : (

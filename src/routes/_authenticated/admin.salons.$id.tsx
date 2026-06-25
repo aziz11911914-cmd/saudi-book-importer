@@ -37,7 +37,7 @@ function SalonDetailPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <Link to="/_authenticated/admin/salons" className="text-xs text-muted-foreground hover:underline">← Salons</Link>
+          <Link to="/admin/salons" className="text-xs text-muted-foreground hover:underline">← Salons</Link>
           <h1 className="font-display text-3xl">{data.shop.name_en}</h1>
           <p className="text-sm text-muted-foreground">{data.shop.slug}</p>
         </div>

@@ -47,7 +47,7 @@ function NewSalonPage() {
         if (payload[k] === "") payload[k] = null;
       }
       const row = await fn({ data: payload });
-      navigate({ to: "/_authenticated/admin/salons/$id" as any, params: { id: row.id } as any });
+      navigate({ to: "/admin/salons/$id" as any, params: { id: row.id } as any });
     } catch (e: any) {
       setErr(e?.message ?? "Failed");
     } finally { setBusy(false); }
@@ -112,7 +112,7 @@ function NewSalonPage() {
       {err && <div className="rounded-2xl border border-red-500/30 bg-red-500/5 px-4 py-3 text-sm text-red-300">{err}</div>}
 
       <div className="flex justify-end gap-3">
-        <button type="button" onClick={() => navigate({ to: "/_authenticated/admin/salons" as any })} className="rounded-full border border-hairline px-5 py-2 text-sm">Cancel</button>
+        <button type="button" onClick={() => navigate({ to: "/admin/salons" as any })} className="rounded-full border border-hairline px-5 py-2 text-sm">Cancel</button>
         <button type="submit" disabled={busy} className="rounded-full bg-gold px-6 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60">{busy ? "Creating…" : "Create Salon"}</button>
       </div>
     </form>
