@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-provider";
 import { sendAuthOtp, verifyAuthOtp } from "@/lib/auth-otp.functions";
 import { useLocale } from "@/lib/locale-provider";
+import { homeForRoles } from "@/lib/role-routing";
 import { cn } from "@/lib/utils";
 
 const search = z.object({
