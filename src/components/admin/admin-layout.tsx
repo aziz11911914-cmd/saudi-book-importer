@@ -146,7 +146,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
                       key={r.id}
                       onMouseDown={() => {
                         setOpen(false); setQ("");
-                        if (key === "salons") navigate({ to: "/admin/salons/$id" as any, params: { id: r.id } });
+                        if (key === "salons") navigate({ to: "/admin/salons/$id" as any, params: { id: r.id } as any });
                         if (key === "barbers") navigate({ to: "/admin/barbers" as any });
                         if (key === "users") navigate({ to: "/admin/customers" as any });
                         if (key === "bookings") navigate({ to: "/admin/bookings" as any });
