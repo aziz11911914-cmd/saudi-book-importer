@@ -30,6 +30,7 @@ import {
 } from "@/lib/slots";
 import { cn } from "@/lib/utils";
 import { createBooking } from "@/lib/booking-store";
+import { useAuth, displayName } from "@/lib/auth-provider";
 
 const searchSchema = z.object({
   step: fallback(
