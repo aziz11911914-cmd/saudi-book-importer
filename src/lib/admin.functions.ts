@@ -119,28 +119,13 @@ export const listSalons = createServerFn({ method: "GET" })
   });
 
 const salonInputSchema = z.object({
-  name_en: z.string().min(1).max(200),
-  name_ar: z.string().min(1).max(200),
-  slug: z.string().min(1).max(200).regex(/^[a-z0-9-]+$/),
-  description_en: z.string().max(2000).nullish(),
-  description_ar: z.string().max(2000).nullish(),
-  phone: z.string().max(40).nullish(),
-  whatsapp: z.string().max(40).nullish(),
-  email: z.string().email().max(200).nullish(),
-  website: z.string().max(300).nullish(),
-  city: z.string().max(120).nullish(),
-  district: z.string().max(120).nullish(),
-  address: z.string().max(500).nullish(),
-  lat: z.number().nullish(),
-  lng: z.number().nullish(),
-  logo_url: z.string().nullish(),
-  cover_url: z.string().nullish(),
-  featured: z.boolean().optional(),
-  booking_enabled: z.boolean().optional(),
-  walkin_enabled: z.boolean().optional(),
-  accept_reviews: z.boolean().optional(),
-  max_booking_window_days: z.number().int().min(1).max(365).optional(),
-  booking_interval_minutes: z.number().int().min(5).max(180).optional(),
+  name_ar: z.string().trim().min(1).max(200),
+  name_en: z.string().trim().max(200).optional().default(""),
+  city: z.string().trim().max(120).optional().nullable(),
+  district: z.string().trim().max(120).optional().nullable(),
+  phone: z.string().trim().max(40).optional().nullable(),
+  email: z.string().trim().email().max(200).optional().nullable().or(z.literal("").transform(() => null)),
+  logo_url: z.string().trim().max(500).optional().nullable(),
 });
 
 export const createSalon = createServerFn({ method: "POST" })
@@ -148,13 +133,29 @@ export const createSalon = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => salonInputSchema.parse(d))
   .handler(async ({ context, data }) => {
     await assertSuperAdmin(context.supabase, context.userId);
+    const nameEn = (data.name_en && data.name_en.length > 0) ? data.name_en : data.name_ar;
+    const slugSource = (data.name_en && data.name_en.length > 0) ? data.name_en : data.name_ar;
+    const { data: slugRow, error: slugErr } = await context.supabase
+      .rpc("generate_unique_shop_slug", { _base: slugSource });
+    if (slugErr) throw new Error(slugErr.message);
+    const slug: string = slugRow as any;
     const { data: row, error } = await context.supabase
       .from("shops")
-      .insert({ ...data, status: "active" })
+      .insert({
+        name_ar: data.name_ar,
+        name_en: nameEn,
+        slug,
+        city: data.city || null,
+        district: data.district || null,
+        phone: data.phone || null,
+        email: data.email || null,
+        logo_url: data.logo_url || null,
+        status: "active",
+      } as any)
       .select("id, slug")
       .single();
     if (error) throw new Error(error.message);
-    await audit(context.supabase, context.userId, context.claims?.email ?? null, "salon.created", "shop", row.id, { slug: row.slug, name: data.name_en });
+    await audit(context.supabase, context.userId, context.claims?.email ?? null, "salon.created", "shop", row.id, { slug: row.slug, name: nameEn });
     return row;
   });
 
