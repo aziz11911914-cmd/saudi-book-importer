@@ -1,13 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, MapPin, Search } from "lucide-react";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SpecialtyChip } from "@/components/specialty-chip";
 import { StarRating } from "@/components/star-rating";
 import { PortfolioLightbox } from "@/components/portfolio-lightbox";
 import { useLocale } from "@/lib/locale-provider";
+import { useAuth } from "@/lib/auth-provider";
+import { homeForRoles } from "@/lib/role-routing";
 import {
   fetchFeaturedBarbers,
   fetchFeaturedShops,
@@ -26,7 +28,17 @@ function HomePage() {
   const { lng, rtl, t: tt } = useLocale();
   const ArrowEnd = rtl ? ArrowLeft : ArrowRight;
   const navigate = useNavigate({ from: "/" });
+  const { ready, roles } = useAuth();
   const [searchDraft, setSearchDraft] = useState("");
+
+  // Session restoration: non-customer roles always land on their workspace.
+  useEffect(() => {
+    if (!ready) return;
+    const home = homeForRoles(roles);
+    if (home !== "/") navigate({ to: home, replace: true });
+  }, [ready, roles, navigate]);
+
+
 
   function submitSearch(e: React.FormEvent) {
     e.preventDefault();

@@ -2,15 +2,17 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/lib/locale-provider";
-import { Languages, CalendarCheck, Heart, LogIn, User as UserIcon, LogOut, Settings, ChevronDown } from "lucide-react";
+import { Languages, CalendarCheck, Heart, LogIn, User as UserIcon, LogOut, Settings, ChevronDown, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import logoUrl from "@/assets/qassah-logo.png";
 import { useAuth, displayName } from "@/lib/auth-provider";
+import { homeForRoles } from "@/lib/role-routing";
 
 export function SiteHeader({ transparent = false }: { transparent?: boolean }) {
   const { t } = useTranslation();
   const { lng, toggle, t: tt } = useLocale();
-  const { ready, user, profile, signOut } = useAuth();
+  const { ready, user, profile, roles, signOut } = useAuth();
+  const workspaceHome = homeForRoles(roles);
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -102,6 +104,11 @@ export function SiteHeader({ transparent = false }: { transparent?: boolean }) {
                     </div>
                     <div className="mt-0.5 truncate" dir="ltr">{user.email}</div>
                   </div>
+                  {workspaceHome !== "/" && (
+                    <MenuItem to={workspaceHome} icon={LayoutDashboard} onClick={() => setMenuOpen(false)}>
+                      {tt("Dashboard", "لوحة التحكم")}
+                    </MenuItem>
+                  )}
                   <MenuItem to="/profile" icon={UserIcon} onClick={() => setMenuOpen(false)}>
                     {tt("Profile", "الملف الشخصي")}
                   </MenuItem>
