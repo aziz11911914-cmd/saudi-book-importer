@@ -73,7 +73,7 @@ function SearchPage() {
             type="submit"
             className="inline-flex items-center justify-center rounded-full bg-gold px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-gold-glow"
           >
-            {t("common.search") || t("search.title")}
+            {t("search.title")}
           </button>
         </form>
 
