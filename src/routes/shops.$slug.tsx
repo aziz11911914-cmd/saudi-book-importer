@@ -88,10 +88,23 @@ function ShopProfilePage() {
     : null;
 
   function startBooking(serviceId?: string) {
+    // When a service is already chosen from the Services tab, skip the
+    // "choose service" step. If only one barber works at this shop, also
+    // pre-assign them and jump straight to date selection.
+    if (serviceId) {
+      const onlyBarber = shop && shop.barbers.length === 1 ? shop.barbers[0] : null;
+      navigate({
+        to: "/book/shop/$shopSlug",
+        params: { shopSlug: slug },
+        search: (onlyBarber
+          ? { service: serviceId, barber: onlyBarber.id, step: "date" }
+          : { service: serviceId, step: "barber" }) as never,
+      });
+      return;
+    }
     navigate({
       to: "/book/shop/$shopSlug",
       params: { shopSlug: slug },
-      search: serviceId ? { service: serviceId } as never : undefined,
     });
   }
 
