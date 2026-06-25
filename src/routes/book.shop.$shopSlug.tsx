@@ -422,6 +422,7 @@ function ReviewStep(props: {
   notes: string; setNotes: (v: string) => void;
   name: string; setName: (v: string) => void;
   phone: string; setPhone: (v: string) => void;
+  isAuthed: boolean;
   onConfirm: () => void;
 }) {
   const { t } = useTranslation();
