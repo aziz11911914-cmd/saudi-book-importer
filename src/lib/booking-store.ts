@@ -50,9 +50,10 @@ function write(list: LocalBooking[]) {
 }
 
 function genRef() {
-  return Array.from({ length: 8 }, () =>
+  const tail = Array.from({ length: 8 }, () =>
     "0123456789ABCDEF"[Math.floor(Math.random() * 16)],
   ).join("");
+  return `QS-${tail}`;
 }
 
 export function listBookings(): LocalBooking[] {
