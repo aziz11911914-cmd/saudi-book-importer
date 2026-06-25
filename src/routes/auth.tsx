@@ -31,12 +31,18 @@ const emailSchema = z
   .max(255);
 
 function roleRedirect(roles: string[], explicit?: string): string {
-  if (explicit && explicit.startsWith("/")) return explicit;
-  if (roles.includes("super_admin")) return "/admin";
-  if (roles.includes("owner")) return "/owner";
-  if (roles.includes("barber")) return "/barber";
-  return "/";
+  // Honour explicit ?redirect= ONLY when the destination is allowed for this role.
+  const home = homeForRoles(roles as any);
+  if (explicit && explicit.startsWith("/")) {
+    // Block role-mismatch redirects (e.g. customer trying ?redirect=/admin).
+    if (explicit.startsWith("/admin") && home !== "/admin") return home;
+    if (explicit.startsWith("/owner") && home !== "/owner") return home;
+    if (explicit.startsWith("/barber") && home !== "/barber") return home;
+    return explicit;
+  }
+  return home;
 }
+
 
 function AuthPage() {
   const { t } = useTranslation();
