@@ -47,7 +47,7 @@ function BarberHome() {
   return (
     <div className="mx-auto max-w-4xl space-y-6 px-6 py-10">
       <div className="flex items-center gap-4">
-        {me.avatar_url ? <img src={me.avatar_url} alt="" className="size-16 rounded-full object-cover" /> : <div className="size-16 rounded-full bg-surface" />}
+        {me.photo_url ? <img src={me.photo_url} alt="" className="size-16 rounded-full object-cover" /> : <div className="size-16 rounded-full bg-surface" />}
         <div>
           <h1 className="font-display text-3xl">{me.display_name_en}</h1>
           <p className="text-sm text-muted-foreground">{me.shops?.name_en} · {me.status}</p>
