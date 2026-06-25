@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { listOwners, setProfileStatus } from "@/lib/admin.functions";
 
-export const Route = createFileRoute("/_authenticated/admin/owners")({
+export const Route = createFileRoute("/_authenticated/admin/owners/")({
   component: OwnersPage,
 });
 

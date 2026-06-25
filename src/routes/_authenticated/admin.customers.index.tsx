@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { listCustomers, setProfileStatus } from "@/lib/admin.functions";
 
-export const Route = createFileRoute("/_authenticated/admin/customers")({
+export const Route = createFileRoute("/_authenticated/admin/customers/")({
   component: CustomersPage,
 });
 
