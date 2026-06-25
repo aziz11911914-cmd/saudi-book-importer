@@ -17,6 +17,7 @@ import { Route as FavoritesIndexRouteImport } from './routes/favorites.index'
 import { Route as BookingsIndexRouteImport } from './routes/bookings.index'
 import { Route as BarbersIndexRouteImport } from './routes/barbers.index'
 import { Route as ShopsSlugRouteImport } from './routes/shops.$slug'
+import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as BookingsBookingIdRouteImport } from './routes/bookings.$bookingId'
 import { Route as BookBarberIdRouteImport } from './routes/book.$barberId'
 import { Route as BarbersBarberIdRouteImport } from './routes/barbers.$barberId'
@@ -86,6 +87,11 @@ const BarbersIndexRoute = BarbersIndexRouteImport.update({
 const ShopsSlugRoute = ShopsSlugRouteImport.update({
   id: '/shops/$slug',
   path: '/shops/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InviteTokenRoute = InviteTokenRouteImport.update({
+  id: '/invite/$token',
+  path: '/invite/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BookingsBookingIdRoute = BookingsBookingIdRouteImport.update({
@@ -275,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/barbers/$barberId': typeof BarbersBarberIdRoute
   '/book/$barberId': typeof BookBarberIdRoute
   '/bookings/$bookingId': typeof BookingsBookingIdRouteWithChildren
+  '/invite/$token': typeof InviteTokenRoute
   '/shops/$slug': typeof ShopsSlugRoute
   '/barbers/': typeof BarbersIndexRoute
   '/bookings/': typeof BookingsIndexRoute
@@ -314,6 +321,7 @@ export interface FileRoutesByTo {
   '/barbers/$barberId': typeof BarbersBarberIdRoute
   '/book/$barberId': typeof BookBarberIdRoute
   '/bookings/$bookingId': typeof BookingsBookingIdRouteWithChildren
+  '/invite/$token': typeof InviteTokenRoute
   '/shops/$slug': typeof ShopsSlugRoute
   '/barbers': typeof BarbersIndexRoute
   '/bookings': typeof BookingsIndexRoute
@@ -356,6 +364,7 @@ export interface FileRoutesById {
   '/barbers/$barberId': typeof BarbersBarberIdRoute
   '/book/$barberId': typeof BookBarberIdRoute
   '/bookings/$bookingId': typeof BookingsBookingIdRouteWithChildren
+  '/invite/$token': typeof InviteTokenRoute
   '/shops/$slug': typeof ShopsSlugRoute
   '/barbers/': typeof BarbersIndexRoute
   '/bookings/': typeof BookingsIndexRoute
@@ -398,6 +407,7 @@ export interface FileRouteTypes {
     | '/barbers/$barberId'
     | '/book/$barberId'
     | '/bookings/$bookingId'
+    | '/invite/$token'
     | '/shops/$slug'
     | '/barbers/'
     | '/bookings/'
@@ -437,6 +447,7 @@ export interface FileRouteTypes {
     | '/barbers/$barberId'
     | '/book/$barberId'
     | '/bookings/$bookingId'
+    | '/invite/$token'
     | '/shops/$slug'
     | '/barbers'
     | '/bookings'
@@ -478,6 +489,7 @@ export interface FileRouteTypes {
     | '/barbers/$barberId'
     | '/book/$barberId'
     | '/bookings/$bookingId'
+    | '/invite/$token'
     | '/shops/$slug'
     | '/barbers/'
     | '/bookings/'
@@ -515,6 +527,7 @@ export interface RootRouteChildren {
   BarbersBarberIdRoute: typeof BarbersBarberIdRoute
   BookBarberIdRoute: typeof BookBarberIdRoute
   BookingsBookingIdRoute: typeof BookingsBookingIdRouteWithChildren
+  InviteTokenRoute: typeof InviteTokenRoute
   ShopsSlugRoute: typeof ShopsSlugRoute
   BarbersIndexRoute: typeof BarbersIndexRoute
   BookingsIndexRoute: typeof BookingsIndexRoute
@@ -581,6 +594,13 @@ declare module '@tanstack/react-router' {
       path: '/shops/$slug'
       fullPath: '/shops/$slug'
       preLoaderRoute: typeof ShopsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invite/$token': {
+      id: '/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof InviteTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/bookings/$bookingId': {
@@ -886,6 +906,7 @@ const rootRouteChildren: RootRouteChildren = {
   BarbersBarberIdRoute: BarbersBarberIdRoute,
   BookBarberIdRoute: BookBarberIdRoute,
   BookingsBookingIdRoute: BookingsBookingIdRouteWithChildren,
+  InviteTokenRoute: InviteTokenRoute,
   ShopsSlugRoute: ShopsSlugRoute,
   BarbersIndexRoute: BarbersIndexRoute,
   BookingsIndexRoute: BookingsIndexRoute,
