@@ -9,7 +9,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { adminGlobalSearch } from "@/lib/admin.functions";
 import { cn } from "@/lib/utils";
 
-const NAV = [
+type NavItem = { to: string; label: string; icon: any; exact?: boolean };
+const NAV: NavItem[] = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/admin/salons", label: "Salons", icon: Store },
   { to: "/admin/owners", label: "Owners", icon: UserCircle },
@@ -21,7 +22,7 @@ const NAV = [
   { to: "/admin/notifications", label: "Notifications", icon: Bell },
   { to: "/admin/settings", label: "Settings", icon: Settings },
   { to: "/admin/audit-logs", label: "Audit Logs", icon: ShieldAlert },
-] as const;
+];
 
 export function AdminLayout({ requireRole = "super_admin" as "super_admin" | "owner" | "barber" }: { requireRole?: "super_admin" | "owner" | "barber" }) {
   const { ready, roles, profile, signOut } = useAuth();
