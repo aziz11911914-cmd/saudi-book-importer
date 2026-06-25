@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useMemo, useState } from "react";
@@ -25,6 +25,19 @@ function HomePage() {
   const { t } = useTranslation();
   const { lng, rtl, t: tt } = useLocale();
   const ArrowEnd = rtl ? ArrowLeft : ArrowRight;
+  const navigate = useNavigate({ from: "/" });
+  const [searchDraft, setSearchDraft] = useState("");
+
+  function submitSearch(e: React.FormEvent) {
+    e.preventDefault();
+    const q = searchDraft.trim();
+    if (!q) {
+      navigate({ to: "/barbers" });
+      return;
+    }
+    navigate({ to: "/search", search: { q } });
+  }
+
 
   const { data: specialties = [] } = useQuery({
     queryKey: ["specialties"],
@@ -90,23 +103,29 @@ function HomePage() {
           </p>
 
           {/* Search */}
-          <div className="mt-8 flex max-w-2xl items-center gap-2 rounded-full border border-hairline bg-surface/80 p-1.5 backdrop-blur gold-hairline">
+          <form
+            onSubmit={submitSearch}
+            className="mt-8 flex max-w-2xl items-center gap-2 rounded-full border border-hairline bg-surface/80 p-1.5 backdrop-blur gold-hairline"
+          >
             <div className="flex flex-1 items-center gap-3 ps-4">
               <Search className="size-4 text-muted-foreground" />
               <input
                 type="text"
+                value={searchDraft}
+                onChange={(e) => setSearchDraft(e.target.value)}
                 placeholder={t("home.searchPlaceholder")}
                 className="w-full bg-transparent py-2.5 text-sm text-foreground outline-none placeholder:text-muted-foreground"
               />
             </div>
-            <Link
-              to="/barbers"
+            <button
+              type="submit"
               className="inline-flex items-center justify-center rounded-full bg-gold px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-gold-glow"
             >
               {t("home.ctaBrowse")}
               <ArrowEnd className="ms-2 size-4" />
-            </Link>
-          </div>
+            </button>
+          </form>
+
         </div>
       </section>
 
