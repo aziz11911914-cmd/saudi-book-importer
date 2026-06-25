@@ -455,9 +455,17 @@ function ReviewStep(props: {
         </div>
       </div>
 
+      <div className="rounded-2xl border border-gold/30 bg-gold/5 p-4 text-xs leading-relaxed text-foreground/90">
+        {t("booking.lateNotice")}
+      </div>
+
       <div className="space-y-3">
-        <Field label={t("booking.yourName")} value={props.name} onChange={props.setName} placeholder={t("booking.namePh")} />
-        <Field label={t("booking.yourPhone")} value={props.phone} onChange={props.setPhone} placeholder={t("booking.phonePh")} dir="ltr" />
+        {!props.isAuthed && (
+          <>
+            <Field label={t("booking.yourName")} value={props.name} onChange={props.setName} placeholder={t("booking.namePh")} />
+            <Field label={t("booking.yourPhone")} value={props.phone} onChange={props.setPhone} placeholder={t("booking.phonePh")} dir="ltr" />
+          </>
+        )}
         <div>
           <label className="mb-1 block text-xs uppercase tracking-[0.18em] text-muted-foreground">{t("booking.notes")}</label>
           <textarea value={props.notes} onChange={(e) => props.setNotes(e.target.value)} placeholder={t("booking.notesPh")} rows={3}
