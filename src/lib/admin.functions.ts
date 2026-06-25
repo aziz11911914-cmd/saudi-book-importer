@@ -648,9 +648,9 @@ export const getReports = createServerFn({ method: "GET" })
     const topServices = tally(popRows, "service_id");
 
     const lookupOne = async (table: string, ids: string[], cols: string) => {
-      if (!ids.length) return [];
-      const { data } = await sb.from(table).select(cols).in("id", ids);
-      return data ?? [];
+      if (!ids.length) return [] as any[];
+      const { data } = await (sb as any).from(table).select(cols).in("id", ids);
+      return (data ?? []) as any[];
     };
     const [shops, barbers, services] = await Promise.all([
       lookupOne("shops", topShops.map(([id]) => id), "id, name_en, name_ar"),
