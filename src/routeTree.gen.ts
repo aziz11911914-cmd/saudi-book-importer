@@ -27,6 +27,7 @@ import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authentic
 import { Route as BookingsBookingIdRescheduleRouteImport } from './routes/bookings.$bookingId.reschedule'
 import { Route as BookShopShopSlugRouteImport } from './routes/book.shop.$shopSlug'
 import { Route as AuthenticatedAdminOwnersRouteImport } from './routes/_authenticated/admin.owners'
+import { Route as AuthenticatedAdminCustomersRouteImport } from './routes/_authenticated/admin.customers'
 import { Route as AuthenticatedAdminBarbersRouteImport } from './routes/_authenticated/admin.barbers'
 import { Route as AuthenticatedAdminSalonsIndexRouteImport } from './routes/_authenticated/admin.salons.index'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
@@ -126,6 +127,12 @@ const AuthenticatedAdminOwnersRoute =
     path: '/owners',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminCustomersRoute =
+  AuthenticatedAdminCustomersRouteImport.update({
+    id: '/customers',
+    path: '/customers',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminBarbersRoute =
   AuthenticatedAdminBarbersRouteImport.update({
     id: '/barbers',
@@ -182,6 +189,7 @@ export interface FileRoutesByFullPath {
   '/bookings/': typeof BookingsIndexRoute
   '/favorites/': typeof FavoritesIndexRoute
   '/admin/barbers': typeof AuthenticatedAdminBarbersRoute
+  '/admin/customers': typeof AuthenticatedAdminCustomersRoute
   '/admin/owners': typeof AuthenticatedAdminOwnersRoute
   '/book/shop/$shopSlug': typeof BookShopShopSlugRoute
   '/bookings/$bookingId/reschedule': typeof BookingsBookingIdRescheduleRoute
@@ -207,6 +215,7 @@ export interface FileRoutesByTo {
   '/bookings': typeof BookingsIndexRoute
   '/favorites': typeof FavoritesIndexRoute
   '/admin/barbers': typeof AuthenticatedAdminBarbersRoute
+  '/admin/customers': typeof AuthenticatedAdminCustomersRoute
   '/admin/owners': typeof AuthenticatedAdminOwnersRoute
   '/book/shop/$shopSlug': typeof BookShopShopSlugRoute
   '/bookings/$bookingId/reschedule': typeof BookingsBookingIdRescheduleRoute
@@ -235,6 +244,7 @@ export interface FileRoutesById {
   '/bookings/': typeof BookingsIndexRoute
   '/favorites/': typeof FavoritesIndexRoute
   '/_authenticated/admin/barbers': typeof AuthenticatedAdminBarbersRoute
+  '/_authenticated/admin/customers': typeof AuthenticatedAdminCustomersRoute
   '/_authenticated/admin/owners': typeof AuthenticatedAdminOwnersRoute
   '/book/shop/$shopSlug': typeof BookShopShopSlugRoute
   '/bookings/$bookingId/reschedule': typeof BookingsBookingIdRescheduleRoute
@@ -263,6 +273,7 @@ export interface FileRouteTypes {
     | '/bookings/'
     | '/favorites/'
     | '/admin/barbers'
+    | '/admin/customers'
     | '/admin/owners'
     | '/book/shop/$shopSlug'
     | '/bookings/$bookingId/reschedule'
@@ -288,6 +299,7 @@ export interface FileRouteTypes {
     | '/bookings'
     | '/favorites'
     | '/admin/barbers'
+    | '/admin/customers'
     | '/admin/owners'
     | '/book/shop/$shopSlug'
     | '/bookings/$bookingId/reschedule'
@@ -315,6 +327,7 @@ export interface FileRouteTypes {
     | '/bookings/'
     | '/favorites/'
     | '/_authenticated/admin/barbers'
+    | '/_authenticated/admin/customers'
     | '/_authenticated/admin/owners'
     | '/book/shop/$shopSlug'
     | '/bookings/$bookingId/reschedule'
@@ -473,6 +486,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminOwnersRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/customers': {
+      id: '/_authenticated/admin/customers'
+      path: '/customers'
+      fullPath: '/admin/customers'
+      preLoaderRoute: typeof AuthenticatedAdminCustomersRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/barbers': {
       id: '/_authenticated/admin/barbers'
       path: '/barbers'
@@ -527,6 +547,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminBarbersRoute: typeof AuthenticatedAdminBarbersRoute
+  AuthenticatedAdminCustomersRoute: typeof AuthenticatedAdminCustomersRoute
   AuthenticatedAdminOwnersRoute: typeof AuthenticatedAdminOwnersRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminSalonsIdRoute: typeof AuthenticatedAdminSalonsIdRoute
@@ -536,6 +557,7 @@ interface AuthenticatedAdminRouteChildren {
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminBarbersRoute: AuthenticatedAdminBarbersRoute,
+  AuthenticatedAdminCustomersRoute: AuthenticatedAdminCustomersRoute,
   AuthenticatedAdminOwnersRoute: AuthenticatedAdminOwnersRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminSalonsIdRoute: AuthenticatedAdminSalonsIdRoute,
