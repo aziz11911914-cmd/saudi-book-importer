@@ -31,6 +31,7 @@ import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/e
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as AuthenticatedAdminSalonsNewRouteImport } from './routes/_authenticated/admin.salons.new'
+import { Route as AuthenticatedAdminSalonsIdRouteImport } from './routes/_authenticated/admin.salons.$id'
 
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
@@ -145,6 +146,12 @@ const AuthenticatedAdminSalonsNewRoute =
     path: '/salons/new',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminSalonsIdRoute =
+  AuthenticatedAdminSalonsIdRouteImport.update({
+    id: '/salons/$id',
+    path: '/salons/$id',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -163,6 +170,7 @@ export interface FileRoutesByFullPath {
   '/book/shop/$shopSlug': typeof BookShopShopSlugRoute
   '/bookings/$bookingId/reschedule': typeof BookingsBookingIdRescheduleRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/admin/salons/$id': typeof AuthenticatedAdminSalonsIdRoute
   '/admin/salons/new': typeof AuthenticatedAdminSalonsNewRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -185,6 +193,7 @@ export interface FileRoutesByTo {
   '/book/shop/$shopSlug': typeof BookShopShopSlugRoute
   '/bookings/$bookingId/reschedule': typeof BookingsBookingIdRescheduleRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/admin/salons/$id': typeof AuthenticatedAdminSalonsIdRoute
   '/admin/salons/new': typeof AuthenticatedAdminSalonsNewRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -210,6 +219,7 @@ export interface FileRoutesById {
   '/book/shop/$shopSlug': typeof BookShopShopSlugRoute
   '/bookings/$bookingId/reschedule': typeof BookingsBookingIdRescheduleRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/admin/salons/$id': typeof AuthenticatedAdminSalonsIdRoute
   '/_authenticated/admin/salons/new': typeof AuthenticatedAdminSalonsNewRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -235,6 +245,7 @@ export interface FileRouteTypes {
     | '/book/shop/$shopSlug'
     | '/bookings/$bookingId/reschedule'
     | '/admin/'
+    | '/admin/salons/$id'
     | '/admin/salons/new'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -257,6 +268,7 @@ export interface FileRouteTypes {
     | '/book/shop/$shopSlug'
     | '/bookings/$bookingId/reschedule'
     | '/admin'
+    | '/admin/salons/$id'
     | '/admin/salons/new'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -281,6 +293,7 @@ export interface FileRouteTypes {
     | '/book/shop/$shopSlug'
     | '/bookings/$bookingId/reschedule'
     | '/_authenticated/admin/'
+    | '/_authenticated/admin/salons/$id'
     | '/_authenticated/admin/salons/new'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -462,17 +475,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSalonsNewRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/salons/$id': {
+      id: '/_authenticated/admin/salons/$id'
+      path: '/salons/$id'
+      fullPath: '/admin/salons/$id'
+      preLoaderRoute: typeof AuthenticatedAdminSalonsIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
   }
 }
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+  AuthenticatedAdminSalonsIdRoute: typeof AuthenticatedAdminSalonsIdRoute
   AuthenticatedAdminSalonsNewRoute: typeof AuthenticatedAdminSalonsNewRoute
   AuthenticatedAdminSalonsIndexRoute: typeof AuthenticatedAdminSalonsIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  AuthenticatedAdminSalonsIdRoute: AuthenticatedAdminSalonsIdRoute,
   AuthenticatedAdminSalonsNewRoute: AuthenticatedAdminSalonsNewRoute,
   AuthenticatedAdminSalonsIndexRoute: AuthenticatedAdminSalonsIndexRoute,
 }

@@ -20,7 +20,7 @@ function SalonDetailPage() {
 
   useEffect(() => { if (data?.shop) setForm({ ...data.shop }); }, [data]);
 
-  if (isLoading || !data || !form) return <div className="text-muted-foreground">Loading…</div>;
+  if (isLoading || !data || !data.shop || !form) return <div className="text-muted-foreground">Loading…</div>;
 
   async function save() {
     setSaving(true);
