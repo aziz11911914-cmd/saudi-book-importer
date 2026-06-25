@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -103,7 +103,18 @@ function ShopBookPage() {
     });
   }, [service, search.date, availability, slotBarberId]);
 
-  const stepIdx = STEPS.indexOf(search.step as Step);
+  // Capture entry context: hide steps the customer has already completed at
+  // the entry point (e.g. they picked a specific service on the salon page).
+  const entryHadService = useRef<boolean>(!!search.service);
+  const entryHadBarber = useRef<boolean>(!!search.barber);
+  const visibleSteps = useMemo<readonly Step[]>(() => {
+    const base = [...STEPS];
+    const skip = new Set<Step>();
+    if (entryHadService.current) skip.add("service");
+    if (entryHadBarber.current) skip.add("barber");
+    return base.filter((s) => !skip.has(s));
+  }, []);
+  const stepIdx = visibleSteps.indexOf(search.step as Step);
 
   function setStep(next: Step, extra: Partial<typeof search> = {}) {
     navigate({ search: (s: typeof search) => ({ ...s, ...extra, step: next }), params: { shopSlug } });
