@@ -122,6 +122,8 @@ function BookPage() {
     const endISO = new Date(
       new Date(startISO).getTime() + service.duration_min * 60_000,
     ).toISOString();
+    const authedName = profile ? displayName(profile, "") : "";
+    const authedPhone = profile?.phone ?? "";
     const booking = createBooking({
       barber_id: barber.id,
       shop_id: barber.shop.id,
@@ -130,8 +132,8 @@ function BookPage() {
       ends_at: endISO,
       price_sar: Number(service.price_sar),
       notes: notes || null,
-      customer_name: name || null,
-      customer_phone: phone || null,
+      customer_name: (session?.user ? authedName : name) || null,
+      customer_phone: (session?.user ? authedPhone : phone) || null,
       snapshot: {
         barber_name_en: barber.display_name_en,
         barber_name_ar: barber.display_name_ar,
