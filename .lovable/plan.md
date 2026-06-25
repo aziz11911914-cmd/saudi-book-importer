@@ -1,75 +1,63 @@
-## Super Admin Platform — Implementation Plan
+## Owner Dashboard — Phased Build Plan
 
-### 1. What already exists
+The specification is ~4,000 lines covering 8 major sections (Dashboard, Salon Management, Services, Barbers, Bookings & Calendar, Customers & Reviews, Analytics, Settings). Building all of it in one turn would be irresponsible — each section is itself a multi-page module touching dozens of tables, RLS policies, and UI flows. I will deliver it section by section, verifying each before moving on, exactly as the spec requires.
 
-**Auth & roles**
-- Email OTP authentication (`auth-otp.functions.ts`, `auth.tsx`) — keep as-is.
-- `profiles` table, `user_roles` table, `app_role` enum, `has_role()` SECURITY DEFINER function.
-- `AuthProvider` exposes `roles`.
-- Existing enum values: `customer`, `barber`, `manager`, `admin`.
+### Foundation (built once, used by every section)
 
-**Domain tables**
-- `shops` (with `manager_id`, `status`, `featured`, ratings, location).
-- `barbers`, `barber_services`, `barber_availability`, `barber_time_off`, `barber_specialties`.
-- `services`, `shop_hours`, `shop_photos`.
-- `bookings` (with `booking_ref`, status enum, customer/shop/barber/service).
-- `reviews`, `favorites`, `portfolio_photos`, `portfolio_photo_specialties`, `specialties`.
-- `invites` table (email/role/shop_id/token/expires_at) — partially built.
+1. **Owner shell & routing**
+   - New protected layout `src/routes/_authenticated/owner.tsx` with sidebar (Dashboard, Bookings, Calendar, Customers, Barbers, Services, Portfolio, Reviews, Analytics, Salon, Settings, Support, Logout).
+   - `role-routing` already sends owners to `/owner`; extend it to `/owner` as the new dashboard home.
+   - Header: greeting, salon name, date/time, last sync, notifications, profile menu.
+   - Route guard: `requireSupabaseAuth` + `has_role(uid,'owner')`; redirect non-owners.
 
-**Customer app routes** (`/`, `/search`, `/shops/$slug`, `/barbers/...`, `/book/...`, `/bookings/...`, `/favorites`, `/auth`, `/_authenticated/profile|settings`).
+2. **Owner data layer (`src/lib/owner.functions.ts`)**
+   - All reads/writes go through `createServerFn` + `requireSupabaseAuth`.
+   - Helper `getOwnerShopId(userId)` reused everywhere — every query is scoped to that shop.
+   - RLS audit: confirm `shops`, `barbers`, `bookings`, `services`, `reviews`, `invites`, `shop_hours`, `portfolio_photos`, `notifications` policies allow owner access only when `manager_id = auth.uid()`. Add missing policies via migration if needed.
 
-### 2. What is missing
+### Section 1 — Dashboard (this turn's deliverable)
 
-**Database**
-- `app_role` enum has `admin`/`manager`; spec uses `super_admin`/`owner`. Need to decide: rename vs. alias.
-- No `audit_logs` table.
-- No `notifications` table (in-app + email log only).
-- No `platform_settings` table (general / booking / auth / notifications / maintenance).
-- `profiles` missing `status` (active/suspended), `last_login_at`, `nationality`, `language`, `notes`.
-- `shops` missing `whatsapp`, `website`, `email`, `booking_enabled`, `walkin_enabled`, `accept_reviews`, `max_booking_window`, `booking_interval`, `logo_url`.
-- `bookings` missing `no_show_at` / grace-period handling at DB level.
-- No DB trigger to seed the initial super admin (`abdulazizalodan1@gmail.com`).
+Route: `/_authenticated/owner/index.tsx`
 
-**Backend (server functions)**
-- Admin-scoped server fns (list/create/update/suspend salons, owners, barbers, customers, bookings, reviews).
-- Owner-scoped server fns (own salon only).
-- Barber-scoped server fns (self only).
-- Invitation send/accept tied to OTP login.
-- Audit logging middleware/helper.
-- Dashboard metrics aggregation fn.
-- Global admin search fn.
+- **KPI cards** (live SQL):
+  1. Today's Bookings + delta vs yesterday
+  2. Occupancy rate = booked-minutes / available-minutes today
+  3. Available barbers breakdown (Working / Busy / Break / Off)
+  4. Pending reviews (no owner reply)
+  5. New customers this week (distinct customer_id first booked in last 7d)
+  6. Revenue — placeholder card marked "Coming soon" (architecture only)
+- **Today's Schedule** timeline with status chips; click opens `BookingDrawer` (no navigation) showing customer, phone, service, duration, price, barber, notes, status, quick actions (confirm / cancel / no-show / reschedule).
+- **Quick Actions** bar: Create Booking, Invite Barber, Add Service, Edit Salon, Open Calendar.
+- **Recent Activity** from `audit_logs` filtered to this shop.
+- **Pending Invitations** list (copy link, resend, cancel) from `invites`.
+- **Recent Reviews** with Reply button (opens drawer).
+- **Barber Status** cards (photo, name, status, current booking, today's count).
+- **Today Performance**: Completed / Upcoming / Cancelled / No-show / Avg rating.
+- Auto-refresh: TanStack Query `refetchInterval: 30s` + Supabase realtime channel on `bookings` invalidating queries.
 
-**Frontend routes & layouts**
-- `/admin/*` Super Admin shell (sidebar, topbar, global search, +Create menu).
-- `/owner/*` Owner shell (own salon only).
-- `/barber/*` Barber shell (self only).
-- `/access-denied` page.
-- Post-login role-based redirect.
-- All admin pages: Dashboard, Salons (list/detail/create/edit), Owners, Barbers, Customers, Bookings, Reviews, Reports, Notifications, Settings, Audit Logs, Profile.
+Verification checklist before Section 2:
+- All KPIs read real data — no mocks.
+- RLS denies access when signed in as another owner.
+- Sidebar navigation renders; non-owner roles get redirected.
+- Mobile (375px), tablet, desktop layouts pass visual check via Playwright screenshot.
+- No console errors; build & typecheck pass.
 
-### 3. Implementation order
+### Sections 2–8 (subsequent turns, one per turn)
 
-1. **DB migration #1 — roles & profile fields**: extend `app_role` enum with `super_admin`, `owner` (keep old values as aliases via mapping), add `status`/`last_login_at`/`nationality`/`language`/`notes` on profiles, seed initial super admin role on signup trigger for `abdulazizalodan1@gmail.com`.
-2. **DB migration #2 — admin tables**: `audit_logs`, `notifications`, `platform_settings` (singleton row), missing `shops` columns. Full GRANTs + RLS using `has_role(auth.uid(),'super_admin')`.
-3. **Server functions**: `admin.functions.ts` (metrics, salons, owners, barbers, customers, bookings, reviews, settings, audit, search), `owner.functions.ts`, `barber.functions.ts`, `invites.functions.ts`. All gated by `requireSupabaseAuth` + role check; every write emits an audit log.
-4. **Shared admin UI**: `AdminLayout` (sidebar + topbar + global search + Create menu), `DataTable`, `StatCard`, `ConfirmDialog`, `AccessDenied`.
-5. **Routes — `_authenticated/admin/*`**: dashboard, salons (index/$id/new), owners, barbers, customers, bookings, reviews, reports, notifications, settings, audit-logs. Each route's loader calls a `requireSupabaseAuth`+super_admin server fn.
-6. **Routes — `_authenticated/owner/*`** and **`_authenticated/barber/*`** shells with own-scope queries.
-7. **Post-login redirect**: update `/auth` success handler → route by highest role (super_admin → `/admin`, owner → `/owner`, barber → `/barber`, else `/`).
-8. **Invitation flow**: Super Admin creates Owner/Barber → `invites` row + invitation email with magic link to `/auth?email=…` → existing OTP completes login → on first sign-in, link profile to role+shop from invite token.
-9. **i18n**: add AR/EN strings for all new admin surfaces.
-10. **Verification**: Playwright smoke test of super admin login, create salon→owner→barber, owner login sees only own salon, barber login sees only self, customer login unchanged.
+Each will land as its own approved scope with the same verification gate:
 
-### 4. Open questions before I start
+2. **Salon Management** — 10 sub-sections, image uploads (needs new `salon-media` storage bucket), auto-save, working hours, holidays, visibility, danger zone.
+3. **Services** — categories table (new migration), services CRUD with image, barber assignment matrix, bulk actions, analytics rollups.
+4. **Barbers & Team** — invitation flow (reuses existing `invites`), profiles, working hours, vacations, assigned services, portfolio uploads, performance.
+5. **Bookings & Calendar** — list + day/week/month calendar, drag-to-reschedule, conflict detection, status transitions.
+6. **Customers & Reviews** — customer list scoped to owner's bookings, review replies, customer detail drawer.
+7. **Analytics** — charts (Recharts) for bookings, revenue placeholders, top services, top barbers, retention.
+8. **Settings** — notifications, locale, team permissions stub, support contact.
 
-1. **Role enum naming.** Existing DB uses `admin` and `manager`. Spec uses `super_admin` and `owner`. Three options:
-   (a) Add `super_admin` + `owner` to the enum and migrate existing rows (cleanest, matches spec).
-   (b) Keep `admin`/`manager` and treat them as aliases in app code.
-   (c) Add the new values and keep the old as deprecated synonyms during transition.
-   I recommend (a). Confirm?
-2. **Initial super admin.** Auto-grant `super_admin` to `abdulazizalodan1@gmail.com` once (in the signup trigger) and never again, so the email is not hardcoded for runtime permission checks — OK?
-3. **Owner & Barber dashboards.** Spec says post-login owners go to `/owner` and barbers to `/barber`. Should I build full Owner/Barber dashboards now, or only the shell + access guard in this round and focus depth on Super Admin (which is what the spec title emphasizes)?
-4. **Notifications channel.** Build in-app notifications table + email via existing Lovable email queue? Push is explicitly future.
-5. **Audit log scope.** Log every admin write (create/update/suspend/delete on salons/owners/barbers/customers/reviews/settings) — confirm that's the desired granularity (no read logging)?
+### Open questions before I start Section 1
 
-Once you answer these, I'll execute steps 1→10 in order. The first user-visible deliverable will be the Super Admin shell + Dashboard + Salons module, then Owners/Barbers/Customers/Bookings, then Reviews/Reports/Settings/Audit Logs.
+1. **Revenue card** — the spec says "future-ready, do not calculate payments yet." Confirm: render a card with "Coming soon" badge and no number? (My default.)
+2. **Realtime** — Supabase realtime adds load. OK to use Postgres changes channel on `bookings`/`reviews`/`invites` scoped to the owner's shop, fallback to 30s polling?
+3. **Notifications icon** — should it open a panel reading from the existing `notifications` table, or just route to `/owner/notifications` for now?
+
+I'll proceed with sensible defaults (Coming-soon revenue, realtime + polling, notification icon → panel reading `notifications`) unless you say otherwise. Approve this plan and I'll ship Section 1.

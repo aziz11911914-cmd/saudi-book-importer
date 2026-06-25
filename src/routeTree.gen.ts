@@ -26,9 +26,21 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedOwnerRouteImport } from './routes/_authenticated/owner'
 import { Route as AuthenticatedBarberRouteImport } from './routes/_authenticated/barber'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedOwnerIndexRouteImport } from './routes/_authenticated/owner.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as BookingsBookingIdRescheduleRouteImport } from './routes/bookings.$bookingId.reschedule'
 import { Route as BookShopShopSlugRouteImport } from './routes/book.shop.$shopSlug'
+import { Route as AuthenticatedOwnerSupportRouteImport } from './routes/_authenticated/owner.support'
+import { Route as AuthenticatedOwnerSettingsRouteImport } from './routes/_authenticated/owner.settings'
+import { Route as AuthenticatedOwnerServicesRouteImport } from './routes/_authenticated/owner.services'
+import { Route as AuthenticatedOwnerSalonRouteImport } from './routes/_authenticated/owner.salon'
+import { Route as AuthenticatedOwnerReviewsRouteImport } from './routes/_authenticated/owner.reviews'
+import { Route as AuthenticatedOwnerPortfolioRouteImport } from './routes/_authenticated/owner.portfolio'
+import { Route as AuthenticatedOwnerCustomersRouteImport } from './routes/_authenticated/owner.customers'
+import { Route as AuthenticatedOwnerCalendarRouteImport } from './routes/_authenticated/owner.calendar'
+import { Route as AuthenticatedOwnerBookingsRouteImport } from './routes/_authenticated/owner.bookings'
+import { Route as AuthenticatedOwnerBarbersRouteImport } from './routes/_authenticated/owner.barbers'
+import { Route as AuthenticatedOwnerAnalyticsRouteImport } from './routes/_authenticated/owner.analytics'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
 import { Route as AuthenticatedAdminReviewsRouteImport } from './routes/_authenticated/admin.reviews'
 import { Route as AuthenticatedAdminReportsRouteImport } from './routes/_authenticated/admin.reports'
@@ -134,6 +146,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOwnerIndexRoute = AuthenticatedOwnerIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedOwnerRoute,
+} as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -150,6 +167,71 @@ const BookShopShopSlugRoute = BookShopShopSlugRouteImport.update({
   path: '/book/shop/$shopSlug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedOwnerSupportRoute =
+  AuthenticatedOwnerSupportRouteImport.update({
+    id: '/support',
+    path: '/support',
+    getParentRoute: () => AuthenticatedOwnerRoute,
+  } as any)
+const AuthenticatedOwnerSettingsRoute =
+  AuthenticatedOwnerSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedOwnerRoute,
+  } as any)
+const AuthenticatedOwnerServicesRoute =
+  AuthenticatedOwnerServicesRouteImport.update({
+    id: '/services',
+    path: '/services',
+    getParentRoute: () => AuthenticatedOwnerRoute,
+  } as any)
+const AuthenticatedOwnerSalonRoute = AuthenticatedOwnerSalonRouteImport.update({
+  id: '/salon',
+  path: '/salon',
+  getParentRoute: () => AuthenticatedOwnerRoute,
+} as any)
+const AuthenticatedOwnerReviewsRoute =
+  AuthenticatedOwnerReviewsRouteImport.update({
+    id: '/reviews',
+    path: '/reviews',
+    getParentRoute: () => AuthenticatedOwnerRoute,
+  } as any)
+const AuthenticatedOwnerPortfolioRoute =
+  AuthenticatedOwnerPortfolioRouteImport.update({
+    id: '/portfolio',
+    path: '/portfolio',
+    getParentRoute: () => AuthenticatedOwnerRoute,
+  } as any)
+const AuthenticatedOwnerCustomersRoute =
+  AuthenticatedOwnerCustomersRouteImport.update({
+    id: '/customers',
+    path: '/customers',
+    getParentRoute: () => AuthenticatedOwnerRoute,
+  } as any)
+const AuthenticatedOwnerCalendarRoute =
+  AuthenticatedOwnerCalendarRouteImport.update({
+    id: '/calendar',
+    path: '/calendar',
+    getParentRoute: () => AuthenticatedOwnerRoute,
+  } as any)
+const AuthenticatedOwnerBookingsRoute =
+  AuthenticatedOwnerBookingsRouteImport.update({
+    id: '/bookings',
+    path: '/bookings',
+    getParentRoute: () => AuthenticatedOwnerRoute,
+  } as any)
+const AuthenticatedOwnerBarbersRoute =
+  AuthenticatedOwnerBarbersRouteImport.update({
+    id: '/barbers',
+    path: '/barbers',
+    getParentRoute: () => AuthenticatedOwnerRoute,
+  } as any)
+const AuthenticatedOwnerAnalyticsRoute =
+  AuthenticatedOwnerAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => AuthenticatedOwnerRoute,
+  } as any)
 const AuthenticatedAdminSettingsRoute =
   AuthenticatedAdminSettingsRouteImport.update({
     id: '/settings',
@@ -275,7 +357,7 @@ export interface FileRoutesByFullPath {
   '/search': typeof SearchRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/barber': typeof AuthenticatedBarberRoute
-  '/owner': typeof AuthenticatedOwnerRoute
+  '/owner': typeof AuthenticatedOwnerRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/barbers/$barberId': typeof BarbersBarberIdRoute
@@ -292,9 +374,21 @@ export interface FileRoutesByFullPath {
   '/admin/reports': typeof AuthenticatedAdminReportsRoute
   '/admin/reviews': typeof AuthenticatedAdminReviewsRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/owner/analytics': typeof AuthenticatedOwnerAnalyticsRoute
+  '/owner/barbers': typeof AuthenticatedOwnerBarbersRoute
+  '/owner/bookings': typeof AuthenticatedOwnerBookingsRoute
+  '/owner/calendar': typeof AuthenticatedOwnerCalendarRoute
+  '/owner/customers': typeof AuthenticatedOwnerCustomersRoute
+  '/owner/portfolio': typeof AuthenticatedOwnerPortfolioRoute
+  '/owner/reviews': typeof AuthenticatedOwnerReviewsRoute
+  '/owner/salon': typeof AuthenticatedOwnerSalonRoute
+  '/owner/services': typeof AuthenticatedOwnerServicesRoute
+  '/owner/settings': typeof AuthenticatedOwnerSettingsRoute
+  '/owner/support': typeof AuthenticatedOwnerSupportRoute
   '/book/shop/$shopSlug': typeof BookShopShopSlugRoute
   '/bookings/$bookingId/reschedule': typeof BookingsBookingIdRescheduleRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/owner/': typeof AuthenticatedOwnerIndexRoute
   '/admin/barbers/$id': typeof AuthenticatedAdminBarbersIdRoute
   '/admin/barbers/new': typeof AuthenticatedAdminBarbersNewRoute
   '/admin/customers/$id': typeof AuthenticatedAdminCustomersIdRoute
@@ -315,7 +409,6 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/search': typeof SearchRoute
   '/barber': typeof AuthenticatedBarberRoute
-  '/owner': typeof AuthenticatedOwnerRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/barbers/$barberId': typeof BarbersBarberIdRoute
@@ -332,9 +425,21 @@ export interface FileRoutesByTo {
   '/admin/reports': typeof AuthenticatedAdminReportsRoute
   '/admin/reviews': typeof AuthenticatedAdminReviewsRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/owner/analytics': typeof AuthenticatedOwnerAnalyticsRoute
+  '/owner/barbers': typeof AuthenticatedOwnerBarbersRoute
+  '/owner/bookings': typeof AuthenticatedOwnerBookingsRoute
+  '/owner/calendar': typeof AuthenticatedOwnerCalendarRoute
+  '/owner/customers': typeof AuthenticatedOwnerCustomersRoute
+  '/owner/portfolio': typeof AuthenticatedOwnerPortfolioRoute
+  '/owner/reviews': typeof AuthenticatedOwnerReviewsRoute
+  '/owner/salon': typeof AuthenticatedOwnerSalonRoute
+  '/owner/services': typeof AuthenticatedOwnerServicesRoute
+  '/owner/settings': typeof AuthenticatedOwnerSettingsRoute
+  '/owner/support': typeof AuthenticatedOwnerSupportRoute
   '/book/shop/$shopSlug': typeof BookShopShopSlugRoute
   '/bookings/$bookingId/reschedule': typeof BookingsBookingIdRescheduleRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/owner': typeof AuthenticatedOwnerIndexRoute
   '/admin/barbers/$id': typeof AuthenticatedAdminBarbersIdRoute
   '/admin/barbers/new': typeof AuthenticatedAdminBarbersNewRoute
   '/admin/customers/$id': typeof AuthenticatedAdminCustomersIdRoute
@@ -358,7 +463,7 @@ export interface FileRoutesById {
   '/search': typeof SearchRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/barber': typeof AuthenticatedBarberRoute
-  '/_authenticated/owner': typeof AuthenticatedOwnerRoute
+  '/_authenticated/owner': typeof AuthenticatedOwnerRouteWithChildren
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/barbers/$barberId': typeof BarbersBarberIdRoute
@@ -375,9 +480,21 @@ export interface FileRoutesById {
   '/_authenticated/admin/reports': typeof AuthenticatedAdminReportsRoute
   '/_authenticated/admin/reviews': typeof AuthenticatedAdminReviewsRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/_authenticated/owner/analytics': typeof AuthenticatedOwnerAnalyticsRoute
+  '/_authenticated/owner/barbers': typeof AuthenticatedOwnerBarbersRoute
+  '/_authenticated/owner/bookings': typeof AuthenticatedOwnerBookingsRoute
+  '/_authenticated/owner/calendar': typeof AuthenticatedOwnerCalendarRoute
+  '/_authenticated/owner/customers': typeof AuthenticatedOwnerCustomersRoute
+  '/_authenticated/owner/portfolio': typeof AuthenticatedOwnerPortfolioRoute
+  '/_authenticated/owner/reviews': typeof AuthenticatedOwnerReviewsRoute
+  '/_authenticated/owner/salon': typeof AuthenticatedOwnerSalonRoute
+  '/_authenticated/owner/services': typeof AuthenticatedOwnerServicesRoute
+  '/_authenticated/owner/settings': typeof AuthenticatedOwnerSettingsRoute
+  '/_authenticated/owner/support': typeof AuthenticatedOwnerSupportRoute
   '/book/shop/$shopSlug': typeof BookShopShopSlugRoute
   '/bookings/$bookingId/reschedule': typeof BookingsBookingIdRescheduleRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/owner/': typeof AuthenticatedOwnerIndexRoute
   '/_authenticated/admin/barbers/$id': typeof AuthenticatedAdminBarbersIdRoute
   '/_authenticated/admin/barbers/new': typeof AuthenticatedAdminBarbersNewRoute
   '/_authenticated/admin/customers/$id': typeof AuthenticatedAdminCustomersIdRoute
@@ -418,9 +535,21 @@ export interface FileRouteTypes {
     | '/admin/reports'
     | '/admin/reviews'
     | '/admin/settings'
+    | '/owner/analytics'
+    | '/owner/barbers'
+    | '/owner/bookings'
+    | '/owner/calendar'
+    | '/owner/customers'
+    | '/owner/portfolio'
+    | '/owner/reviews'
+    | '/owner/salon'
+    | '/owner/services'
+    | '/owner/settings'
+    | '/owner/support'
     | '/book/shop/$shopSlug'
     | '/bookings/$bookingId/reschedule'
     | '/admin/'
+    | '/owner/'
     | '/admin/barbers/$id'
     | '/admin/barbers/new'
     | '/admin/customers/$id'
@@ -441,7 +570,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/search'
     | '/barber'
-    | '/owner'
     | '/profile'
     | '/settings'
     | '/barbers/$barberId'
@@ -458,9 +586,21 @@ export interface FileRouteTypes {
     | '/admin/reports'
     | '/admin/reviews'
     | '/admin/settings'
+    | '/owner/analytics'
+    | '/owner/barbers'
+    | '/owner/bookings'
+    | '/owner/calendar'
+    | '/owner/customers'
+    | '/owner/portfolio'
+    | '/owner/reviews'
+    | '/owner/salon'
+    | '/owner/services'
+    | '/owner/settings'
+    | '/owner/support'
     | '/book/shop/$shopSlug'
     | '/bookings/$bookingId/reschedule'
     | '/admin'
+    | '/owner'
     | '/admin/barbers/$id'
     | '/admin/barbers/new'
     | '/admin/customers/$id'
@@ -500,9 +640,21 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/reports'
     | '/_authenticated/admin/reviews'
     | '/_authenticated/admin/settings'
+    | '/_authenticated/owner/analytics'
+    | '/_authenticated/owner/barbers'
+    | '/_authenticated/owner/bookings'
+    | '/_authenticated/owner/calendar'
+    | '/_authenticated/owner/customers'
+    | '/_authenticated/owner/portfolio'
+    | '/_authenticated/owner/reviews'
+    | '/_authenticated/owner/salon'
+    | '/_authenticated/owner/services'
+    | '/_authenticated/owner/settings'
+    | '/_authenticated/owner/support'
     | '/book/shop/$shopSlug'
     | '/bookings/$bookingId/reschedule'
     | '/_authenticated/admin/'
+    | '/_authenticated/owner/'
     | '/_authenticated/admin/barbers/$id'
     | '/_authenticated/admin/barbers/new'
     | '/_authenticated/admin/customers/$id'
@@ -659,6 +811,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/owner/': {
+      id: '/_authenticated/owner/'
+      path: '/'
+      fullPath: '/owner/'
+      preLoaderRoute: typeof AuthenticatedOwnerIndexRouteImport
+      parentRoute: typeof AuthenticatedOwnerRoute
+    }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
       path: '/'
@@ -679,6 +838,83 @@ declare module '@tanstack/react-router' {
       fullPath: '/book/shop/$shopSlug'
       preLoaderRoute: typeof BookShopShopSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/owner/support': {
+      id: '/_authenticated/owner/support'
+      path: '/support'
+      fullPath: '/owner/support'
+      preLoaderRoute: typeof AuthenticatedOwnerSupportRouteImport
+      parentRoute: typeof AuthenticatedOwnerRoute
+    }
+    '/_authenticated/owner/settings': {
+      id: '/_authenticated/owner/settings'
+      path: '/settings'
+      fullPath: '/owner/settings'
+      preLoaderRoute: typeof AuthenticatedOwnerSettingsRouteImport
+      parentRoute: typeof AuthenticatedOwnerRoute
+    }
+    '/_authenticated/owner/services': {
+      id: '/_authenticated/owner/services'
+      path: '/services'
+      fullPath: '/owner/services'
+      preLoaderRoute: typeof AuthenticatedOwnerServicesRouteImport
+      parentRoute: typeof AuthenticatedOwnerRoute
+    }
+    '/_authenticated/owner/salon': {
+      id: '/_authenticated/owner/salon'
+      path: '/salon'
+      fullPath: '/owner/salon'
+      preLoaderRoute: typeof AuthenticatedOwnerSalonRouteImport
+      parentRoute: typeof AuthenticatedOwnerRoute
+    }
+    '/_authenticated/owner/reviews': {
+      id: '/_authenticated/owner/reviews'
+      path: '/reviews'
+      fullPath: '/owner/reviews'
+      preLoaderRoute: typeof AuthenticatedOwnerReviewsRouteImport
+      parentRoute: typeof AuthenticatedOwnerRoute
+    }
+    '/_authenticated/owner/portfolio': {
+      id: '/_authenticated/owner/portfolio'
+      path: '/portfolio'
+      fullPath: '/owner/portfolio'
+      preLoaderRoute: typeof AuthenticatedOwnerPortfolioRouteImport
+      parentRoute: typeof AuthenticatedOwnerRoute
+    }
+    '/_authenticated/owner/customers': {
+      id: '/_authenticated/owner/customers'
+      path: '/customers'
+      fullPath: '/owner/customers'
+      preLoaderRoute: typeof AuthenticatedOwnerCustomersRouteImport
+      parentRoute: typeof AuthenticatedOwnerRoute
+    }
+    '/_authenticated/owner/calendar': {
+      id: '/_authenticated/owner/calendar'
+      path: '/calendar'
+      fullPath: '/owner/calendar'
+      preLoaderRoute: typeof AuthenticatedOwnerCalendarRouteImport
+      parentRoute: typeof AuthenticatedOwnerRoute
+    }
+    '/_authenticated/owner/bookings': {
+      id: '/_authenticated/owner/bookings'
+      path: '/bookings'
+      fullPath: '/owner/bookings'
+      preLoaderRoute: typeof AuthenticatedOwnerBookingsRouteImport
+      parentRoute: typeof AuthenticatedOwnerRoute
+    }
+    '/_authenticated/owner/barbers': {
+      id: '/_authenticated/owner/barbers'
+      path: '/barbers'
+      fullPath: '/owner/barbers'
+      preLoaderRoute: typeof AuthenticatedOwnerBarbersRouteImport
+      parentRoute: typeof AuthenticatedOwnerRoute
+    }
+    '/_authenticated/owner/analytics': {
+      id: '/_authenticated/owner/analytics'
+      path: '/analytics'
+      fullPath: '/owner/analytics'
+      preLoaderRoute: typeof AuthenticatedOwnerAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedOwnerRoute
     }
     '/_authenticated/admin/settings': {
       id: '/_authenticated/admin/settings'
@@ -868,10 +1104,43 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
 const AuthenticatedAdminRouteWithChildren =
   AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
 
+interface AuthenticatedOwnerRouteChildren {
+  AuthenticatedOwnerAnalyticsRoute: typeof AuthenticatedOwnerAnalyticsRoute
+  AuthenticatedOwnerBarbersRoute: typeof AuthenticatedOwnerBarbersRoute
+  AuthenticatedOwnerBookingsRoute: typeof AuthenticatedOwnerBookingsRoute
+  AuthenticatedOwnerCalendarRoute: typeof AuthenticatedOwnerCalendarRoute
+  AuthenticatedOwnerCustomersRoute: typeof AuthenticatedOwnerCustomersRoute
+  AuthenticatedOwnerPortfolioRoute: typeof AuthenticatedOwnerPortfolioRoute
+  AuthenticatedOwnerReviewsRoute: typeof AuthenticatedOwnerReviewsRoute
+  AuthenticatedOwnerSalonRoute: typeof AuthenticatedOwnerSalonRoute
+  AuthenticatedOwnerServicesRoute: typeof AuthenticatedOwnerServicesRoute
+  AuthenticatedOwnerSettingsRoute: typeof AuthenticatedOwnerSettingsRoute
+  AuthenticatedOwnerSupportRoute: typeof AuthenticatedOwnerSupportRoute
+  AuthenticatedOwnerIndexRoute: typeof AuthenticatedOwnerIndexRoute
+}
+
+const AuthenticatedOwnerRouteChildren: AuthenticatedOwnerRouteChildren = {
+  AuthenticatedOwnerAnalyticsRoute: AuthenticatedOwnerAnalyticsRoute,
+  AuthenticatedOwnerBarbersRoute: AuthenticatedOwnerBarbersRoute,
+  AuthenticatedOwnerBookingsRoute: AuthenticatedOwnerBookingsRoute,
+  AuthenticatedOwnerCalendarRoute: AuthenticatedOwnerCalendarRoute,
+  AuthenticatedOwnerCustomersRoute: AuthenticatedOwnerCustomersRoute,
+  AuthenticatedOwnerPortfolioRoute: AuthenticatedOwnerPortfolioRoute,
+  AuthenticatedOwnerReviewsRoute: AuthenticatedOwnerReviewsRoute,
+  AuthenticatedOwnerSalonRoute: AuthenticatedOwnerSalonRoute,
+  AuthenticatedOwnerServicesRoute: AuthenticatedOwnerServicesRoute,
+  AuthenticatedOwnerSettingsRoute: AuthenticatedOwnerSettingsRoute,
+  AuthenticatedOwnerSupportRoute: AuthenticatedOwnerSupportRoute,
+  AuthenticatedOwnerIndexRoute: AuthenticatedOwnerIndexRoute,
+}
+
+const AuthenticatedOwnerRouteWithChildren =
+  AuthenticatedOwnerRoute._addFileChildren(AuthenticatedOwnerRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedBarberRoute: typeof AuthenticatedBarberRoute
-  AuthenticatedOwnerRoute: typeof AuthenticatedOwnerRoute
+  AuthenticatedOwnerRoute: typeof AuthenticatedOwnerRouteWithChildren
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
 }
@@ -879,7 +1148,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedBarberRoute: AuthenticatedBarberRoute,
-  AuthenticatedOwnerRoute: AuthenticatedOwnerRoute,
+  AuthenticatedOwnerRoute: AuthenticatedOwnerRouteWithChildren,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
 }
