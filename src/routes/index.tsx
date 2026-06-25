@@ -28,7 +28,17 @@ function HomePage() {
   const { lng, rtl, t: tt } = useLocale();
   const ArrowEnd = rtl ? ArrowLeft : ArrowRight;
   const navigate = useNavigate({ from: "/" });
+  const { ready, roles } = useAuth();
   const [searchDraft, setSearchDraft] = useState("");
+
+  // Session restoration: non-customer roles always land on their workspace.
+  useEffect(() => {
+    if (!ready) return;
+    const home = homeForRoles(roles);
+    if (home !== "/") navigate({ to: home, replace: true });
+  }, [ready, roles, navigate]);
+
+
 
   function submitSearch(e: React.FormEvent) {
     e.preventDefault();
