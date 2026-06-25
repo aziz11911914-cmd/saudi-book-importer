@@ -169,8 +169,9 @@ export function PortfolioLightbox({
             search={
               {
                 photo: photo.id,
-                step: "date",
-                ...(photo.service_id ? { service: photo.service_id } : {}),
+                ...(photo.service_id
+                  ? { service: photo.service_id, step: "date" }
+                  : { step: "service" }),
               } as never
             }
             onClick={onClose}
