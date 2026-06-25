@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  getOwnerDashboard, setBookingStatus, cancelInvite, resendInvite,
+  getOwnerDashboard, setBookingStatus, cancelInvite, resendInvite, inviteBarberFromOwner,
 } from "@/lib/owner.functions";
 import { cn } from "@/lib/utils";
 
