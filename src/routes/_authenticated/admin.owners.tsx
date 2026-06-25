@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -16,7 +16,10 @@ function OwnersPage() {
 
   return (
     <div className="space-y-4">
-      <div><h1 className="font-display text-3xl">Owners</h1><p className="text-sm text-muted-foreground">Salon owners and their assignments.</p></div>
+      <div className="flex items-end justify-between gap-3">
+        <div><h1 className="font-display text-3xl">Owners</h1><p className="text-sm text-muted-foreground">Salon owners and their assignments.</p></div>
+        <Link to="/admin/owners/new" className="rounded-full bg-gold px-4 py-2 text-sm font-semibold text-primary-foreground">+ Invite Owner</Link>
+      </div>
       <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search…" className="w-full max-w-md rounded-full border border-hairline bg-surface px-4 py-2 text-sm outline-none focus:border-gold/60" />
       <div className="overflow-x-auto rounded-2xl border border-hairline bg-surface">
         <table className="w-full text-sm">
@@ -25,10 +28,10 @@ function OwnersPage() {
           </thead>
           <tbody>
             {isLoading && <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Loading…</td></tr>}
-            {!isLoading && (data?.length ?? 0) === 0 && <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No owners yet.</td></tr>}
+            {!isLoading && (data?.length ?? 0) === 0 && <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No owners yet. Use “Invite Owner” to add one.</td></tr>}
             {(data ?? []).map((o: any) => (
               <tr key={o.id} className="border-t border-hairline/40">
-                <td className="px-4 py-3">{o.full_name || `${o.first_name ?? ""} ${o.last_name ?? ""}`}</td>
+                <td className="px-4 py-3"><Link to="/admin/owners/$id" params={{ id: o.id }} className="hover:underline">{o.full_name || `${o.first_name ?? ""} ${o.last_name ?? ""}`.trim() || o.email}</Link></td>
                 <td className="px-4 py-3 text-muted-foreground">{o.shop?.name_en ?? "—"}</td>
                 <td className="px-4 py-3 text-muted-foreground">{o.phone ?? "—"}</td>
                 <td className="px-4 py-3 text-muted-foreground">{o.email}</td>
@@ -42,7 +45,7 @@ function OwnersPage() {
           </tbody>
         </table>
       </div>
-      <p className="text-xs text-muted-foreground">Note: To create an owner, create a Salon first and assign an existing user, or invite via the salon detail page (coming next).</p>
     </div>
   );
 }
+
