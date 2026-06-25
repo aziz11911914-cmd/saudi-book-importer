@@ -20,6 +20,7 @@ export type AuthProfile = {
   last_name: string | null;
   full_name: string | null;
   avatar_url: string | null;
+  phone: string | null;
 };
 
 type AuthState = {
@@ -44,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [{ data: p }, { data: r }] = await Promise.all([
       supabase
         .from("profiles")
-        .select("id,email,first_name,last_name,full_name,avatar_url")
+        .select("id,email,first_name,last_name,full_name,avatar_url,phone")
         .eq("id", userId)
         .maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", userId),

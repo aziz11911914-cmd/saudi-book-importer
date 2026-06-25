@@ -30,6 +30,7 @@ import {
 } from "@/lib/slots";
 import { cn } from "@/lib/utils";
 import { createBooking } from "@/lib/booking-store";
+import { useAuth, displayName } from "@/lib/auth-provider";
 
 const searchSchema = z.object({
   step: fallback(
@@ -60,9 +61,11 @@ function ShopBookPage() {
   const { t: tt, lng, rtl } = useLocale();
   const ArrowBack = rtl ? ArrowRight : ArrowLeft;
 
+  const { session, profile } = useAuth();
   const [notes, setNotes] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+
 
   const { data: shop } = useQuery({
     queryKey: ["shop", shopSlug],
@@ -124,8 +127,8 @@ function ShopBookPage() {
       ends_at: endISO,
       price_sar: Number(service.price_sar),
       notes: notes || null,
-      customer_name: name || null,
-      customer_phone: phone || null,
+      customer_name: (session?.user ? (profile ? displayName(profile, "") : "") : name) || null,
+      customer_phone: (session?.user ? (profile?.phone ?? "") : phone) || null,
       snapshot: {
         barber_name_en: barber.display_name_en,
         barber_name_ar: barber.display_name_ar,
@@ -314,6 +317,7 @@ function ShopBookPage() {
             notes={notes} setNotes={setNotes}
             name={name} setName={setName}
             phone={phone} setPhone={setPhone}
+            isAuthed={!!session?.user}
             onConfirm={confirm}
           />
         )}
@@ -418,6 +422,7 @@ function ReviewStep(props: {
   notes: string; setNotes: (v: string) => void;
   name: string; setName: (v: string) => void;
   phone: string; setPhone: (v: string) => void;
+  isAuthed: boolean;
   onConfirm: () => void;
 }) {
   const { t } = useTranslation();
@@ -450,9 +455,17 @@ function ReviewStep(props: {
         </div>
       </div>
 
+      <div className="rounded-2xl border border-gold/30 bg-gold/5 p-4 text-xs leading-relaxed text-foreground/90">
+        {t("booking.lateNotice")}
+      </div>
+
       <div className="space-y-3">
-        <Field label={t("booking.yourName")} value={props.name} onChange={props.setName} placeholder={t("booking.namePh")} />
-        <Field label={t("booking.yourPhone")} value={props.phone} onChange={props.setPhone} placeholder={t("booking.phonePh")} dir="ltr" />
+        {!props.isAuthed && (
+          <>
+            <Field label={t("booking.yourName")} value={props.name} onChange={props.setName} placeholder={t("booking.namePh")} />
+            <Field label={t("booking.yourPhone")} value={props.phone} onChange={props.setPhone} placeholder={t("booking.phonePh")} dir="ltr" />
+          </>
+        )}
         <div>
           <label className="mb-1 block text-xs uppercase tracking-[0.18em] text-muted-foreground">{t("booking.notes")}</label>
           <textarea value={props.notes} onChange={(e) => props.setNotes(e.target.value)} placeholder={t("booking.notesPh")} rows={3}

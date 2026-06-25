@@ -239,7 +239,7 @@ function ShopProfilePage() {
                 {Array.from({ length: 7 }).map((_, i) => {
                   const h = shop.shop_hours.find((x) => x.day_of_week === i);
                   const isToday = new Date().getDay() === i;
-                  const days = t("days.short", { returnObjects: true }) as string[];
+                  const days = t("days.long", { returnObjects: true }) as string[];
                   return (
                     <li
                       key={i}
@@ -249,7 +249,7 @@ function ShopProfilePage() {
                       )}
                     >
                       <span>{days[i]}</span>
-                      <span className={isToday ? "font-semibold text-gold" : ""}>
+                      <span dir="ltr" className={isToday ? "font-semibold text-gold" : ""}>
                         {h ? `${h.opens_at.slice(0, 5)} – ${h.closes_at.slice(0, 5)}` : "—"}
                       </span>
                     </li>

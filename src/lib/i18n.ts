@@ -91,6 +91,7 @@ const resources = {
       },
       days: {
         short: ["أحد", "اثن", "ثلا", "أرب", "خمس", "جمع", "سبت"],
+        long: ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"],
       },
       booking: {
         title: "احجز موعدك",
@@ -106,6 +107,7 @@ const resources = {
         back: "رجوع",
         confirm: "تأكيد الحجز",
         noSlots: "لا توجد أوقات متاحة في هذا اليوم",
+        lateNotice: "تنبيه: إذا تأخرت أكثر من 5 دقائق عن موعدك سيتم إلغاء الحجز تلقائياً وتعتبر الجلسة \"عدم حضور\".",
         pickDate: "اختر يومًا للحجز",
         pickService: "اختر خدمة للمتابعة",
         pickTime: "اختر وقتًا متاحًا",
@@ -250,6 +252,7 @@ const resources = {
       },
       days: {
         short: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+        long: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
       },
       booking: {
         title: "Book your appointment",
@@ -265,6 +268,7 @@ const resources = {
         back: "Back",
         confirm: "Confirm booking",
         noSlots: "No slots available on this day",
+        lateNotice: "Notice: if you arrive more than 5 minutes after your appointment time, the booking will be automatically cancelled and marked as a No-Show.",
         pickDate: "Choose a date to book",
         pickService: "Pick a service to continue",
         pickTime: "Pick an available time",
