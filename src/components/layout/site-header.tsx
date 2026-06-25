@@ -126,21 +126,13 @@ export function SiteHeader({ transparent = false }: { transparent?: boolean }) {
               )}
             </div>
           ) : (
-            <>
-              <Link
-                to="/auth"
-                className="inline-flex items-center gap-1.5 rounded-full border border-hairline px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-gold/40 hover:text-foreground"
-              >
-                <LogIn className="size-3.5" />
-                <span className="hidden sm:inline">{tt("Sign in", "تسجيل الدخول")}</span>
-              </Link>
-              <Link
-                to="/auth"
-                className="hidden sm:inline-flex items-center rounded-full bg-gold px-3 py-1.5 text-xs font-semibold text-primary-foreground transition-colors hover:bg-gold-glow"
-              >
-                {tt("Sign up", "إنشاء حساب")}
-              </Link>
-            </>
+            <Link
+              to="/auth"
+              className="inline-flex items-center gap-1.5 rounded-full bg-gold px-3 py-1.5 text-xs font-semibold text-primary-foreground transition-colors hover:bg-gold-glow"
+            >
+              <LogIn className="size-3.5" />
+              <span>{tt("Sign in", "تسجيل الدخول")}</span>
+            </Link>
           )}
         </div>
       </div>
