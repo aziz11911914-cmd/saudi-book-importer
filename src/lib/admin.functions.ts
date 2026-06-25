@@ -539,7 +539,7 @@ export const getProfileDetail = createServerFn({ method: "GET" })
       context.supabase.from("reviews").select("id, rating, comment, created_at, hidden_at, shop_id, shops:shop_id(name_en)").eq("customer_id", data.id).order("created_at", { ascending: false }).limit(50),
       context.supabase.from("favorites").select("id, shop_id, barber_id, created_at").eq("user_id", data.id),
       context.supabase.from("shops").select("id, name_en, name_ar, slug, status").eq("manager_id", data.id).maybeSingle(),
-      context.supabase.from("barbers").select("id, display_name_en, shop_id, status, shops:shop_id(name_en)").eq("user_id", data.id).maybeSingle(),
+      context.supabase.from("barbers").select("id, display_name_en, shop_id, status, shops:shop_id(name_en)").eq("profile_id", data.id).maybeSingle(),
     ]);
     if (profile.error) throw new Error(profile.error.message);
     return {
