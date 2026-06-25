@@ -85,7 +85,7 @@ export function AdminLayout({ requireRole = "super_admin" as "super_admin" | "ow
           })}
         </nav>
         <div className="border-t border-hairline p-3">
-          <Link to="/_authenticated/profile" className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground hover:bg-surface hover:text-foreground">
+          <Link to="/profile" className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground hover:bg-surface hover:text-foreground">
             <UserCircle className="size-4" /> {profile?.full_name || profile?.email || "Profile"}
           </Link>
           <button onClick={async () => { await signOut(); navigate({ to: "/auth", replace: true }); }} className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground hover:bg-surface hover:text-foreground">
