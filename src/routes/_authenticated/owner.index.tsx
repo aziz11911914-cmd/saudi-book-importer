@@ -546,8 +546,6 @@ function InviteBarberDrawer({ onClose, onDone }: { onClose: () => void; onDone: 
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  // delegate to existing barbers/new for richer flow if available; here we do quick create
-  const { inviteBarberFromOwner } = require("@/lib/owner.functions");
   const fn = useServerFn(inviteBarberFromOwner);
 
   async function submit(e: React.FormEvent) {
