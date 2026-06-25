@@ -17,8 +17,8 @@ function BarberHome() {
     if (!ready || !user) return;
     (async () => {
       const { data } = await supabase
-        .from("barbers").select("id, display_name_en, avatar_url, rating_avg, rating_count, status, shop_id, shops:shop_id(name_en, slug)")
-        .eq("user_id", user.id).maybeSingle();
+        .from("barbers").select("id, display_name_en, photo_url, rating_avg, rating_count, status, shop_id, shops:shop_id(name_en, slug)")
+        .eq("profile_id", user.id).maybeSingle();
       setMe(data); setLoading(false);
     })();
   }, [ready, user]);

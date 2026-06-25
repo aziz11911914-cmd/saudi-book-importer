@@ -23,6 +23,7 @@ import { Route as BarbersBarberIdRouteImport } from './routes/barbers.$barberId'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedOwnerRouteImport } from './routes/_authenticated/owner'
+import { Route as AuthenticatedBarberRouteImport } from './routes/_authenticated/barber'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as BookingsBookingIdRescheduleRouteImport } from './routes/bookings.$bookingId.reschedule'
@@ -110,6 +111,11 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
 const AuthenticatedOwnerRoute = AuthenticatedOwnerRouteImport.update({
   id: '/owner',
   path: '/owner',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedBarberRoute = AuthenticatedBarberRouteImport.update({
+  id: '/barber',
+  path: '/barber',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
@@ -227,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/search': typeof SearchRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/barber': typeof AuthenticatedBarberRoute
   '/owner': typeof AuthenticatedOwnerRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -260,6 +267,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/search': typeof SearchRoute
+  '/barber': typeof AuthenticatedBarberRoute
   '/owner': typeof AuthenticatedOwnerRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -296,6 +304,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/search': typeof SearchRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/_authenticated/barber': typeof AuthenticatedBarberRoute
   '/_authenticated/owner': typeof AuthenticatedOwnerRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -332,6 +341,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/search'
     | '/admin'
+    | '/barber'
     | '/owner'
     | '/profile'
     | '/settings'
@@ -365,6 +375,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/search'
+    | '/barber'
     | '/owner'
     | '/profile'
     | '/settings'
@@ -400,6 +411,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/search'
     | '/_authenticated/admin'
+    | '/_authenticated/barber'
     | '/_authenticated/owner'
     | '/_authenticated/profile'
     | '/_authenticated/settings'
@@ -546,6 +558,13 @@ declare module '@tanstack/react-router' {
       path: '/owner'
       fullPath: '/owner'
       preLoaderRoute: typeof AuthenticatedOwnerRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/barber': {
+      id: '/_authenticated/barber'
+      path: '/barber'
+      fullPath: '/barber'
+      preLoaderRoute: typeof AuthenticatedBarberRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin': {
@@ -721,6 +740,7 @@ const AuthenticatedAdminRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
+  AuthenticatedBarberRoute: typeof AuthenticatedBarberRoute
   AuthenticatedOwnerRoute: typeof AuthenticatedOwnerRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -728,6 +748,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
+  AuthenticatedBarberRoute: AuthenticatedBarberRoute,
   AuthenticatedOwnerRoute: AuthenticatedOwnerRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
