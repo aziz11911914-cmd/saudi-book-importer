@@ -363,7 +363,7 @@ export const updateSettings = createServerFn({ method: "POST" })
     const patch: Record<string, unknown> = {};
     patch[data.section] = data.values;
     patch.updated_by = context.userId;
-    const { error } = await context.supabase.from("platform_settings").update(patch).eq("id", 1);
+    const { error } = await context.supabase.from("platform_settings").update(patch as any).eq("id", 1);
     if (error) throw new Error(error.message);
     await audit(context.supabase, context.userId, context.claims?.email ?? null, "settings.updated", "platform_settings", "1", { section: data.section });
     return { ok: true };
