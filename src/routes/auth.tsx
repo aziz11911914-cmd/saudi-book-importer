@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 
 const search = z.object({
   redirect: z.string().optional().catch(undefined),
+  email: z.string().optional().catch(undefined),
 });
 
 export const Route = createFileRoute("/auth")({
@@ -42,13 +43,13 @@ function AuthPage() {
   const { ready, session, profile, roles, refresh } = useAuth();
   const navigate = useNavigate();
   const router = useRouter();
-  const { redirect } = useSearch({ from: "/auth" });
+  const { redirect, email: emailParam } = useSearch({ from: "/auth" });
   const Arrow = rtl ? ArrowLeft : ArrowRight;
   const requestOtp = useServerFn(sendAuthOtp);
   const verifyOtp = useServerFn(verifyAuthOtp);
 
   const [step, setStep] = useState<Step>("email");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(emailParam ?? "");
   const [code, setCode] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
