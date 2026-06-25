@@ -20,6 +20,7 @@ export type AuthProfile = {
   last_name: string | null;
   full_name: string | null;
   avatar_url: string | null;
+  phone: string | null;
 };
 
 type AuthState = {
