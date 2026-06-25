@@ -1,13 +1,14 @@
 import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, ChevronLeft, ChevronRight, Clock } from "lucide-react";
 import { z } from "zod";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { SiteHeader } from "@/components/layout/site-header";
 import logoUrl from "@/assets/qassah-logo.png";
 import { useLocale } from "@/lib/locale-provider";
+import { useAuth, displayName } from "@/lib/auth-provider";
 import {
   fetchBarberAvailability,
   fetchBarberFull,
@@ -51,9 +52,27 @@ function BookPage() {
   const { t: tt, lng, rtl } = useLocale();
   const ArrowBack = rtl ? ArrowRight : ArrowLeft;
 
+  const { ready, session, profile } = useAuth();
   const [notes, setNotes] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+
+  // Prefill from profile once it loads
+  useEffect(() => {
+    if (profile) {
+      const n = displayName(profile, "");
+      if (n && !name) setName(n);
+    }
+  }, [profile]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Guests cannot reach the review/confirm step — bounce to /auth and resume after sign-in
+  useEffect(() => {
+    if (!ready) return;
+    if (!session?.user && search.step === "review") {
+      const back = `/book/${barberId}?step=review${search.service ? `&service=${search.service}` : ""}${search.date ? `&date=${search.date}` : ""}${search.time ? `&time=${search.time}` : ""}${search.photo ? `&photo=${search.photo}` : ""}`;
+      navigate({ to: "/auth", search: { redirect: back } as never, replace: true });
+    }
+  }, [ready, session, search.step, search.service, search.date, search.time, search.photo, barberId, navigate]);
 
   const { data: barber } = useQuery({
     queryKey: ["barber", barberId],
