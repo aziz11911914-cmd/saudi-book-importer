@@ -2,10 +2,11 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/lib/locale-provider";
-import { Languages, CalendarCheck, Heart, LogIn, User as UserIcon, LogOut, Settings, ChevronDown } from "lucide-react";
+import { Languages, CalendarCheck, Heart, LogIn, User as UserIcon, LogOut, Settings, ChevronDown, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import logoUrl from "@/assets/qassah-logo.png";
 import { useAuth, displayName } from "@/lib/auth-provider";
+import { homeForRoles } from "@/lib/role-routing";
 
 export function SiteHeader({ transparent = false }: { transparent?: boolean }) {
   const { t } = useTranslation();
