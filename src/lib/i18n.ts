@@ -34,6 +34,15 @@ const resources = {
         allStyles: "الكل",
         noStyleResults: "لا توجد قصات لهذا التخصص بعد",
       },
+      search: {
+        title: "نتائج البحث",
+        for: "نتائج عن",
+        empty: "لم نجد أي نتائج. جرّب كلمة مختلفة.",
+        barbers: "الحلاقون",
+        shops: "الصالونات",
+        haircuts: "القصات",
+        prompt: "ابحث عن حلاق، صالون، أو قصة",
+      },
       barber: {
         title: "حلاق",
         appointmentsCompleted: "حجوزات منفذة",
@@ -194,6 +203,15 @@ const resources = {
         seeAll: "See all",
         allStyles: "All",
         noStyleResults: "No haircuts in this style yet",
+      },
+      search: {
+        title: "Search results",
+        for: "Results for",
+        empty: "No results found. Try a different keyword.",
+        barbers: "Barbers",
+        shops: "Shops",
+        haircuts: "Haircuts",
+        prompt: "Search for a barber, shop, or haircut",
       },
       barber: {
         title: "Barber",

@@ -301,3 +301,102 @@ export async function fetchBarberReviews(barberId: string): Promise<DemoReviewRo
   if (error) throw error;
   return (data ?? []) as DemoReviewRow[];
 }
+
+// --- Global search ---------------------------------------------------------
+
+export type SearchResults = {
+  barbers: (Barber & {
+    shop: Pick<Shop, "slug" | "name_en" | "name_ar" | "city" | "district"> | null;
+    barber_specialties: { specialty: Specialty }[];
+  })[];
+  shops: Shop[];
+  photos: PortfolioCard[];
+};
+
+function escapeIlike(q: string) {
+  return q.replace(/[%_,]/g, "\\$&");
+}
+
+export async function searchAll(rawQuery: string): Promise<SearchResults> {
+  const query = rawQuery.trim();
+  if (!query) return { barbers: [], shops: [], photos: [] };
+  const safe = escapeIlike(query);
+  const pat = `%${safe}%`;
+
+  const [barbersRes, shopsRes, photosRes] = await Promise.all([
+    supabase
+      .from("barbers")
+      .select(
+        "*, shop:shops(slug, name_en, name_ar, city, district), barber_specialties(specialty:specialties(id, slug, label_en, label_ar))",
+      )
+      .eq("status", "active")
+      .or(
+        `display_name_en.ilike.${pat},display_name_ar.ilike.${pat},title_en.ilike.${pat},title_ar.ilike.${pat}`,
+      )
+      .order("rating_avg", { ascending: false })
+      .limit(20),
+    supabase
+      .from("shops")
+      .select("*")
+      .eq("status", "active")
+      .or(
+        `name_en.ilike.${pat},name_ar.ilike.${pat},city.ilike.${pat},district.ilike.${pat}`,
+      )
+      .order("rating_avg", { ascending: false })
+      .limit(20),
+    supabase
+      .from("portfolio_photos")
+      .select(
+        `*,
+         portfolio_photo_specialties(specialty:specialties(*)),
+         barber:barbers!inner(
+           id, display_name_en, display_name_ar, photo_url, rating_avg, rating_count, status,
+           shop:shops(id, name_en, name_ar, city, district),
+           barber_services(service:services(id, name_en, name_ar, price_sar, duration_min))
+         )`,
+      )
+      .eq("barber.status", "active")
+      .or(`caption_en.ilike.${pat},caption_ar.ilike.${pat}`)
+      .limit(30),
+  ]);
+
+  if (barbersRes.error) throw barbersRes.error;
+  if (shopsRes.error) throw shopsRes.error;
+  if (photosRes.error) throw photosRes.error;
+
+  // Also include photos whose related specialty label matches the query
+  // (e.g. searching "فيد" finds all fade haircuts).
+  const photoByLabel = await supabase
+    .from("portfolio_photos")
+    .select(
+      `*,
+       portfolio_photo_specialties!inner(specialty:specialties!inner(*)),
+       barber:barbers!inner(
+         id, display_name_en, display_name_ar, photo_url, rating_avg, rating_count, status,
+         shop:shops(id, name_en, name_ar, city, district),
+         barber_services(service:services(id, name_en, name_ar, price_sar, duration_min))
+       )`,
+    )
+    .eq("barber.status", "active")
+    .or(
+      `label_en.ilike.${pat},label_ar.ilike.${pat},slug.ilike.${pat}`,
+      { foreignTable: "portfolio_photo_specialties.specialty" },
+    )
+    .limit(30);
+
+  const photos = [
+    ...((photosRes.data ?? []) as never as PortfolioCard[]),
+    ...((photoByLabel.data ?? []) as never as PortfolioCard[]),
+  ];
+  // De-dupe by photo id
+  const seen = new Set<string>();
+  const uniquePhotos = photos.filter((p) =>
+    seen.has(p.id) ? false : (seen.add(p.id), true),
+  );
+
+  return rewriteUrls({
+    barbers: (barbersRes.data ?? []) as never,
+    shops: (shopsRes.data ?? []) as Shop[],
+    photos: uniquePhotos,
+  });
+}
