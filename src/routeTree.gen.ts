@@ -26,6 +26,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as BookingsBookingIdRescheduleRouteImport } from './routes/bookings.$bookingId.reschedule'
 import { Route as BookShopShopSlugRouteImport } from './routes/book.shop.$shopSlug'
+import { Route as AuthenticatedAdminReviewsRouteImport } from './routes/_authenticated/admin.reviews'
 import { Route as AuthenticatedAdminOwnersRouteImport } from './routes/_authenticated/admin.owners'
 import { Route as AuthenticatedAdminCustomersRouteImport } from './routes/_authenticated/admin.customers'
 import { Route as AuthenticatedAdminBookingsRouteImport } from './routes/_authenticated/admin.bookings'
@@ -122,6 +123,12 @@ const BookShopShopSlugRoute = BookShopShopSlugRouteImport.update({
   path: '/book/shop/$shopSlug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminReviewsRoute =
+  AuthenticatedAdminReviewsRouteImport.update({
+    id: '/reviews',
+    path: '/reviews',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminOwnersRoute =
   AuthenticatedAdminOwnersRouteImport.update({
     id: '/owners',
@@ -199,6 +206,7 @@ export interface FileRoutesByFullPath {
   '/admin/bookings': typeof AuthenticatedAdminBookingsRoute
   '/admin/customers': typeof AuthenticatedAdminCustomersRoute
   '/admin/owners': typeof AuthenticatedAdminOwnersRoute
+  '/admin/reviews': typeof AuthenticatedAdminReviewsRoute
   '/book/shop/$shopSlug': typeof BookShopShopSlugRoute
   '/bookings/$bookingId/reschedule': typeof BookingsBookingIdRescheduleRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -226,6 +234,7 @@ export interface FileRoutesByTo {
   '/admin/bookings': typeof AuthenticatedAdminBookingsRoute
   '/admin/customers': typeof AuthenticatedAdminCustomersRoute
   '/admin/owners': typeof AuthenticatedAdminOwnersRoute
+  '/admin/reviews': typeof AuthenticatedAdminReviewsRoute
   '/book/shop/$shopSlug': typeof BookShopShopSlugRoute
   '/bookings/$bookingId/reschedule': typeof BookingsBookingIdRescheduleRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -256,6 +265,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/bookings': typeof AuthenticatedAdminBookingsRoute
   '/_authenticated/admin/customers': typeof AuthenticatedAdminCustomersRoute
   '/_authenticated/admin/owners': typeof AuthenticatedAdminOwnersRoute
+  '/_authenticated/admin/reviews': typeof AuthenticatedAdminReviewsRoute
   '/book/shop/$shopSlug': typeof BookShopShopSlugRoute
   '/bookings/$bookingId/reschedule': typeof BookingsBookingIdRescheduleRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -286,6 +296,7 @@ export interface FileRouteTypes {
     | '/admin/bookings'
     | '/admin/customers'
     | '/admin/owners'
+    | '/admin/reviews'
     | '/book/shop/$shopSlug'
     | '/bookings/$bookingId/reschedule'
     | '/admin/'
@@ -313,6 +324,7 @@ export interface FileRouteTypes {
     | '/admin/bookings'
     | '/admin/customers'
     | '/admin/owners'
+    | '/admin/reviews'
     | '/book/shop/$shopSlug'
     | '/bookings/$bookingId/reschedule'
     | '/admin'
@@ -342,6 +354,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/bookings'
     | '/_authenticated/admin/customers'
     | '/_authenticated/admin/owners'
+    | '/_authenticated/admin/reviews'
     | '/book/shop/$shopSlug'
     | '/bookings/$bookingId/reschedule'
     | '/_authenticated/admin/'
@@ -492,6 +505,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BookShopShopSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/reviews': {
+      id: '/_authenticated/admin/reviews'
+      path: '/reviews'
+      fullPath: '/admin/reviews'
+      preLoaderRoute: typeof AuthenticatedAdminReviewsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/owners': {
       id: '/_authenticated/admin/owners'
       path: '/owners'
@@ -570,6 +590,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminBookingsRoute: typeof AuthenticatedAdminBookingsRoute
   AuthenticatedAdminCustomersRoute: typeof AuthenticatedAdminCustomersRoute
   AuthenticatedAdminOwnersRoute: typeof AuthenticatedAdminOwnersRoute
+  AuthenticatedAdminReviewsRoute: typeof AuthenticatedAdminReviewsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminSalonsIdRoute: typeof AuthenticatedAdminSalonsIdRoute
   AuthenticatedAdminSalonsNewRoute: typeof AuthenticatedAdminSalonsNewRoute
@@ -581,6 +602,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminBookingsRoute: AuthenticatedAdminBookingsRoute,
   AuthenticatedAdminCustomersRoute: AuthenticatedAdminCustomersRoute,
   AuthenticatedAdminOwnersRoute: AuthenticatedAdminOwnersRoute,
+  AuthenticatedAdminReviewsRoute: AuthenticatedAdminReviewsRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminSalonsIdRoute: AuthenticatedAdminSalonsIdRoute,
   AuthenticatedAdminSalonsNewRoute: AuthenticatedAdminSalonsNewRoute,
