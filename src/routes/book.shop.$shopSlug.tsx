@@ -61,9 +61,11 @@ function ShopBookPage() {
   const { t: tt, lng, rtl } = useLocale();
   const ArrowBack = rtl ? ArrowRight : ArrowLeft;
 
+  const { session, profile } = useAuth();
   const [notes, setNotes] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+
 
   const { data: shop } = useQuery({
     queryKey: ["shop", shopSlug],
