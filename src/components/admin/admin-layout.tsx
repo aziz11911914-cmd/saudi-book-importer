@@ -177,8 +177,8 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
           <div className="absolute end-0 top-full z-10 mt-2 w-56 overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xl">
             {[
               { label: "Create Salon", to: "/admin/salons/new" },
-              { label: "Create Owner", to: "/admin/owners" },
-              { label: "Create Barber", to: "/admin/barbers" },
+              { label: "Invite Owner", to: "/admin/owners/new" },
+              { label: "Invite Barber", to: "/admin/barbers/new" },
               { label: "Send Notification", to: "/admin/notifications" },
             ].map((m) => (
               <button

@@ -297,6 +297,9 @@ export type Database = {
         Row: {
           barber_id: string
           booking_ref: string
+          cancel_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
           created_at: string
           customer_id: string
           ends_at: string
@@ -312,6 +315,9 @@ export type Database = {
         Insert: {
           barber_id: string
           booking_ref?: string
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string
           customer_id: string
           ends_at: string
@@ -327,6 +333,9 @@ export type Database = {
         Update: {
           barber_id?: string
           booking_ref?: string
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string
           customer_id?: string
           ends_at?: string
@@ -760,6 +769,8 @@ export type Database = {
           comment: string | null
           created_at: string
           customer_id: string
+          hidden_at: string | null
+          hidden_by: string | null
           id: string
           rating: number
           shop_id: string
@@ -770,6 +781,8 @@ export type Database = {
           comment?: string | null
           created_at?: string
           customer_id: string
+          hidden_at?: string | null
+          hidden_by?: string | null
           id?: string
           rating: number
           shop_id: string
@@ -780,6 +793,8 @@ export type Database = {
           comment?: string | null
           created_at?: string
           customer_id?: string
+          hidden_at?: string | null
+          hidden_by?: string | null
           id?: string
           rating?: number
           shop_id?: string
@@ -1095,6 +1110,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      consume_invites_for_current_user: { Args: never; Returns: number }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean

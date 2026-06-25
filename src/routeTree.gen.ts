@@ -43,6 +43,11 @@ import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/em
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as AuthenticatedAdminSalonsNewRouteImport } from './routes/_authenticated/admin.salons.new'
 import { Route as AuthenticatedAdminSalonsIdRouteImport } from './routes/_authenticated/admin.salons.$id'
+import { Route as AuthenticatedAdminOwnersNewRouteImport } from './routes/_authenticated/admin.owners.new'
+import { Route as AuthenticatedAdminOwnersIdRouteImport } from './routes/_authenticated/admin.owners.$id'
+import { Route as AuthenticatedAdminCustomersIdRouteImport } from './routes/_authenticated/admin.customers.$id'
+import { Route as AuthenticatedAdminBarbersNewRouteImport } from './routes/_authenticated/admin.barbers.new'
+import { Route as AuthenticatedAdminBarbersIdRouteImport } from './routes/_authenticated/admin.barbers.$id'
 
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
@@ -227,6 +232,36 @@ const AuthenticatedAdminSalonsIdRoute =
     path: '/salons/$id',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminOwnersNewRoute =
+  AuthenticatedAdminOwnersNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedAdminOwnersRoute,
+  } as any)
+const AuthenticatedAdminOwnersIdRoute =
+  AuthenticatedAdminOwnersIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAdminOwnersRoute,
+  } as any)
+const AuthenticatedAdminCustomersIdRoute =
+  AuthenticatedAdminCustomersIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAdminCustomersRoute,
+  } as any)
+const AuthenticatedAdminBarbersNewRoute =
+  AuthenticatedAdminBarbersNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedAdminBarbersRoute,
+  } as any)
+const AuthenticatedAdminBarbersIdRoute =
+  AuthenticatedAdminBarbersIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAdminBarbersRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -245,17 +280,22 @@ export interface FileRoutesByFullPath {
   '/bookings/': typeof BookingsIndexRoute
   '/favorites/': typeof FavoritesIndexRoute
   '/admin/audit-logs': typeof AuthenticatedAdminAuditLogsRoute
-  '/admin/barbers': typeof AuthenticatedAdminBarbersRoute
+  '/admin/barbers': typeof AuthenticatedAdminBarbersRouteWithChildren
   '/admin/bookings': typeof AuthenticatedAdminBookingsRoute
-  '/admin/customers': typeof AuthenticatedAdminCustomersRoute
+  '/admin/customers': typeof AuthenticatedAdminCustomersRouteWithChildren
   '/admin/notifications': typeof AuthenticatedAdminNotificationsRoute
-  '/admin/owners': typeof AuthenticatedAdminOwnersRoute
+  '/admin/owners': typeof AuthenticatedAdminOwnersRouteWithChildren
   '/admin/reports': typeof AuthenticatedAdminReportsRoute
   '/admin/reviews': typeof AuthenticatedAdminReviewsRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/book/shop/$shopSlug': typeof BookShopShopSlugRoute
   '/bookings/$bookingId/reschedule': typeof BookingsBookingIdRescheduleRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/admin/barbers/$id': typeof AuthenticatedAdminBarbersIdRoute
+  '/admin/barbers/new': typeof AuthenticatedAdminBarbersNewRoute
+  '/admin/customers/$id': typeof AuthenticatedAdminCustomersIdRoute
+  '/admin/owners/$id': typeof AuthenticatedAdminOwnersIdRoute
+  '/admin/owners/new': typeof AuthenticatedAdminOwnersNewRoute
   '/admin/salons/$id': typeof AuthenticatedAdminSalonsIdRoute
   '/admin/salons/new': typeof AuthenticatedAdminSalonsNewRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -279,17 +319,22 @@ export interface FileRoutesByTo {
   '/bookings': typeof BookingsIndexRoute
   '/favorites': typeof FavoritesIndexRoute
   '/admin/audit-logs': typeof AuthenticatedAdminAuditLogsRoute
-  '/admin/barbers': typeof AuthenticatedAdminBarbersRoute
+  '/admin/barbers': typeof AuthenticatedAdminBarbersRouteWithChildren
   '/admin/bookings': typeof AuthenticatedAdminBookingsRoute
-  '/admin/customers': typeof AuthenticatedAdminCustomersRoute
+  '/admin/customers': typeof AuthenticatedAdminCustomersRouteWithChildren
   '/admin/notifications': typeof AuthenticatedAdminNotificationsRoute
-  '/admin/owners': typeof AuthenticatedAdminOwnersRoute
+  '/admin/owners': typeof AuthenticatedAdminOwnersRouteWithChildren
   '/admin/reports': typeof AuthenticatedAdminReportsRoute
   '/admin/reviews': typeof AuthenticatedAdminReviewsRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/book/shop/$shopSlug': typeof BookShopShopSlugRoute
   '/bookings/$bookingId/reschedule': typeof BookingsBookingIdRescheduleRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/admin/barbers/$id': typeof AuthenticatedAdminBarbersIdRoute
+  '/admin/barbers/new': typeof AuthenticatedAdminBarbersNewRoute
+  '/admin/customers/$id': typeof AuthenticatedAdminCustomersIdRoute
+  '/admin/owners/$id': typeof AuthenticatedAdminOwnersIdRoute
+  '/admin/owners/new': typeof AuthenticatedAdminOwnersNewRoute
   '/admin/salons/$id': typeof AuthenticatedAdminSalonsIdRoute
   '/admin/salons/new': typeof AuthenticatedAdminSalonsNewRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -316,17 +361,22 @@ export interface FileRoutesById {
   '/bookings/': typeof BookingsIndexRoute
   '/favorites/': typeof FavoritesIndexRoute
   '/_authenticated/admin/audit-logs': typeof AuthenticatedAdminAuditLogsRoute
-  '/_authenticated/admin/barbers': typeof AuthenticatedAdminBarbersRoute
+  '/_authenticated/admin/barbers': typeof AuthenticatedAdminBarbersRouteWithChildren
   '/_authenticated/admin/bookings': typeof AuthenticatedAdminBookingsRoute
-  '/_authenticated/admin/customers': typeof AuthenticatedAdminCustomersRoute
+  '/_authenticated/admin/customers': typeof AuthenticatedAdminCustomersRouteWithChildren
   '/_authenticated/admin/notifications': typeof AuthenticatedAdminNotificationsRoute
-  '/_authenticated/admin/owners': typeof AuthenticatedAdminOwnersRoute
+  '/_authenticated/admin/owners': typeof AuthenticatedAdminOwnersRouteWithChildren
   '/_authenticated/admin/reports': typeof AuthenticatedAdminReportsRoute
   '/_authenticated/admin/reviews': typeof AuthenticatedAdminReviewsRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/book/shop/$shopSlug': typeof BookShopShopSlugRoute
   '/bookings/$bookingId/reschedule': typeof BookingsBookingIdRescheduleRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/admin/barbers/$id': typeof AuthenticatedAdminBarbersIdRoute
+  '/_authenticated/admin/barbers/new': typeof AuthenticatedAdminBarbersNewRoute
+  '/_authenticated/admin/customers/$id': typeof AuthenticatedAdminCustomersIdRoute
+  '/_authenticated/admin/owners/$id': typeof AuthenticatedAdminOwnersIdRoute
+  '/_authenticated/admin/owners/new': typeof AuthenticatedAdminOwnersNewRoute
   '/_authenticated/admin/salons/$id': typeof AuthenticatedAdminSalonsIdRoute
   '/_authenticated/admin/salons/new': typeof AuthenticatedAdminSalonsNewRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -364,6 +414,11 @@ export interface FileRouteTypes {
     | '/book/shop/$shopSlug'
     | '/bookings/$bookingId/reschedule'
     | '/admin/'
+    | '/admin/barbers/$id'
+    | '/admin/barbers/new'
+    | '/admin/customers/$id'
+    | '/admin/owners/$id'
+    | '/admin/owners/new'
     | '/admin/salons/$id'
     | '/admin/salons/new'
     | '/lovable/email/auth/preview'
@@ -398,6 +453,11 @@ export interface FileRouteTypes {
     | '/book/shop/$shopSlug'
     | '/bookings/$bookingId/reschedule'
     | '/admin'
+    | '/admin/barbers/$id'
+    | '/admin/barbers/new'
+    | '/admin/customers/$id'
+    | '/admin/owners/$id'
+    | '/admin/owners/new'
     | '/admin/salons/$id'
     | '/admin/salons/new'
     | '/lovable/email/auth/preview'
@@ -434,6 +494,11 @@ export interface FileRouteTypes {
     | '/book/shop/$shopSlug'
     | '/bookings/$bookingId/reschedule'
     | '/_authenticated/admin/'
+    | '/_authenticated/admin/barbers/$id'
+    | '/_authenticated/admin/barbers/new'
+    | '/_authenticated/admin/customers/$id'
+    | '/_authenticated/admin/owners/$id'
+    | '/_authenticated/admin/owners/new'
     | '/_authenticated/admin/salons/$id'
     | '/_authenticated/admin/salons/new'
     | '/lovable/email/auth/preview'
@@ -700,16 +765,97 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSalonsIdRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/owners/new': {
+      id: '/_authenticated/admin/owners/new'
+      path: '/new'
+      fullPath: '/admin/owners/new'
+      preLoaderRoute: typeof AuthenticatedAdminOwnersNewRouteImport
+      parentRoute: typeof AuthenticatedAdminOwnersRoute
+    }
+    '/_authenticated/admin/owners/$id': {
+      id: '/_authenticated/admin/owners/$id'
+      path: '/$id'
+      fullPath: '/admin/owners/$id'
+      preLoaderRoute: typeof AuthenticatedAdminOwnersIdRouteImport
+      parentRoute: typeof AuthenticatedAdminOwnersRoute
+    }
+    '/_authenticated/admin/customers/$id': {
+      id: '/_authenticated/admin/customers/$id'
+      path: '/$id'
+      fullPath: '/admin/customers/$id'
+      preLoaderRoute: typeof AuthenticatedAdminCustomersIdRouteImport
+      parentRoute: typeof AuthenticatedAdminCustomersRoute
+    }
+    '/_authenticated/admin/barbers/new': {
+      id: '/_authenticated/admin/barbers/new'
+      path: '/new'
+      fullPath: '/admin/barbers/new'
+      preLoaderRoute: typeof AuthenticatedAdminBarbersNewRouteImport
+      parentRoute: typeof AuthenticatedAdminBarbersRoute
+    }
+    '/_authenticated/admin/barbers/$id': {
+      id: '/_authenticated/admin/barbers/$id'
+      path: '/$id'
+      fullPath: '/admin/barbers/$id'
+      preLoaderRoute: typeof AuthenticatedAdminBarbersIdRouteImport
+      parentRoute: typeof AuthenticatedAdminBarbersRoute
+    }
   }
 }
 
+interface AuthenticatedAdminBarbersRouteChildren {
+  AuthenticatedAdminBarbersIdRoute: typeof AuthenticatedAdminBarbersIdRoute
+  AuthenticatedAdminBarbersNewRoute: typeof AuthenticatedAdminBarbersNewRoute
+}
+
+const AuthenticatedAdminBarbersRouteChildren: AuthenticatedAdminBarbersRouteChildren =
+  {
+    AuthenticatedAdminBarbersIdRoute: AuthenticatedAdminBarbersIdRoute,
+    AuthenticatedAdminBarbersNewRoute: AuthenticatedAdminBarbersNewRoute,
+  }
+
+const AuthenticatedAdminBarbersRouteWithChildren =
+  AuthenticatedAdminBarbersRoute._addFileChildren(
+    AuthenticatedAdminBarbersRouteChildren,
+  )
+
+interface AuthenticatedAdminCustomersRouteChildren {
+  AuthenticatedAdminCustomersIdRoute: typeof AuthenticatedAdminCustomersIdRoute
+}
+
+const AuthenticatedAdminCustomersRouteChildren: AuthenticatedAdminCustomersRouteChildren =
+  {
+    AuthenticatedAdminCustomersIdRoute: AuthenticatedAdminCustomersIdRoute,
+  }
+
+const AuthenticatedAdminCustomersRouteWithChildren =
+  AuthenticatedAdminCustomersRoute._addFileChildren(
+    AuthenticatedAdminCustomersRouteChildren,
+  )
+
+interface AuthenticatedAdminOwnersRouteChildren {
+  AuthenticatedAdminOwnersIdRoute: typeof AuthenticatedAdminOwnersIdRoute
+  AuthenticatedAdminOwnersNewRoute: typeof AuthenticatedAdminOwnersNewRoute
+}
+
+const AuthenticatedAdminOwnersRouteChildren: AuthenticatedAdminOwnersRouteChildren =
+  {
+    AuthenticatedAdminOwnersIdRoute: AuthenticatedAdminOwnersIdRoute,
+    AuthenticatedAdminOwnersNewRoute: AuthenticatedAdminOwnersNewRoute,
+  }
+
+const AuthenticatedAdminOwnersRouteWithChildren =
+  AuthenticatedAdminOwnersRoute._addFileChildren(
+    AuthenticatedAdminOwnersRouteChildren,
+  )
+
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAuditLogsRoute: typeof AuthenticatedAdminAuditLogsRoute
-  AuthenticatedAdminBarbersRoute: typeof AuthenticatedAdminBarbersRoute
+  AuthenticatedAdminBarbersRoute: typeof AuthenticatedAdminBarbersRouteWithChildren
   AuthenticatedAdminBookingsRoute: typeof AuthenticatedAdminBookingsRoute
-  AuthenticatedAdminCustomersRoute: typeof AuthenticatedAdminCustomersRoute
+  AuthenticatedAdminCustomersRoute: typeof AuthenticatedAdminCustomersRouteWithChildren
   AuthenticatedAdminNotificationsRoute: typeof AuthenticatedAdminNotificationsRoute
-  AuthenticatedAdminOwnersRoute: typeof AuthenticatedAdminOwnersRoute
+  AuthenticatedAdminOwnersRoute: typeof AuthenticatedAdminOwnersRouteWithChildren
   AuthenticatedAdminReportsRoute: typeof AuthenticatedAdminReportsRoute
   AuthenticatedAdminReviewsRoute: typeof AuthenticatedAdminReviewsRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
@@ -721,11 +867,12 @@ interface AuthenticatedAdminRouteChildren {
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAuditLogsRoute: AuthenticatedAdminAuditLogsRoute,
-  AuthenticatedAdminBarbersRoute: AuthenticatedAdminBarbersRoute,
+  AuthenticatedAdminBarbersRoute: AuthenticatedAdminBarbersRouteWithChildren,
   AuthenticatedAdminBookingsRoute: AuthenticatedAdminBookingsRoute,
-  AuthenticatedAdminCustomersRoute: AuthenticatedAdminCustomersRoute,
+  AuthenticatedAdminCustomersRoute:
+    AuthenticatedAdminCustomersRouteWithChildren,
   AuthenticatedAdminNotificationsRoute: AuthenticatedAdminNotificationsRoute,
-  AuthenticatedAdminOwnersRoute: AuthenticatedAdminOwnersRoute,
+  AuthenticatedAdminOwnersRoute: AuthenticatedAdminOwnersRouteWithChildren,
   AuthenticatedAdminReportsRoute: AuthenticatedAdminReportsRoute,
   AuthenticatedAdminReviewsRoute: AuthenticatedAdminReviewsRoute,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,

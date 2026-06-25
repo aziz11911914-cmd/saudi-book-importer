@@ -435,3 +435,252 @@ export const listMyNotifications = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return data ?? [];
   });
+
+// ---------- invitations ----------
+const inviteSchema = z.object({
+  email: z.string().trim().toLowerCase().email().max(200),
+  role: z.enum(["owner", "barber"]),
+  shop_id: z.string().uuid().nullable().optional(),
+  full_name: z.string().max(200).optional(),
+  phone: z.string().max(40).optional(),
+  nationality: z.string().max(80).optional(),
+  language: z.string().max(8).optional(),
+  notes: z.string().max(2000).optional(),
+  expires_in_hours: z.number().int().min(1).max(720).optional(),
+});
+
+function randomToken() {
+  const b = new Uint8Array(24);
+  crypto.getRandomValues(b);
+  return Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
+}
+
+export const createInvite = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => inviteSchema.parse(d))
+  .handler(async ({ context, data }) => {
+    await assertSuperAdmin(context.supabase, context.userId);
+    const expires = new Date(Date.now() + (data.expires_in_hours ?? 168) * 3600_000).toISOString();
+    const token = randomToken();
+    const { data: row, error } = await context.supabase
+      .from("invites")
+      .insert({
+        email: data.email,
+        role: data.role,
+        shop_id: data.shop_id ?? null,
+        token,
+        expires_at: expires,
+        invited_by: context.userId,
+      })
+      .select("id, email, role, shop_id, token, expires_at")
+      .single();
+    if (error) throw new Error(error.message);
+
+    // Best-effort: pre-create profile fields for the invited email if a profile already exists
+    if (data.full_name || data.phone || data.nationality || data.language || data.notes) {
+      const { data: existing } = await context.supabase
+        .from("profiles").select("id").eq("email", data.email).maybeSingle();
+      if (existing) {
+        await context.supabase.from("profiles").update({
+          full_name: data.full_name ?? undefined,
+          phone: data.phone ?? undefined,
+          nationality: data.nationality ?? undefined,
+          language: data.language ?? undefined,
+          notes: data.notes ?? undefined,
+        }).eq("id", existing.id);
+      }
+    }
+
+    await audit(context.supabase, context.userId, context.claims?.email ?? null,
+      `invite.${data.role}.created`, "invite", row.id, { email: data.email, shop_id: data.shop_id ?? null });
+    return row;
+  });
+
+export const listInvites = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { role?: "owner" | "barber" } | undefined) => d ?? {})
+  .handler(async ({ context, data }) => {
+    await assertSuperAdmin(context.supabase, context.userId);
+    let q = context.supabase
+      .from("invites")
+      .select("id, email, role, shop_id, used_at, expires_at, created_at, token")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (data.role) q = q.eq("role", data.role);
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+    return rows ?? [];
+  });
+
+export const revokeInvite = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ context, data }) => {
+    await assertSuperAdmin(context.supabase, context.userId);
+    const { error } = await context.supabase
+      .from("invites")
+      .update({ used_at: new Date().toISOString() })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await audit(context.supabase, context.userId, context.claims?.email ?? null, "invite.revoked", "invite", data.id);
+    return { ok: true };
+  });
+
+// ---------- profile/owner/barber/customer detail ----------
+export const getProfileDetail = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ context, data }) => {
+    await assertSuperAdmin(context.supabase, context.userId);
+    const [profile, roles, bookings, reviews, favorites, shop, barberRow] = await Promise.all([
+      context.supabase.from("profiles").select("*").eq("id", data.id).maybeSingle(),
+      context.supabase.from("user_roles").select("role").eq("user_id", data.id),
+      context.supabase.from("bookings").select("id, booking_ref, status, starts_at, price_sar, shop_id, shops:shop_id(name_en)").eq("customer_id", data.id).order("starts_at", { ascending: false }).limit(50),
+      context.supabase.from("reviews").select("id, rating, comment, created_at, hidden_at, shop_id, shops:shop_id(name_en)").eq("customer_id", data.id).order("created_at", { ascending: false }).limit(50),
+      context.supabase.from("favorites").select("id, shop_id, barber_id, created_at").eq("user_id", data.id),
+      context.supabase.from("shops").select("id, name_en, name_ar, slug, status").eq("manager_id", data.id).maybeSingle(),
+      context.supabase.from("barbers").select("id, display_name_en, shop_id, status, shops:shop_id(name_en)").eq("profile_id", data.id).maybeSingle(),
+    ]);
+    if (profile.error) throw new Error(profile.error.message);
+    return {
+      profile: profile.data,
+      roles: (roles.data ?? []).map((r: any) => r.role),
+      bookings: bookings.data ?? [],
+      reviews: reviews.data ?? [],
+      favorites: favorites.data ?? [],
+      ownerShop: shop.data ?? null,
+      barber: barberRow.data ?? null,
+    };
+  });
+
+export const getBarberDetail = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ context, data }) => {
+    await assertSuperAdmin(context.supabase, context.userId);
+    const [barber, services, portfolio, bookings, reviews] = await Promise.all([
+      context.supabase.from("barbers").select("*, shops:shop_id(id, name_en, name_ar, slug)").eq("id", data.id).maybeSingle(),
+      context.supabase.from("barber_services").select("service_id, services:service_id(id, name_en, price_sar, duration_minutes, active)").eq("barber_id", data.id),
+      context.supabase.from("portfolio_photos").select("id, url, title_en, title_ar, caption_en, caption_ar, display_order, status").eq("barber_id", data.id).order("display_order", { ascending: true }).limit(50),
+      context.supabase.from("bookings").select("id, booking_ref, status, starts_at, price_sar").eq("barber_id", data.id).order("starts_at", { ascending: false }).limit(30),
+      context.supabase.from("reviews").select("id, rating, comment, created_at").eq("barber_id", data.id).order("created_at", { ascending: false }).limit(30),
+    ]);
+    if (barber.error) throw new Error(barber.error.message);
+    return { barber: barber.data, services: services.data ?? [], portfolio: portfolio.data ?? [], bookings: bookings.data ?? [], reviews: reviews.data ?? [] };
+  });
+
+export const updateBarber = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; patch: Record<string, unknown> }) => d)
+  .handler(async ({ context, data }) => {
+    await assertSuperAdmin(context.supabase, context.userId);
+    const { error } = await context.supabase.from("barbers").update(data.patch as any).eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await audit(context.supabase, context.userId, context.claims?.email ?? null, "barber.updated", "barber", data.id, data.patch);
+    return { ok: true };
+  });
+
+// ---------- booking actions ----------
+const bookingStatusSchema = z.enum(["pending", "confirmed", "completed", "cancelled", "no_show", "rejected"]);
+
+export const updateBookingStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; status: z.infer<typeof bookingStatusSchema>; reason?: string }) => ({
+    id: d.id, status: bookingStatusSchema.parse(d.status), reason: d.reason,
+  }))
+  .handler(async ({ context, data }) => {
+    await assertSuperAdmin(context.supabase, context.userId);
+    const patch: any = { status: data.status };
+    if (data.status === "cancelled") {
+      patch.cancelled_at = new Date().toISOString();
+      patch.cancelled_by = context.userId;
+      if (data.reason) patch.cancel_reason = data.reason;
+    }
+    const { error } = await context.supabase.from("bookings").update(patch).eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await audit(context.supabase, context.userId, context.claims?.email ?? null, `booking.${data.status}`, "booking", data.id, { reason: data.reason ?? null });
+    return { ok: true };
+  });
+
+// ---------- review moderation ----------
+export const setReviewHidden = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; hidden: boolean }) => d)
+  .handler(async ({ context, data }) => {
+    await assertSuperAdmin(context.supabase, context.userId);
+    const patch: any = data.hidden
+      ? { hidden_at: new Date().toISOString(), hidden_by: context.userId }
+      : { hidden_at: null, hidden_by: null };
+    const { error } = await context.supabase.from("reviews").update(patch).eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await audit(context.supabase, context.userId, context.claims?.email ?? null, data.hidden ? "review.hidden" : "review.restored", "review", data.id);
+    return { ok: true };
+  });
+
+// ---------- extended reports ----------
+export const getReports = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertSuperAdmin(context.supabase, context.userId);
+    const sb = context.supabase;
+    const now = new Date();
+    const startOfDay = new Date(now); startOfDay.setHours(0, 0, 0, 0);
+    const startOfWeek = new Date(startOfDay); startOfWeek.setDate(startOfWeek.getDate() - 7);
+    const startOfMonth = new Date(startOfDay); startOfMonth.setDate(1);
+
+    const [bookingsThisWeek, bookingsThisMonth, bookingsNoShow, popular, customers30, customers60] = await Promise.all([
+      sb.from("bookings").select("id", { count: "exact", head: true }).gte("starts_at", startOfWeek.toISOString()),
+      sb.from("bookings").select("id", { count: "exact", head: true }).gte("starts_at", startOfMonth.toISOString()),
+      sb.from("bookings").select("id", { count: "exact", head: true }).eq("status", "no_show"),
+      sb.from("bookings").select("shop_id, barber_id, service_id"),
+      sb.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", new Date(now.getTime() - 30 * 86400_000).toISOString()),
+      sb.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", new Date(now.getTime() - 60 * 86400_000).toISOString()).lt("created_at", new Date(now.getTime() - 30 * 86400_000).toISOString()),
+    ]);
+
+    const tally = (rows: any[], key: string) => {
+      const m = new Map<string, number>();
+      for (const r of rows) { const v = r?.[key]; if (!v) continue; m.set(v, (m.get(v) ?? 0) + 1); }
+      return [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+    };
+    const popRows = popular.data ?? [];
+    const topShops = tally(popRows, "shop_id");
+    const topBarbers = tally(popRows, "barber_id");
+    const topServices = tally(popRows, "service_id");
+
+    const lookupOne = async (table: string, ids: string[], cols: string) => {
+      if (!ids.length) return [] as any[];
+      const { data } = await (sb as any).from(table).select(cols).in("id", ids);
+      return (data ?? []) as any[];
+    };
+    const [shops, barbers, services] = await Promise.all([
+      lookupOne("shops", topShops.map(([id]) => id), "id, name_en, name_ar"),
+      lookupOne("barbers", topBarbers.map(([id]) => id), "id, display_name_en, display_name_ar"),
+      lookupOne("services", topServices.map(([id]) => id), "id, name_en, name_ar"),
+    ]);
+    const enrich = (top: [string, number][], rows: any[], label: string) =>
+      top.map(([id, count]) => ({ id, count, label: (rows.find((r: any) => r.id === id) as any)?.[label] ?? id }));
+
+    const newCustomersCurrent = customers30.count ?? 0;
+    const newCustomersPrev = customers60.count ?? 0;
+    const growthRate = newCustomersPrev > 0 ? ((newCustomersCurrent - newCustomersPrev) / newCustomersPrev) * 100 : null;
+
+    return {
+      bookingsThisWeek: bookingsThisWeek.count ?? 0,
+      bookingsThisMonth: bookingsThisMonth.count ?? 0,
+      bookingsNoShow: bookingsNoShow.count ?? 0,
+      newCustomers30d: newCustomersCurrent,
+      growthRatePct: growthRate,
+      topShops: enrich(topShops, shops as any[], "name_en"),
+      topBarbers: enrich(topBarbers, barbers as any[], "display_name_en"),
+      topServices: enrich(topServices, services as any[], "name_en"),
+    };
+  });
+
+export const consumeMyInvites = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase.rpc("consume_invites_for_current_user");
+    if (error) throw new Error(error.message);
+    return { applied: data ?? 0 };
+  });
+

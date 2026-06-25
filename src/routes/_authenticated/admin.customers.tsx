@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -27,7 +27,7 @@ function CustomersPage() {
             {isLoading && <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Loading…</td></tr>}
             {(data ?? []).map((c: any) => (
               <tr key={c.id} className="border-t border-hairline/40">
-                <td className="px-4 py-3">{c.full_name || "—"}</td>
+                <td className="px-4 py-3"><Link to="/admin/customers/$id" params={{ id: c.id }} className="hover:underline">{c.full_name || c.email}</Link></td>
                 <td className="px-4 py-3 text-muted-foreground">{c.email}</td>
                 <td className="px-4 py-3 text-muted-foreground">{c.phone ?? "—"}</td>
                 <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs ${c.status === "active" ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>{c.status}</span></td>
