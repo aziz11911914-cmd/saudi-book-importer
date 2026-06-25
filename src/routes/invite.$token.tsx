@@ -14,9 +14,10 @@ export const Route = createFileRoute("/invite/$token")({
 function InvitePage() {
   const { token } = Route.useParams();
   const navigate = useNavigate();
-  const { ready, session, refresh } = useAuth();
+  const { ready, session, refresh, signOut } = useAuth();
   const fetchInvite = useServerFn(getInviteByToken);
   const accept = useServerFn(acceptInvite);
+  const [switching, setSwitching] = useState(false);
 
   const { data: invite, isLoading } = useQuery({
     queryKey: ["invite", token],
