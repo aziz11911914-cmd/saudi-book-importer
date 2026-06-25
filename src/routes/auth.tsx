@@ -28,10 +28,18 @@ const emailSchema = z
   .email()
   .max(255);
 
+function roleRedirect(roles: string[], explicit?: string): string {
+  if (explicit && explicit.startsWith("/")) return explicit;
+  if (roles.includes("super_admin")) return "/admin";
+  if (roles.includes("owner")) return "/owner";
+  if (roles.includes("barber")) return "/barber";
+  return "/";
+}
+
 function AuthPage() {
   const { t } = useTranslation();
   const { rtl, t: tt } = useLocale();
-  const { ready, session, profile, refresh } = useAuth();
+  const { ready, session, profile, roles, refresh } = useAuth();
   const navigate = useNavigate();
   const router = useRouter();
   const { redirect } = useSearch({ from: "/auth" });
@@ -58,8 +66,9 @@ function AuthPage() {
       setStep("name");
       return;
     }
-    navigate({ to: redirect && redirect.startsWith("/") ? (redirect as "/") : "/", replace: true });
-  }, [ready, session, profile, step, navigate, redirect]);
+    const target = roleRedirect(roles, redirect);
+    navigate({ to: target as any, replace: true });
+  }, [ready, session, profile, roles, step, navigate, redirect]);
 
   async function handleSendOtp(e: React.FormEvent) {
     e.preventDefault();
@@ -150,7 +159,7 @@ function AuthPage() {
     }
     await refresh();
     router.invalidate();
-    navigate({ to: redirect && redirect.startsWith("/") ? (redirect as "/") : "/", replace: true });
+    navigate({ to: roleRedirect(roles, redirect) as any, replace: true });
   }
 
   async function handleResend() {

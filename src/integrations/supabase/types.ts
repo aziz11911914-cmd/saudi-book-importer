@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_id: string | null
+          created_at: string
+          details: Json
+          id: string
+          ip: string | null
+          target_id: string | null
+          target_type: string | null
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          ip?: string | null
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          ip?: string | null
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Relationships: []
+      }
       auth_otp_challenges: {
         Row: {
           attempt_count: number
@@ -516,6 +552,72 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          data: Json
+          id: string
+          kind: string
+          read_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          data?: Json
+          id?: string
+          kind: string
+          read_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          data?: Json
+          id?: string
+          kind?: string
+          read_at?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      platform_settings: {
+        Row: {
+          authentication: Json
+          booking: Json
+          general: Json
+          id: number
+          maintenance: Json
+          notifications: Json
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          authentication?: Json
+          booking?: Json
+          general?: Json
+          id?: number
+          maintenance?: Json
+          notifications?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          authentication?: Json
+          booking?: Json
+          general?: Json
+          id?: number
+          maintenance?: Json
+          notifications?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       portfolio_photo_specialties: {
         Row: {
           photo_id: string
@@ -605,9 +707,14 @@ export type Database = {
           first_name: string | null
           full_name: string | null
           id: string
+          language: string | null
+          last_login_at: string | null
           last_name: string | null
           locale: string
+          nationality: string | null
+          notes: string | null
           phone: string | null
+          status: Database["public"]["Enums"]["profile_status"]
           updated_at: string
         }
         Insert: {
@@ -617,9 +724,14 @@ export type Database = {
           first_name?: string | null
           full_name?: string | null
           id: string
+          language?: string | null
+          last_login_at?: string | null
           last_name?: string | null
           locale?: string
+          nationality?: string | null
+          notes?: string | null
           phone?: string | null
+          status?: Database["public"]["Enums"]["profile_status"]
           updated_at?: string
         }
         Update: {
@@ -629,9 +741,14 @@ export type Database = {
           first_name?: string | null
           full_name?: string | null
           id?: string
+          language?: string | null
+          last_login_at?: string | null
           last_name?: string | null
           locale?: string
+          nationality?: string | null
+          notes?: string | null
           phone?: string | null
+          status?: Database["public"]["Enums"]["profile_status"]
           updated_at?: string
         }
         Relationships: []
@@ -807,18 +924,24 @@ export type Database = {
       }
       shops: {
         Row: {
+          accept_reviews: boolean
           address: string | null
+          booking_enabled: boolean
+          booking_interval_minutes: number
           city: string | null
           cover_url: string | null
           created_at: string
           description_ar: string | null
           description_en: string | null
           district: string | null
+          email: string | null
           featured: boolean
           id: string
           lat: number | null
           lng: number | null
+          logo_url: string | null
           manager_id: string | null
+          max_booking_window_days: number
           name_ar: string
           name_en: string
           phone: string | null
@@ -827,20 +950,29 @@ export type Database = {
           slug: string
           status: Database["public"]["Enums"]["entity_status"]
           updated_at: string
+          walkin_enabled: boolean
+          website: string | null
+          whatsapp: string | null
         }
         Insert: {
+          accept_reviews?: boolean
           address?: string | null
+          booking_enabled?: boolean
+          booking_interval_minutes?: number
           city?: string | null
           cover_url?: string | null
           created_at?: string
           description_ar?: string | null
           description_en?: string | null
           district?: string | null
+          email?: string | null
           featured?: boolean
           id?: string
           lat?: number | null
           lng?: number | null
+          logo_url?: string | null
           manager_id?: string | null
+          max_booking_window_days?: number
           name_ar: string
           name_en: string
           phone?: string | null
@@ -849,20 +981,29 @@ export type Database = {
           slug: string
           status?: Database["public"]["Enums"]["entity_status"]
           updated_at?: string
+          walkin_enabled?: boolean
+          website?: string | null
+          whatsapp?: string | null
         }
         Update: {
+          accept_reviews?: boolean
           address?: string | null
+          booking_enabled?: boolean
+          booking_interval_minutes?: number
           city?: string | null
           cover_url?: string | null
           created_at?: string
           description_ar?: string | null
           description_en?: string | null
           district?: string | null
+          email?: string | null
           featured?: boolean
           id?: string
           lat?: number | null
           lng?: number | null
+          logo_url?: string | null
           manager_id?: string | null
+          max_booking_window_days?: number
           name_ar?: string
           name_en?: string
           phone?: string | null
@@ -871,6 +1012,9 @@ export type Database = {
           slug?: string
           status?: Database["public"]["Enums"]["entity_status"]
           updated_at?: string
+          walkin_enabled?: boolean
+          website?: string | null
+          whatsapp?: string | null
         }
         Relationships: []
       }
@@ -966,6 +1110,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_super_admin: { Args: never; Returns: boolean }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -985,7 +1130,13 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "customer" | "barber" | "manager" | "admin"
+      app_role:
+        | "customer"
+        | "barber"
+        | "manager"
+        | "admin"
+        | "super_admin"
+        | "owner"
       booking_status:
         | "pending"
         | "confirmed"
@@ -994,6 +1145,7 @@ export type Database = {
         | "no_show"
       entity_status: "active" | "inactive" | "pending"
       favorite_target: "barber" | "shop"
+      profile_status: "active" | "suspended"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1121,7 +1273,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["customer", "barber", "manager", "admin"],
+      app_role: [
+        "customer",
+        "barber",
+        "manager",
+        "admin",
+        "super_admin",
+        "owner",
+      ],
       booking_status: [
         "pending",
         "confirmed",
@@ -1131,6 +1290,7 @@ export const Constants = {
       ],
       entity_status: ["active", "inactive", "pending"],
       favorite_target: ["barber", "shop"],
+      profile_status: ["active", "suspended"],
     },
   },
 } as const
