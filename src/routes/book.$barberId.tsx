@@ -256,6 +256,7 @@ function BookPage() {
             setName={setName}
             phone={phone}
             setPhone={setPhone}
+            isAuthed={!!session?.user}
             onConfirm={confirm}
           />
         )}
