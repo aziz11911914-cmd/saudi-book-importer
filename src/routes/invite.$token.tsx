@@ -111,8 +111,37 @@ function InvitePage() {
           Continue to sign in
         </Link>
       ) : wrongEmail ? (
-        <div className="mt-5 rounded-2xl border border-red-500/30 bg-red-500/5 px-4 py-3 text-sm text-red-300">
-          You're signed in as <span dir="ltr">{session.user.email}</span>, but this invitation is for <span dir="ltr">{invite.email}</span>. Please sign out and sign in with the invited email.
+        <div className="mt-5 space-y-4">
+          <div className="rounded-2xl border border-red-500/30 bg-red-500/5 px-4 py-3 text-sm text-red-300">
+            You're currently signed in as <span dir="ltr" className="font-semibold">{session.user.email}</span>, but this invitation belongs to <span dir="ltr" className="font-semibold">{invite.email}</span>.
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <button
+              type="button"
+              disabled={switching}
+              onClick={async () => {
+                setSwitching(true);
+                try {
+                  await signOut();
+                } catch {}
+                navigate({
+                  to: "/auth",
+                  search: { redirect: `/invite/${token}`, email: invite.email } as any,
+                  replace: true,
+                });
+              }}
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-gold px-5 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+            >
+              {switching ? <Loader2 className="size-4 animate-spin" /> : <Mail className="size-4" />}
+              Continue with invited account
+            </button>
+            <Link
+              to="/"
+              className="inline-flex flex-1 items-center justify-center rounded-full border border-hairline px-5 py-3 text-sm font-semibold text-muted-foreground hover:text-foreground"
+            >
+              Cancel
+            </Link>
+          </div>
         </div>
       ) : accepting ? (
         <div className="mt-5 flex items-center justify-center gap-2 text-sm text-muted-foreground">
