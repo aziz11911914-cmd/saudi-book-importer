@@ -685,3 +685,29 @@ export const consumeMyInvites = createServerFn({ method: "POST" })
     return { applied: data ?? 0 };
   });
 
+
+// ---------- public invite lookup & acceptance ----------
+import { createClient } from "@supabase/supabase-js";
+
+export const getInviteByToken = createServerFn({ method: "GET" })
+  .inputValidator((d: { token: string }) => d)
+  .handler(async ({ data }) => {
+    const sb = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_PUBLISHABLE_KEY!,
+      { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
+    );
+    const { data: rows, error } = await sb.rpc("get_invite_by_token", { _token: data.token });
+    if (error) throw new Error(error.message);
+    const row = Array.isArray(rows) ? rows[0] : rows;
+    return row ?? null;
+  });
+
+export const acceptInvite = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { token: string }) => d)
+  .handler(async ({ context, data }) => {
+    const { data: result, error } = await context.supabase.rpc("accept_invite", { _token: data.token });
+    if (error) throw new Error(error.message);
+    return result as { ok: boolean; error?: string; role?: string; shop_id?: string; expected?: string };
+  });
