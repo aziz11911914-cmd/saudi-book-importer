@@ -527,35 +527,53 @@ export type Database = {
       }
       invites: {
         Row: {
+          accepted_at: string | null
+          accepted_by: string | null
           created_at: string
           email: string
           expires_at: string
+          full_name: string | null
           id: string
           invited_by: string | null
+          notes: string | null
+          phone: string | null
           role: Database["public"]["Enums"]["app_role"]
           shop_id: string | null
+          status: Database["public"]["Enums"]["invite_status"]
           token: string
           used_at: string | null
         }
         Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
           created_at?: string
           email: string
           expires_at: string
+          full_name?: string | null
           id?: string
           invited_by?: string | null
+          notes?: string | null
+          phone?: string | null
           role: Database["public"]["Enums"]["app_role"]
           shop_id?: string | null
+          status?: Database["public"]["Enums"]["invite_status"]
           token: string
           used_at?: string | null
         }
         Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
           created_at?: string
           email?: string
           expires_at?: string
+          full_name?: string | null
           id?: string
           invited_by?: string | null
+          notes?: string | null
+          phone?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           shop_id?: string | null
+          status?: Database["public"]["Enums"]["invite_status"]
           token?: string
           used_at?: string | null
         }
@@ -1110,6 +1128,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_invite: { Args: { _token: string }; Returns: Json }
       consume_invites_for_current_user: { Args: never; Returns: number }
       delete_email: {
         Args: { message_id: number; queue_name: string }
@@ -1122,6 +1141,21 @@ export type Database = {
       ensure_protected_super_admin: {
         Args: { _user_id: string }
         Returns: undefined
+      }
+      generate_unique_shop_slug: { Args: { _base: string }; Returns: string }
+      get_invite_by_token: {
+        Args: { _token: string }
+        Returns: {
+          email: string
+          expires_at: string
+          id: string
+          invited_by_name: string
+          role: Database["public"]["Enums"]["app_role"]
+          shop_id: string
+          shop_name_ar: string
+          shop_name_en: string
+          status: Database["public"]["Enums"]["invite_status"]
+        }[]
       }
       has_role: {
         Args: {
@@ -1165,6 +1199,7 @@ export type Database = {
         | "no_show"
       entity_status: "active" | "inactive" | "pending"
       favorite_target: "barber" | "shop"
+      invite_status: "pending" | "accepted" | "revoked" | "expired"
       profile_status: "active" | "suspended"
     }
     CompositeTypes: {
@@ -1310,6 +1345,7 @@ export const Constants = {
       ],
       entity_status: ["active", "inactive", "pending"],
       favorite_target: ["barber", "shop"],
+      invite_status: ["pending", "accepted", "revoked", "expired"],
       profile_status: ["active", "suspended"],
     },
   },
