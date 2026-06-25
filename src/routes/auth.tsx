@@ -31,7 +31,7 @@ const emailSchema = z
 function AuthPage() {
   const { t } = useTranslation();
   const { rtl, t: tt } = useLocale();
-  const { ready, session, profile, refresh } = useAuth();
+  const { ready, session, profile, roles, refresh } = useAuth();
   const navigate = useNavigate();
   const router = useRouter();
   const { redirect } = useSearch({ from: "/auth" });
