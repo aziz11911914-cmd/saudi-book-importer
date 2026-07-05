@@ -291,6 +291,13 @@ export type Database = {
             referencedRelation: "shops"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "barbers_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       bookings: {
@@ -370,6 +377,13 @@ export type Database = {
             referencedRelation: "shops"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "bookings_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       demo_reviews: {
@@ -413,6 +427,13 @@ export type Database = {
             columns: ["shop_id"]
             isOneToOne: false
             referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demo_reviews_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops_public"
             referencedColumns: ["id"]
           },
         ]
@@ -839,6 +860,13 @@ export type Database = {
             referencedRelation: "shops"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "reviews_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       service_categories: {
@@ -875,6 +903,13 @@ export type Database = {
             columns: ["shop_id"]
             isOneToOne: false
             referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_categories_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops_public"
             referencedColumns: ["id"]
           },
         ]
@@ -970,6 +1005,13 @@ export type Database = {
             referencedRelation: "shops"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "services_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       shop_holidays: {
@@ -1011,6 +1053,13 @@ export type Database = {
             referencedRelation: "shops"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "shop_holidays_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       shop_hours: {
@@ -1043,6 +1092,13 @@ export type Database = {
             referencedRelation: "shops"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "shop_hours_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       shop_photos: {
@@ -1073,6 +1129,13 @@ export type Database = {
             columns: ["shop_id"]
             isOneToOne: false
             referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shop_photos_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops_public"
             referencedColumns: ["id"]
           },
         ]
@@ -1298,7 +1361,147 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      shops_public: {
+        Row: {
+          accept_reviews: boolean | null
+          address: string | null
+          archived_at: string | null
+          booking_enabled: boolean | null
+          booking_interval_minutes: number | null
+          city: string | null
+          country: string | null
+          cover_url: string | null
+          created_at: string | null
+          description_ar: string | null
+          description_en: string | null
+          display_address: boolean | null
+          display_gallery: boolean | null
+          display_phone: boolean | null
+          display_services: boolean | null
+          display_team: boolean | null
+          display_whatsapp: boolean | null
+          district: string | null
+          email: string | null
+          featured: boolean | null
+          full_address: string | null
+          google_maps_url: string | null
+          id: string | null
+          instagram: string | null
+          lat: number | null
+          lng: number | null
+          logo_url: string | null
+          manager_id: string | null
+          max_booking_window_days: number | null
+          name_ar: string | null
+          name_en: string | null
+          paused_bookings: boolean | null
+          phone: string | null
+          published: boolean | null
+          rating_avg: number | null
+          rating_count: number | null
+          slug: string | null
+          snapchat: string | null
+          status: Database["public"]["Enums"]["entity_status"] | null
+          tiktok: string | null
+          updated_at: string | null
+          walkin_enabled: boolean | null
+          website: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          accept_reviews?: boolean | null
+          address?: string | null
+          archived_at?: string | null
+          booking_enabled?: boolean | null
+          booking_interval_minutes?: number | null
+          city?: string | null
+          country?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          description_ar?: string | null
+          description_en?: string | null
+          display_address?: boolean | null
+          display_gallery?: boolean | null
+          display_phone?: boolean | null
+          display_services?: boolean | null
+          display_team?: boolean | null
+          display_whatsapp?: boolean | null
+          district?: string | null
+          email?: string | null
+          featured?: boolean | null
+          full_address?: string | null
+          google_maps_url?: string | null
+          id?: string | null
+          instagram?: string | null
+          lat?: never
+          lng?: never
+          logo_url?: string | null
+          manager_id?: string | null
+          max_booking_window_days?: number | null
+          name_ar?: string | null
+          name_en?: string | null
+          paused_bookings?: boolean | null
+          phone?: never
+          published?: boolean | null
+          rating_avg?: number | null
+          rating_count?: number | null
+          slug?: string | null
+          snapchat?: string | null
+          status?: Database["public"]["Enums"]["entity_status"] | null
+          tiktok?: string | null
+          updated_at?: string | null
+          walkin_enabled?: boolean | null
+          website?: string | null
+          whatsapp?: never
+        }
+        Update: {
+          accept_reviews?: boolean | null
+          address?: string | null
+          archived_at?: string | null
+          booking_enabled?: boolean | null
+          booking_interval_minutes?: number | null
+          city?: string | null
+          country?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          description_ar?: string | null
+          description_en?: string | null
+          display_address?: boolean | null
+          display_gallery?: boolean | null
+          display_phone?: boolean | null
+          display_services?: boolean | null
+          display_team?: boolean | null
+          display_whatsapp?: boolean | null
+          district?: string | null
+          email?: string | null
+          featured?: boolean | null
+          full_address?: string | null
+          google_maps_url?: string | null
+          id?: string | null
+          instagram?: string | null
+          lat?: never
+          lng?: never
+          logo_url?: string | null
+          manager_id?: string | null
+          max_booking_window_days?: number | null
+          name_ar?: string | null
+          name_en?: string | null
+          paused_bookings?: boolean | null
+          phone?: never
+          published?: boolean | null
+          rating_avg?: number | null
+          rating_count?: number | null
+          slug?: string | null
+          snapchat?: string | null
+          status?: Database["public"]["Enums"]["entity_status"] | null
+          tiktok?: string | null
+          updated_at?: string | null
+          walkin_enabled?: boolean | null
+          website?: string | null
+          whatsapp?: never
+        }
+        Relationships: []
+      }
     }
     Functions: {
       accept_invite: { Args: { _token: string }; Returns: Json }

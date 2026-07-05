@@ -7,8 +7,12 @@ export function MaintenanceBanner() {
   const [m, setM] = useState<Maintenance | null>(null);
   useEffect(() => {
     let alive = true;
-    supabase.from("platform_settings").select("maintenance").eq("id", 1).maybeSingle()
-      .then(({ data }) => { if (alive) setM((data?.maintenance as any) ?? null); });
+    (async () => {
+      const { data: sess } = await supabase.auth.getSession();
+      if (!sess.session) return;
+      const { data } = await supabase.from("platform_settings").select("maintenance").eq("id", 1).maybeSingle();
+      if (alive) setM((data?.maintenance as any) ?? null);
+    })();
     return () => { alive = false; };
   }, []);
   if (!m?.enabled) return null;

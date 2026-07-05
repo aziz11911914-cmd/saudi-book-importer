@@ -108,8 +108,8 @@ export async function fetchFeaturedBarbers(): Promise<
 }
 
 export async function fetchFeaturedShops(): Promise<Shop[]> {
-  const { data, error } = await supabase
-    .from("shops")
+  const { data, error } = await (supabase as any)
+    .from("shops_public")
     .select("*")
     .eq("status", "active")
     .order("featured", { ascending: false })
@@ -123,7 +123,7 @@ export async function fetchBarbersList(specialtySlug?: string) {
   let q = supabase
     .from("barbers")
     .select(
-      "*, shop:shops(name_en, name_ar, city, district, lat, lng), barber_specialties(specialty:specialties(id, slug, label_en, label_ar))",
+      "*, shop:shops(id, name_en, name_ar, city, district), barber_specialties(specialty:specialties(id, slug, label_en, label_ar))",
     )
     .eq("status", "active");
 
@@ -131,10 +131,27 @@ export async function fetchBarbersList(specialtySlug?: string) {
   if (error) throw error;
   let rows = (data ?? []) as never as Array<
     Barber & {
-      shop: Pick<Shop, "name_en" | "name_ar" | "city" | "district" | "lat" | "lng">;
+      shop: Pick<Shop, "name_en" | "name_ar" | "city" | "district"> & { id: string };
       barber_specialties: { specialty: Specialty }[];
     }
   >;
+
+  // Fetch masked shop coords (respects display_address flag) via public view.
+  const shopIds = Array.from(new Set(rows.map((r) => r.shop?.id).filter(Boolean) as string[]));
+  if (shopIds.length) {
+    const { data: coords } = await (supabase as any)
+      .from("shops_public")
+      .select("id, lat, lng")
+      .in("id", shopIds);
+    const map = new Map<string, { lat: number | null; lng: number | null }>(
+      ((coords ?? []) as any[]).map((c) => [c.id, { lat: c.lat, lng: c.lng }]),
+    );
+    rows = rows.map((r) => {
+      const c = r.shop?.id ? map.get(r.shop.id) : undefined;
+      return c ? { ...r, shop: { ...r.shop, lat: c.lat, lng: c.lng } as any } : r;
+    });
+  }
+
   if (specialtySlug && specialtySlug !== "all") {
     rows = rows.filter((b) =>
       b.barber_specialties.some((bs) => bs.specialty.slug === specialtySlug),
@@ -148,7 +165,7 @@ export async function fetchBarberFull(barberId: string) {
     .from("barbers")
     .select(
       `*,
-       shop:shops(*),
+       shop:shops(id),
        barber_specialties(specialty:specialties(*)),
        portfolio_photos(*, portfolio_photo_specialties(specialty:specialties(*))),
        barber_services(service:services(*))`,
@@ -156,6 +173,16 @@ export async function fetchBarberFull(barberId: string) {
     .eq("id", barberId)
     .maybeSingle();
   if (error) throw error;
+  if (!data) return null;
+  const shopId = (data as any).shop?.id as string | undefined;
+  if (shopId) {
+    const { data: shopRow } = await (supabase as any)
+      .from("shops_public")
+      .select("*")
+      .eq("id", shopId)
+      .maybeSingle();
+    (data as any).shop = shopRow ?? (data as any).shop;
+  }
   return rewriteUrls(data as never) as never as
     | (Barber & {
         shop: Shop;
@@ -229,8 +256,8 @@ export async function fetchBarberAvailability(barberId: string) {
 }
 
 export async function fetchAllShops(): Promise<Shop[]> {
-  const { data, error } = await supabase
-    .from("shops")
+  const { data, error } = await (supabase as any)
+    .from("shops_public")
     .select("*")
     .eq("status", "active")
     .order("featured", { ascending: false })
@@ -249,26 +276,35 @@ export type ShopFull = Shop & {
 };
 
 export async function fetchShopBySlug(slug: string): Promise<ShopFull | null> {
-  const { data, error } = await supabase
-    .from("shops")
-    .select(
-      `*,
-       shop_photos(id, url, sort),
-       shop_hours(day_of_week, opens_at, closes_at),
-       services(*),
-       barbers(*, barber_specialties(specialty:specialties(*)))`,
-    )
+  // Fetch base row via masking view (respects display flags for anon).
+  const { data: base, error: baseErr } = await (supabase as any)
+    .from("shops_public")
+    .select("*")
     .eq("slug", slug)
     .eq("status", "active")
     .maybeSingle();
-  if (error) throw error;
-  if (!data) return null;
-  const full = data as never as ShopFull;
-  full.shop_photos = (full.shop_photos ?? []).sort((a, b) => a.sort - b.sort);
-  full.services = (full.services ?? []).filter((s) => (s as never as { active: boolean }).active !== false);
-  full.barbers = (full.barbers ?? []).filter(
-    (b) => (b as never as { status: string }).status === "active",
-  );
+  if (baseErr) throw baseErr;
+  if (!base) return null;
+
+  const shopId = (base as any).id as string;
+  const [photosRes, hoursRes, servicesRes, barbersRes] = await Promise.all([
+    supabase.from("shop_photos").select("id, url, sort").eq("shop_id", shopId),
+    supabase.from("shop_hours").select("day_of_week, opens_at, closes_at").eq("shop_id", shopId),
+    supabase.from("services").select("*").eq("shop_id", shopId),
+    supabase.from("barbers").select("*, barber_specialties(specialty:specialties(*))").eq("shop_id", shopId),
+  ]);
+  if (photosRes.error) throw photosRes.error;
+  if (hoursRes.error) throw hoursRes.error;
+  if (servicesRes.error) throw servicesRes.error;
+  if (barbersRes.error) throw barbersRes.error;
+
+  const full = {
+    ...(base as any),
+    shop_photos: ((photosRes.data ?? []) as any[]).sort((a, b) => a.sort - b.sort),
+    shop_hours: hoursRes.data ?? [],
+    services: ((servicesRes.data ?? []) as any[]).filter((s) => (s as any).active !== false),
+    barbers: ((barbersRes.data ?? []) as any[]).filter((b) => (b as any).status === "active"),
+  } as ShopFull;
   return rewriteUrls(full);
 }
 
@@ -335,8 +371,8 @@ export async function searchAll(rawQuery: string): Promise<SearchResults> {
       )
       .order("rating_avg", { ascending: false })
       .limit(20),
-    supabase
-      .from("shops")
+    (supabase as any)
+      .from("shops_public")
       .select("*")
       .eq("status", "active")
       .or(
