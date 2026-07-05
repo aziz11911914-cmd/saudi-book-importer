@@ -108,8 +108,8 @@ export async function fetchFeaturedBarbers(): Promise<
 }
 
 export async function fetchFeaturedShops(): Promise<Shop[]> {
-  const { data, error } = await supabase
-    .from("shops")
+  const { data, error } = await (supabase as any)
+    .from("shops_public")
     .select("*")
     .eq("status", "active")
     .order("featured", { ascending: false })
@@ -123,7 +123,7 @@ export async function fetchBarbersList(specialtySlug?: string) {
   let q = supabase
     .from("barbers")
     .select(
-      "*, shop:shops(name_en, name_ar, city, district, lat, lng), barber_specialties(specialty:specialties(id, slug, label_en, label_ar))",
+      "*, shop:shops(id, name_en, name_ar, city, district), barber_specialties(specialty:specialties(id, slug, label_en, label_ar))",
     )
     .eq("status", "active");
 
@@ -131,10 +131,27 @@ export async function fetchBarbersList(specialtySlug?: string) {
   if (error) throw error;
   let rows = (data ?? []) as never as Array<
     Barber & {
-      shop: Pick<Shop, "name_en" | "name_ar" | "city" | "district" | "lat" | "lng">;
+      shop: Pick<Shop, "name_en" | "name_ar" | "city" | "district"> & { id: string };
       barber_specialties: { specialty: Specialty }[];
     }
   >;
+
+  // Fetch masked shop coords (respects display_address flag) via public view.
+  const shopIds = Array.from(new Set(rows.map((r) => r.shop?.id).filter(Boolean) as string[]));
+  if (shopIds.length) {
+    const { data: coords } = await (supabase as any)
+      .from("shops_public")
+      .select("id, lat, lng")
+      .in("id", shopIds);
+    const map = new Map<string, { lat: number | null; lng: number | null }>(
+      ((coords ?? []) as any[]).map((c) => [c.id, { lat: c.lat, lng: c.lng }]),
+    );
+    rows = rows.map((r) => {
+      const c = r.shop?.id ? map.get(r.shop.id) : undefined;
+      return c ? { ...r, shop: { ...r.shop, lat: c.lat, lng: c.lng } as any } : r;
+    });
+  }
+
   if (specialtySlug && specialtySlug !== "all") {
     rows = rows.filter((b) =>
       b.barber_specialties.some((bs) => bs.specialty.slug === specialtySlug),
@@ -148,7 +165,7 @@ export async function fetchBarberFull(barberId: string) {
     .from("barbers")
     .select(
       `*,
-       shop:shops(*),
+       shop:shops(id),
        barber_specialties(specialty:specialties(*)),
        portfolio_photos(*, portfolio_photo_specialties(specialty:specialties(*))),
        barber_services(service:services(*))`,
@@ -156,6 +173,16 @@ export async function fetchBarberFull(barberId: string) {
     .eq("id", barberId)
     .maybeSingle();
   if (error) throw error;
+  if (!data) return null;
+  const shopId = (data as any).shop?.id as string | undefined;
+  if (shopId) {
+    const { data: shopRow } = await (supabase as any)
+      .from("shops_public")
+      .select("*")
+      .eq("id", shopId)
+      .maybeSingle();
+    (data as any).shop = shopRow ?? (data as any).shop;
+  }
   return rewriteUrls(data as never) as never as
     | (Barber & {
         shop: Shop;
@@ -229,8 +256,8 @@ export async function fetchBarberAvailability(barberId: string) {
 }
 
 export async function fetchAllShops(): Promise<Shop[]> {
-  const { data, error } = await supabase
-    .from("shops")
+  const { data, error } = await (supabase as any)
+    .from("shops_public")
     .select("*")
     .eq("status", "active")
     .order("featured", { ascending: false })
