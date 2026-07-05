@@ -276,26 +276,35 @@ export type ShopFull = Shop & {
 };
 
 export async function fetchShopBySlug(slug: string): Promise<ShopFull | null> {
-  const { data, error } = await supabase
-    .from("shops")
-    .select(
-      `*,
-       shop_photos(id, url, sort),
-       shop_hours(day_of_week, opens_at, closes_at),
-       services(*),
-       barbers(*, barber_specialties(specialty:specialties(*)))`,
-    )
+  // Fetch base row via masking view (respects display flags for anon).
+  const { data: base, error: baseErr } = await (supabase as any)
+    .from("shops_public")
+    .select("*")
     .eq("slug", slug)
     .eq("status", "active")
     .maybeSingle();
-  if (error) throw error;
-  if (!data) return null;
-  const full = data as never as ShopFull;
-  full.shop_photos = (full.shop_photos ?? []).sort((a, b) => a.sort - b.sort);
-  full.services = (full.services ?? []).filter((s) => (s as never as { active: boolean }).active !== false);
-  full.barbers = (full.barbers ?? []).filter(
-    (b) => (b as never as { status: string }).status === "active",
-  );
+  if (baseErr) throw baseErr;
+  if (!base) return null;
+
+  const shopId = (base as any).id as string;
+  const [photosRes, hoursRes, servicesRes, barbersRes] = await Promise.all([
+    supabase.from("shop_photos").select("id, url, sort").eq("shop_id", shopId),
+    supabase.from("shop_hours").select("day_of_week, opens_at, closes_at").eq("shop_id", shopId),
+    supabase.from("services").select("*").eq("shop_id", shopId),
+    supabase.from("barbers").select("*, barber_specialties(specialty:specialties(*))").eq("shop_id", shopId),
+  ]);
+  if (photosRes.error) throw photosRes.error;
+  if (hoursRes.error) throw hoursRes.error;
+  if (servicesRes.error) throw servicesRes.error;
+  if (barbersRes.error) throw barbersRes.error;
+
+  const full = {
+    ...(base as any),
+    shop_photos: ((photosRes.data ?? []) as any[]).sort((a, b) => a.sort - b.sort),
+    shop_hours: hoursRes.data ?? [],
+    services: ((servicesRes.data ?? []) as any[]).filter((s) => (s as any).active !== false),
+    barbers: ((barbersRes.data ?? []) as any[]).filter((b) => (b as any).status === "active"),
+  } as ShopFull;
   return rewriteUrls(full);
 }
 
@@ -362,8 +371,8 @@ export async function searchAll(rawQuery: string): Promise<SearchResults> {
       )
       .order("rating_avg", { ascending: false })
       .limit(20),
-    supabase
-      .from("shops")
+    (supabase as any)
+      .from("shops_public")
       .select("*")
       .eq("status", "active")
       .or(
