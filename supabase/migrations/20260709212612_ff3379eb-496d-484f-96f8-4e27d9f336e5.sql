@@ -1,0 +1,1 @@
+CREATE POLICY "Super admins read all roles" ON public.user_roles FOR SELECT USING (public.is_super_admin());
