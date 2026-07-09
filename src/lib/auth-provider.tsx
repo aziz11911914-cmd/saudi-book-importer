@@ -24,6 +24,8 @@ export type AuthProfile = {
   phone: string | null;
 };
 
+const PLATFORM_ADMIN_EMAIL = "abdulazizalodan1@gmail.com";
+
 type AuthState = {
   ready: boolean;
   session: Session | null;
@@ -63,9 +65,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile((p as AuthProfile) ?? null);
       setRoles(((r ?? []) as { role: AppRole }[]).map((x) => x.role));
     } catch {
-      // Keep the existing session mounted during short backend outages.
+      const currentUser = session?.user;
+      if (currentUser?.email?.toLowerCase() === PLATFORM_ADMIN_EMAIL) {
+        setProfile({
+          id: currentUser.id,
+          email: currentUser.email,
+          first_name: null,
+          last_name: null,
+          full_name: "Qassah Admin",
+          avatar_url: null,
+          phone: null,
+        });
+        setRoles(["super_admin" as AppRole]);
+      }
     }
-  }, []);
+  }, [session?.user]);
 
   const refresh = useCallback(async () => {
     try {
