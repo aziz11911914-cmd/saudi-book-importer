@@ -212,80 +212,189 @@ export const getSalon = createServerFn({ method: "GET" })
 // ---------- owners ----------
 export const listOwners = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { search?: string } | undefined) => d ?? {})
+  .inputValidator((d: any) => (d ?? {}) as { search?: string; status?: string; page?: number; pageSize?: number; sortBy?: string; sortDir?: string })
   .handler(async ({ context, data }) => {
     await assertSuperAdmin(context.supabase, context.userId);
-    const { data: roleRows, error } = await context.supabase
-      .from("user_roles")
-      .select("user_id")
-      .eq("role", "owner");
-    if (error) throw new Error(error.message);
-    const ids = (roleRows ?? []).map((r: any) => r.user_id);
-    if (ids.length === 0) return [];
-    let pQ = context.supabase
-      .from("profiles")
-      .select("id, email, full_name, first_name, last_name, phone, status, last_login_at, created_at")
-      .in("id", ids);
-    if (data.search) pQ = pQ.or(`email.ilike.%${data.search}%,full_name.ilike.%${data.search}%,phone.ilike.%${data.search}%`);
-    const { data: profiles, error: pErr } = await pQ;
-    if (pErr) throw new Error(pErr.message);
-    const { data: shops } = await context.supabase
-      .from("shops")
-      .select("id, name_en, name_ar, manager_id")
-      .in("manager_id", ids);
-    const shopByOwner = new Map<string, any>();
-    (shops ?? []).forEach((s: any) => shopByOwner.set(s.manager_id, s));
-    return (profiles ?? []).map((p: any) => ({ ...p, shop: shopByOwner.get(p.id) ?? null }));
+    const { rows, total } = await listProfilesByRole(context, "owner", data as any);
+    const ids = rows.map((r: any) => r.id);
+    let shops: any[] = [];
+    if (ids.length) {
+      const { data: sRows } = await context.supabase
+        .from("shops").select("id, name_en, name_ar, manager_id").in("manager_id", ids);
+      shops = sRows ?? [];
+    }
+    const byOwner = new Map<string, any>();
+    shops.forEach((s: any) => byOwner.set(s.manager_id, s));
+    return { rows: rows.map((p: any) => ({ ...p, shop: byOwner.get(p.id) ?? null })), total };
   });
 
 // ---------- barbers ----------
 export const listBarbers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { search?: string; shopId?: string } | undefined) => d ?? {})
+  .inputValidator((d: any) => (d ?? {}) as { search?: string; shopId?: string; status?: string; page?: number; pageSize?: number; sortBy?: string; sortDir?: string })
   .handler(async ({ context, data }) => {
     await assertSuperAdmin(context.supabase, context.userId);
+    const page = Math.max(1, data.page ?? 1);
+    const pageSize = Math.min(200, Math.max(5, data.pageSize ?? 25));
+    const sortBy = (data.sortBy as any) ?? "created_at";
+    const sortDir = data.sortDir ?? "desc";
     let q = context.supabase
       .from("barbers")
-      .select("id, display_name_en, display_name_ar, photo_url, status, rating_avg, rating_count, shop_id, created_at, shops:shop_id(name_en, name_ar)")
-      .order("created_at", { ascending: false })
-      .limit(200);
+      .select("id, display_name_en, display_name_ar, photo_url, status, rating_avg, rating_count, shop_id, profile_id, created_at, shops:shop_id(name_en, name_ar)", { count: "exact" });
     if (data.search) q = q.or(`display_name_en.ilike.%${data.search}%,display_name_ar.ilike.%${data.search}%`);
     if (data.shopId) q = q.eq("shop_id", data.shopId);
-    const { data: rows, error } = await q;
+    if (data.status && data.status !== "all") q = q.eq("status", data.status as any);
+    q = q.order(sortBy as any, { ascending: sortDir === "asc" }).range((page - 1) * pageSize, page * pageSize - 1);
+    const { data: rows, error, count } = await q;
     if (error) throw new Error(error.message);
-    return rows ?? [];
+    return { rows: rows ?? [], total: count ?? 0 };
+  });
+
+export const setBarberStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; status: "active" | "inactive" | "pending" }) => d)
+  .handler(async ({ context, data }) => {
+    await assertSuperAdmin(context.supabase, context.userId);
+    const { error } = await context.supabase.from("barbers").update({ status: data.status as any }).eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await audit(context.supabase, context.userId, context.claims?.email ?? null, `barber.${data.status}`, "barber", data.id);
+    return { ok: true };
+  });
+
+export const softDeleteBarber = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; reason?: string }) => d)
+  .handler(async ({ context, data }) => {
+    await assertSuperAdmin(context.supabase, context.userId);
+    const { error } = await context.supabase.from("barbers").update({ status: "inactive" as any }).eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await audit(context.supabase, context.userId, context.claims?.email ?? null, "barber.deleted", "barber", data.id, { reason: data.reason ?? null });
+    return { ok: true };
   });
 
 // ---------- customers ----------
+type UsersListInput = {
+  search?: string;
+  status?: string;
+  page?: number;
+  pageSize?: number;
+  sortBy?: "created_at" | "full_name" | "email" | "last_login_at";
+  sortDir?: "asc" | "desc";
+};
+
+async function listProfilesByRole(context: any, role: string, data: UsersListInput) {
+  const { data: roleRows } = await context.supabase
+    .from("user_roles").select("user_id").eq("role", role);
+  const ids = (roleRows ?? []).map((r: any) => r.user_id);
+  if (ids.length === 0) return { rows: [], total: 0 };
+  const page = Math.max(1, data.page ?? 1);
+  const pageSize = Math.min(200, Math.max(5, data.pageSize ?? 25));
+  const sortBy = data.sortBy ?? "created_at";
+  const sortDir = data.sortDir ?? "desc";
+  let q = context.supabase
+    .from("profiles")
+    .select("id, email, full_name, first_name, last_name, phone, status, last_login_at, created_at, disabled_at, disabled_reason, deleted_at", { count: "exact" })
+    .in("id", ids);
+  if (data.status && data.status !== "all") q = q.eq("status", data.status);
+  if (data.search) q = q.or(`email.ilike.%${data.search}%,full_name.ilike.%${data.search}%,phone.ilike.%${data.search}%`);
+  q = q.order(sortBy, { ascending: sortDir === "asc" }).range((page - 1) * pageSize, page * pageSize - 1);
+  const { data: rows, error, count } = await q;
+  if (error) throw new Error(error.message);
+  return { rows: rows ?? [], total: count ?? 0 };
+}
+
 export const listCustomers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { search?: string } | undefined) => d ?? {})
+  .inputValidator((d: UsersListInput | undefined) => d ?? {})
   .handler(async ({ context, data }) => {
     await assertSuperAdmin(context.supabase, context.userId);
-    const { data: roleRows } = await context.supabase
-      .from("user_roles").select("user_id").eq("role", "customer");
-    const ids = (roleRows ?? []).map((r: any) => r.user_id);
-    if (ids.length === 0) return [];
-    let q = context.supabase
-      .from("profiles")
-      .select("id, email, full_name, phone, status, last_login_at, created_at")
-      .in("id", ids)
-      .order("created_at", { ascending: false })
-      .limit(500);
-    if (data.search) q = q.or(`email.ilike.%${data.search}%,full_name.ilike.%${data.search}%,phone.ilike.%${data.search}%`);
-    const { data: rows, error } = await q;
-    if (error) throw new Error(error.message);
-    return rows ?? [];
+    return listProfilesByRole(context, "customer", data);
   });
 
 export const setProfileStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { id: string; status: "active" | "suspended" }) => d)
+  .inputValidator((d: { id: string; status: "active" | "suspended" | "disabled" | "pending"; reason?: string }) => d)
   .handler(async ({ context, data }) => {
     await assertSuperAdmin(context.supabase, context.userId);
-    const { error } = await context.supabase.from("profiles").update({ status: data.status }).eq("id", data.id);
+    const patch: any = { status: data.status };
+    if (data.status === "disabled" || data.status === "suspended") {
+      patch.disabled_at = new Date().toISOString();
+      patch.disabled_reason = data.reason ?? null;
+    } else if (data.status === "active") {
+      patch.disabled_at = null;
+      patch.disabled_reason = null;
+    }
+    const { error } = await context.supabase.from("profiles").update(patch).eq("id", data.id);
     if (error) throw new Error(error.message);
-    await audit(context.supabase, context.userId, context.claims?.email ?? null, `profile.${data.status}`, "profile", data.id);
+    await audit(context.supabase, context.userId, context.claims?.email ?? null, `profile.${data.status}`, "profile", data.id, { reason: data.reason ?? null });
+    return { ok: true };
+  });
+
+// Check user's dependent records to warn before delete
+export const getUserDependencies = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ context, data }) => {
+    await assertSuperAdmin(context.supabase, context.userId);
+    const sb = context.supabase;
+    const [bookings, activeBookings, reviews, shops, barbers] = await Promise.all([
+      sb.from("bookings").select("id", { count: "exact", head: true }).eq("customer_id", data.id),
+      sb.from("bookings").select("id", { count: "exact", head: true }).eq("customer_id", data.id).in("status", ["pending", "confirmed"]),
+      sb.from("reviews").select("id", { count: "exact", head: true }).eq("customer_id", data.id),
+      sb.from("shops").select("id", { count: "exact", head: true }).eq("manager_id", data.id),
+      sb.from("barbers").select("id", { count: "exact", head: true }).eq("profile_id", data.id),
+    ]);
+    return {
+      bookings: bookings.count ?? 0,
+      activeBookings: activeBookings.count ?? 0,
+      reviews: reviews.count ?? 0,
+      shops: shops.count ?? 0,
+      barbers: barbers.count ?? 0,
+    };
+  });
+
+// Soft delete: mark profile as deleted, keep data + audit history
+export const softDeleteProfile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; reason?: string }) => d)
+  .handler(async ({ context, data }) => {
+    await assertSuperAdmin(context.supabase, context.userId);
+    if (data.id === context.userId) throw new Error("You cannot delete your own account.");
+    // Guard: preserve platform owner
+    const { data: emailRow } = await context.supabase.from("profiles").select("email").eq("id", data.id).maybeSingle();
+    if ((emailRow?.email ?? "").toLowerCase() === "abdulazizalodan1@gmail.com") {
+      throw new Error("Cannot delete the platform owner account.");
+    }
+    const { error } = await context.supabase.from("profiles").update({
+      status: "deleted",
+      deleted_at: new Date().toISOString(),
+      deleted_by: context.userId,
+      disabled_reason: data.reason ?? null,
+    }).eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await audit(context.supabase, context.userId, context.claims?.email ?? null, "profile.deleted", "profile", data.id, { reason: data.reason ?? null });
+    return { ok: true };
+  });
+
+// Update profile info from admin
+const profilePatchSchema = z.object({
+  full_name: z.string().trim().max(200).optional().nullable(),
+  first_name: z.string().trim().max(120).optional().nullable(),
+  last_name: z.string().trim().max(120).optional().nullable(),
+  phone: z.string().trim().max(40).optional().nullable(),
+  email: z.string().trim().email().max(200).optional().nullable(),
+  nationality: z.string().trim().max(80).optional().nullable(),
+  language: z.string().trim().max(8).optional().nullable(),
+  notes: z.string().trim().max(2000).optional().nullable(),
+});
+export const updateProfile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; patch: unknown }) => ({ id: d.id, patch: profilePatchSchema.parse(d.patch) }))
+  .handler(async ({ context, data }) => {
+    await assertSuperAdmin(context.supabase, context.userId);
+    const { error } = await context.supabase.from("profiles").update(data.patch as any).eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await audit(context.supabase, context.userId, context.claims?.email ?? null, "profile.updated", "profile", data.id, data.patch as any);
     return { ok: true };
   });
 
