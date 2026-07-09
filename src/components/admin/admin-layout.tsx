@@ -2,9 +2,10 @@ import { Link, Outlet, useRouterState, useNavigate } from "@tanstack/react-route
 import { useAuth } from "@/lib/auth-provider";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   LayoutDashboard, Store, Users, Scissors, UserCircle, CalendarCheck,
-  Star, BarChart3, Bell, Settings, ShieldAlert, LogOut, Search, Plus, Menu, X,
+  Star, BarChart3, Bell, Settings, ShieldAlert, LogOut, Search, Plus, Menu, X, History,
 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { adminGlobalSearch } from "@/lib/admin.functions";
@@ -20,11 +21,13 @@ const NAV: NavItem[] = [
   { to: "/admin/customers", key: "customers", icon: Users },
   { to: "/admin/bookings", key: "bookings", icon: CalendarCheck },
   { to: "/admin/reviews", key: "reviews", icon: Star },
+  { to: "/admin/account-history", key: "accountHistory", icon: History },
   { to: "/admin/reports", key: "reports", icon: BarChart3 },
   { to: "/admin/notifications", key: "notifications", icon: Bell },
   { to: "/admin/settings", key: "settings", icon: Settings },
   { to: "/admin/audit-logs", key: "auditLogs", icon: ShieldAlert },
 ];
+
 
 export function AdminLayout({ requireRole = "super_admin" as "super_admin" | "owner" | "barber" }: { requireRole?: "super_admin" | "owner" | "barber" }) {
   const { t } = useTranslation();
@@ -34,9 +37,26 @@ export function AdminLayout({ requireRole = "super_admin" as "super_admin" | "ow
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const allowed = roles.includes(requireRole);
 
+  const queryClient = useQueryClient();
   useEffect(() => { if (ready && !allowed) { /* deny inline */ } }, [ready, allowed]);
 
+  // Auto-refresh: invalidate all admin queries periodically + on window focus.
+  useEffect(() => {
+    if (!allowed) return;
+    const invalidate = () => queryClient.invalidateQueries({
+      predicate: (q) => {
+        const k = String(q.queryKey[0] ?? "");
+        return k.startsWith("admin-") || k.endsWith("-codes");
+      },
+    });
+    const id = setInterval(invalidate, 10000);
+    const onFocus = () => invalidate();
+    window.addEventListener("focus", onFocus);
+    return () => { clearInterval(id); window.removeEventListener("focus", onFocus); };
+  }, [allowed, queryClient]);
+
   if (!ready) {
+
     return <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">{t("admin.common.loading")}</div>;
   }
   if (!allowed) {

@@ -47,6 +47,7 @@ import { Route as AuthenticatedAdminReportsRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminNotificationsRouteImport } from './routes/_authenticated/admin.notifications'
 import { Route as AuthenticatedAdminBookingsRouteImport } from './routes/_authenticated/admin.bookings'
 import { Route as AuthenticatedAdminAuditLogsRouteImport } from './routes/_authenticated/admin.audit-logs'
+import { Route as AuthenticatedAdminAccountHistoryRouteImport } from './routes/_authenticated/admin.account-history'
 import { Route as AuthenticatedAdminSalonsIndexRouteImport } from './routes/_authenticated/admin.salons.index'
 import { Route as AuthenticatedAdminOwnersIndexRouteImport } from './routes/_authenticated/admin.owners.index'
 import { Route as AuthenticatedAdminCustomersIndexRouteImport } from './routes/_authenticated/admin.customers.index'
@@ -270,6 +271,12 @@ const AuthenticatedAdminAuditLogsRoute =
     path: '/audit-logs',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminAccountHistoryRoute =
+  AuthenticatedAdminAccountHistoryRouteImport.update({
+    id: '/account-history',
+    path: '/account-history',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminSalonsIndexRoute =
   AuthenticatedAdminSalonsIndexRouteImport.update({
     id: '/salons/',
@@ -382,6 +389,7 @@ export interface FileRoutesByFullPath {
   '/barbers/': typeof BarbersIndexRoute
   '/bookings/': typeof BookingsIndexRoute
   '/favorites/': typeof FavoritesIndexRoute
+  '/admin/account-history': typeof AuthenticatedAdminAccountHistoryRoute
   '/admin/audit-logs': typeof AuthenticatedAdminAuditLogsRoute
   '/admin/bookings': typeof AuthenticatedAdminBookingsRoute
   '/admin/notifications': typeof AuthenticatedAdminNotificationsRoute
@@ -435,6 +443,7 @@ export interface FileRoutesByTo {
   '/barbers': typeof BarbersIndexRoute
   '/bookings': typeof BookingsIndexRoute
   '/favorites': typeof FavoritesIndexRoute
+  '/admin/account-history': typeof AuthenticatedAdminAccountHistoryRoute
   '/admin/audit-logs': typeof AuthenticatedAdminAuditLogsRoute
   '/admin/bookings': typeof AuthenticatedAdminBookingsRoute
   '/admin/notifications': typeof AuthenticatedAdminNotificationsRoute
@@ -492,6 +501,7 @@ export interface FileRoutesById {
   '/barbers/': typeof BarbersIndexRoute
   '/bookings/': typeof BookingsIndexRoute
   '/favorites/': typeof FavoritesIndexRoute
+  '/_authenticated/admin/account-history': typeof AuthenticatedAdminAccountHistoryRoute
   '/_authenticated/admin/audit-logs': typeof AuthenticatedAdminAuditLogsRoute
   '/_authenticated/admin/bookings': typeof AuthenticatedAdminBookingsRoute
   '/_authenticated/admin/notifications': typeof AuthenticatedAdminNotificationsRoute
@@ -549,6 +559,7 @@ export interface FileRouteTypes {
     | '/barbers/'
     | '/bookings/'
     | '/favorites/'
+    | '/admin/account-history'
     | '/admin/audit-logs'
     | '/admin/bookings'
     | '/admin/notifications'
@@ -602,6 +613,7 @@ export interface FileRouteTypes {
     | '/barbers'
     | '/bookings'
     | '/favorites'
+    | '/admin/account-history'
     | '/admin/audit-logs'
     | '/admin/bookings'
     | '/admin/notifications'
@@ -658,6 +670,7 @@ export interface FileRouteTypes {
     | '/barbers/'
     | '/bookings/'
     | '/favorites/'
+    | '/_authenticated/admin/account-history'
     | '/_authenticated/admin/audit-logs'
     | '/_authenticated/admin/bookings'
     | '/_authenticated/admin/notifications'
@@ -984,6 +997,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAuditLogsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/account-history': {
+      id: '/_authenticated/admin/account-history'
+      path: '/account-history'
+      fullPath: '/admin/account-history'
+      preLoaderRoute: typeof AuthenticatedAdminAccountHistoryRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/salons/': {
       id: '/_authenticated/admin/salons/'
       path: '/salons'
@@ -1100,6 +1120,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminAccountHistoryRoute: typeof AuthenticatedAdminAccountHistoryRoute
   AuthenticatedAdminAuditLogsRoute: typeof AuthenticatedAdminAuditLogsRoute
   AuthenticatedAdminBookingsRoute: typeof AuthenticatedAdminBookingsRoute
   AuthenticatedAdminNotificationsRoute: typeof AuthenticatedAdminNotificationsRoute
@@ -1123,6 +1144,7 @@ interface AuthenticatedAdminRouteChildren {
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminAccountHistoryRoute: AuthenticatedAdminAccountHistoryRoute,
   AuthenticatedAdminAuditLogsRoute: AuthenticatedAdminAuditLogsRoute,
   AuthenticatedAdminBookingsRoute: AuthenticatedAdminBookingsRoute,
   AuthenticatedAdminNotificationsRoute: AuthenticatedAdminNotificationsRoute,
