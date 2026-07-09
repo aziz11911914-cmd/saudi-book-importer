@@ -1361,21 +1361,6 @@ export type Database = {
       }
     }
     Views: {
-      platform_maintenance_status: {
-        Row: {
-          id: number | null
-          maintenance: Json | null
-        }
-        Insert: {
-          id?: number | null
-          maintenance?: Json | null
-        }
-        Update: {
-          id?: number | null
-          maintenance?: Json | null
-        }
-        Relationships: []
-      }
       shops_public: {
         Row: {
           accept_reviews: boolean | null
