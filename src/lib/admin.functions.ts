@@ -320,15 +320,20 @@ export const setProfileStatus = createServerFn({ method: "POST" })
     if (data.status === "disabled" || data.status === "suspended") {
       patch.disabled_at = new Date().toISOString();
       patch.disabled_reason = data.reason ?? null;
+      patch.deleted_at = null;
+      patch.deleted_by = null;
     } else if (data.status === "active") {
       patch.disabled_at = null;
       patch.disabled_reason = null;
+      patch.deleted_at = null;
+      patch.deleted_by = null;
     }
     const { error } = await context.supabase.from("profiles").update(patch).eq("id", data.id);
     if (error) throw new Error(error.message);
     await audit(context.supabase, context.userId, context.claims?.email ?? null, `profile.${data.status}`, "profile", data.id, { reason: data.reason ?? null });
     return { ok: true };
   });
+
 
 // Check user's dependent records to warn before delete
 export const getUserDependencies = createServerFn({ method: "GET" })
