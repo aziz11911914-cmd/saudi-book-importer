@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [ready, setReady] = useState(false);
 
-  const loadProfile = useCallback(async (userId: string) => {
+  const loadProfile = useCallback(async (currentUser: User) => {
     try {
       // Apply any pending invites (assigns owner/barber role and links to shop) + bumps last_login_at
       try { await withTimeout(consumeMyInvites()); } catch {}
@@ -58,14 +58,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         withTimeout(supabase
           .from("profiles")
           .select("id,email,first_name,last_name,full_name,avatar_url,phone")
-          .eq("id", userId)
+          .eq("id", currentUser.id)
           .maybeSingle()),
-        withTimeout(supabase.from("user_roles").select("role").eq("user_id", userId)),
+        withTimeout(supabase.from("user_roles").select("role").eq("user_id", currentUser.id)),
       ]);
       setProfile((p as AuthProfile) ?? null);
       setRoles(((r ?? []) as { role: AppRole }[]).map((x) => x.role));
     } catch {
-      const currentUser = session?.user;
       if (currentUser?.email?.toLowerCase() === PLATFORM_ADMIN_EMAIL) {
         setProfile({
           id: currentUser.id,
@@ -79,14 +78,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRoles(["super_admin" as AppRole]);
       }
     }
-  }, [session?.user]);
+  }, []);
 
   const refresh = useCallback(async () => {
     try {
       const { data } = await withTimeout(supabase.auth.getSession());
       setSession(data.session);
       if (data.session?.user) {
-        await loadProfile(data.session.user.id);
+        await loadProfile(data.session.user);
       } else {
         setProfile(null);
         setRoles([]);
@@ -105,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!mounted) return;
         setSession(data.session);
         if (data.session?.user) {
-          await loadProfile(data.session.user.id);
+          await loadProfile(data.session.user);
         }
       })
       .catch(() => {
@@ -131,7 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ) {
         // Defer to avoid potential deadlocks inside auth callback
         setTimeout(() => {
-          loadProfile(newSession.user.id);
+          loadProfile(newSession.user);
         }, 0);
       }
     });
