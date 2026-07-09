@@ -92,7 +92,7 @@ function AccountHistoryPage() {
                     <div className="truncate">{r.full_name || `${r.first_name ?? ""} ${r.last_name ?? ""}`.trim() || r.email}</div>
                     <div className="truncate text-xs text-muted-foreground">{r.email}</div>
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground">{roleLabel}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{String(roleLabel)}</td>
                   <td className="px-4 py-3 text-muted-foreground">{salonName}</td>
                   <td className="px-4 py-3"><StatusPill status={r.status} /></td>
                   <td className="px-4 py-3 text-muted-foreground">{when}</td>
