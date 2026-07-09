@@ -249,5 +249,5 @@ export function StatusPill({ status }: { status: string }) {
     deleted: "bg-neutral-500/10 text-neutral-400 line-through",
     inactive: "bg-neutral-500/10 text-neutral-400",
   };
-  return <span className={`rounded-full px-2 py-0.5 text-xs ${cls[status] ?? "bg-neutral-500/10 text-neutral-400"}`}>{t(`admin.status.${status}`, status)}</span>;
+  return <span className={`rounded-full px-2 py-0.5 text-xs ${cls[status] ?? "bg-neutral-500/10 text-neutral-400"}`}>{String(t(`admin.status.${status}`, { defaultValue: status }))}</span>;
 }
