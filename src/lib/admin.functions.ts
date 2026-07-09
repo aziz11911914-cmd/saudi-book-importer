@@ -9,7 +9,16 @@ async function assertSuperAdmin(supabase: any, userId: string) {
     .from("user_roles")
     .select("role")
     .eq("user_id", userId);
-  if (error) throw new Error(error.message);
+  if (error) {
+    const raw = String(error?.message ?? error ?? "");
+    if (raw.includes("Web server is down") || raw.includes("Error code 521") || raw.trim().startsWith("<!DOCTYPE")) {
+      throw new Error("The backend is temporarily unavailable. Please try again in a moment.");
+    }
+    if (raw.includes("Failed to fetch") || raw.includes("NetworkError")) {
+      throw new Error("The backend could not be reached. Please try again.");
+    }
+    throw new Error(raw || "The backend request failed. Please try again.");
+  }
   const roles = (data ?? []).map((r: any) => r.role);
   if (!roles.includes("super_admin")) {
     throw new Response("Forbidden", { status: 403 });

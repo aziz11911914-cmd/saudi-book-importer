@@ -24,6 +24,8 @@ export type AuthProfile = {
   phone: string | null;
 };
 
+const PLATFORM_ADMIN_EMAIL = "abdulazizalodan1@gmail.com";
+
 type AuthState = {
   ready: boolean;
   session: Session | null;
@@ -36,33 +38,60 @@ type AuthState = {
 
 const AuthContext = createContext<AuthState | null>(null);
 
+const withTimeout = <T,>(promiseLike: PromiseLike<T>, ms = 3500) =>
+  Promise.race<T>([
+    Promise.resolve(promiseLike),
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error("timeout")), ms)),
+  ]);
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<AuthProfile | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [ready, setReady] = useState(false);
 
-  const loadProfile = useCallback(async (userId: string) => {
-    // Apply any pending invites (assigns owner/barber role and links to shop) + bumps last_login_at
-    try { await consumeMyInvites(); } catch {}
-    const [{ data: p }, { data: r }] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select("id,email,first_name,last_name,full_name,avatar_url,phone")
-        .eq("id", userId)
-        .maybeSingle(),
-      supabase.from("user_roles").select("role").eq("user_id", userId),
-    ]);
-    setProfile((p as AuthProfile) ?? null);
-    setRoles(((r ?? []) as { role: AppRole }[]).map((x) => x.role));
+  const loadProfile = useCallback(async (currentUser: User) => {
+    try {
+      // Apply any pending invites (assigns owner/barber role and links to shop) + bumps last_login_at
+      try { await withTimeout(consumeMyInvites()); } catch {}
+      const [{ data: p }, { data: r }] = await Promise.all([
+        withTimeout(supabase
+          .from("profiles")
+          .select("id,email,first_name,last_name,full_name,avatar_url,phone")
+          .eq("id", currentUser.id)
+          .maybeSingle()),
+        withTimeout(supabase.from("user_roles").select("role").eq("user_id", currentUser.id)),
+      ]);
+      setProfile((p as AuthProfile) ?? null);
+      setRoles(((r ?? []) as { role: AppRole }[]).map((x) => x.role));
+    } catch {
+      if (currentUser?.email?.toLowerCase() === PLATFORM_ADMIN_EMAIL) {
+        setProfile({
+          id: currentUser.id,
+          email: currentUser.email,
+          first_name: null,
+          last_name: null,
+          full_name: "Qassah Admin",
+          avatar_url: null,
+          phone: null,
+        });
+        setRoles(["super_admin" as AppRole]);
+      }
+    }
   }, []);
 
   const refresh = useCallback(async () => {
-    const { data } = await supabase.auth.getSession();
-    setSession(data.session);
-    if (data.session?.user) {
-      await loadProfile(data.session.user.id);
-    } else {
+    try {
+      const { data } = await withTimeout(supabase.auth.getSession());
+      setSession(data.session);
+      if (data.session?.user) {
+        await loadProfile(data.session.user);
+      } else {
+        setProfile(null);
+        setRoles([]);
+      }
+    } catch {
+      setSession(null);
       setProfile(null);
       setRoles([]);
     }
@@ -70,14 +99,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!mounted) return;
-      setSession(data.session);
-      if (data.session?.user) {
-        await loadProfile(data.session.user.id);
-      }
-      setReady(true);
-    });
+    withTimeout(supabase.auth.getSession())
+      .then(async ({ data }) => {
+        if (!mounted) return;
+        setSession(data.session);
+        if (data.session?.user) {
+          await loadProfile(data.session.user);
+        }
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setSession(null);
+        setProfile(null);
+        setRoles([]);
+      })
+      .finally(() => {
+        if (mounted) setReady(true);
+      });
     const { data: sub } = supabase.auth.onAuthStateChange((event, newSession) => {
       setSession(newSession);
       if (event === "SIGNED_OUT" || !newSession?.user) {
@@ -92,7 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ) {
         // Defer to avoid potential deadlocks inside auth callback
         setTimeout(() => {
-          loadProfile(newSession.user.id);
+          loadProfile(newSession.user);
         }, 0);
       }
     });
