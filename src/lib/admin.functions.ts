@@ -403,7 +403,78 @@ export const updateProfile = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-// ---------- bookings ----------
+// ---------- account history (disabled + deleted) ----------
+export const listAccountHistory = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { status?: "disabled" | "deleted" | "all" } | undefined) => d ?? {})
+  .handler(async ({ context, data }) => {
+    await assertSuperAdmin(context.supabase, context.userId);
+    const sb = context.supabase;
+    const statuses = data.status && data.status !== "all" ? [data.status] : ["disabled", "deleted"];
+    const { data: rows, error } = await sb
+      .from("profiles")
+      .select("id, email, full_name, first_name, last_name, phone, status, disabled_at, disabled_reason, deleted_at, deleted_by, created_at")
+      .in("status", statuses as any)
+      .order("disabled_at", { ascending: false, nullsFirst: false });
+    if (error) throw new Error(error.message);
+    const list = rows ?? [];
+    const ids = list.map((r: any) => r.id);
+    if (!ids.length) return [];
+    const [rolesRes, shopsRes, barbersRes, auditsRes] = await Promise.all([
+      sb.from("user_roles").select("user_id, role").in("user_id", ids),
+      sb.from("shops").select("id, name_en, name_ar, manager_id").in("manager_id", ids),
+      sb.from("barbers").select("profile_id, shop_id, shops:shop_id(name_en, name_ar)").in("profile_id", ids),
+      sb.from("audit_logs")
+        .select("actor_email, action, target_id, created_at")
+        .in("target_id", ids)
+        .in("action", ["profile.disabled", "profile.suspended", "profile.deleted"])
+        .order("created_at", { ascending: false }),
+    ]);
+    const roleMap = new Map<string, string[]>();
+    (rolesRes.data ?? []).forEach((r: any) => {
+      const arr = roleMap.get(r.user_id) ?? [];
+      arr.push(r.role);
+      roleMap.set(r.user_id, arr);
+    });
+    const shopMap = new Map<string, any>();
+    (shopsRes.data ?? []).forEach((s: any) => shopMap.set(s.manager_id, s));
+    const barberMap = new Map<string, any>();
+    (barbersRes.data ?? []).forEach((b: any) => { if (b.shops) barberMap.set(b.profile_id, b.shops); });
+    const actorMap = new Map<string, any>();
+    (auditsRes.data ?? []).forEach((a: any) => { if (!actorMap.has(a.target_id)) actorMap.set(a.target_id, a); });
+    return list.map((r: any) => {
+      const roles = roleMap.get(r.id) ?? [];
+      const role = roles.includes("owner") ? "owner" : roles.includes("barber") ? "barber" : roles.includes("customer") ? "customer" : (roles[0] ?? "—");
+      const salon = shopMap.get(r.id) ?? barberMap.get(r.id) ?? null;
+      const auditRow = actorMap.get(r.id);
+      return {
+        ...r,
+        role,
+        salon,
+        actor_email: auditRow?.actor_email ?? null,
+        action_at: auditRow?.created_at ?? r.deleted_at ?? r.disabled_at,
+      };
+    });
+  });
+
+export const hardDeleteProfile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ context, data }) => {
+    await assertSuperAdmin(context.supabase, context.userId);
+    if (data.id === context.userId) throw new Error("You cannot delete your own account.");
+    const { data: emailRow } = await context.supabase.from("profiles").select("email").eq("id", data.id).maybeSingle();
+    if ((emailRow?.email ?? "").toLowerCase() === "abdulazizalodan1@gmail.com") {
+      throw new Error("Cannot permanently delete the platform owner account.");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.id);
+    if (error) throw new Error(error.message);
+    await audit(context.supabase, context.userId, context.claims?.email ?? null, "profile.hard_deleted", "profile", data.id, { email: emailRow?.email ?? null });
+    return { ok: true };
+  });
+
+
 export const listAllBookings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { status?: string; shopId?: string } | undefined) => d ?? {})
