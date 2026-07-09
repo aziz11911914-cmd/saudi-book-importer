@@ -1,9 +1,9 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 
-const withTimeout = <T,>(promise: Promise<T>, ms = 3500) =>
+const withTimeout = <T,>(promiseLike: PromiseLike<T>, ms = 3500) =>
   Promise.race<T>([
-    promise,
+    Promise.resolve(promiseLike),
     new Promise<T>((_, reject) => setTimeout(() => reject(new Error("timeout")), ms)),
   ]);
 
