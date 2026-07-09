@@ -10,6 +10,7 @@ import {
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { consumeMyInvites } from "@/lib/admin.functions";
 
 export type AppRole = Database["public"]["Enums"]["app_role"];
 
