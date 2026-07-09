@@ -1522,6 +1522,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: undefined
       }
+      generate_unique_barber_slug: { Args: { _base: string }; Returns: string }
       generate_unique_shop_slug: { Args: { _base: string }; Returns: string }
       has_role: {
         Args: {
