@@ -351,7 +351,8 @@ export const getSettings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertSuperAdmin(context.supabase, context.userId);
-    const { data, error } = await context.supabase
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
       .from("platform_settings").select("*").eq("id", 1).maybeSingle();
     if (error) throw new Error(error.message);
     return data;
@@ -362,10 +363,11 @@ export const updateSettings = createServerFn({ method: "POST" })
   .inputValidator((d: { section: "general" | "booking" | "authentication" | "notifications" | "maintenance"; values: Record<string, unknown> }) => d)
   .handler(async ({ context, data }) => {
     await assertSuperAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const patch: Record<string, unknown> = {};
     patch[data.section] = data.values;
     patch.updated_by = context.userId;
-    const { error } = await context.supabase.from("platform_settings").update(patch as any).eq("id", 1);
+    const { error } = await supabaseAdmin.from("platform_settings").update(patch as any).eq("id", 1);
     if (error) throw new Error(error.message);
     await audit(context.supabase, context.userId, context.claims?.email ?? null, "settings.updated", "platform_settings", "1", { section: data.section });
     return { ok: true };
