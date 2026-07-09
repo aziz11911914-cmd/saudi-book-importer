@@ -681,7 +681,8 @@ export const getReports = createServerFn({ method: "GET" })
 export const consumeMyInvites = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await context.supabase.rpc("consume_invites_for_current_user");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin.rpc("consume_invites_for_user", { _user_id: context.userId });
     if (error) throw new Error(error.message);
     return { applied: data ?? 0 };
   });
@@ -694,22 +695,46 @@ export const consumeMyInvites = createServerFn({ method: "POST" })
 export const getInviteByToken = createServerFn({ method: "GET" })
   .inputValidator((d: { token: string }) => d)
   .handler(async ({ data }) => {
-    const sb = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_PUBLISHABLE_KEY!,
-      { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
-    );
-    const { data: rows, error } = await sb.rpc("get_invite_by_token", { _token: data.token });
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: inv, error } = await supabaseAdmin
+      .from("invites")
+      .select("id, email, role, shop_id, expires_at, status, used_at, invited_by, full_name")
+      .eq("token", data.token)
+      .maybeSingle();
     if (error) throw new Error(error.message);
-    const row = Array.isArray(rows) ? rows[0] : rows;
-    return row ?? null;
+    if (!inv) return null;
+
+    const [{ data: shop }, { data: inviter }] = await Promise.all([
+      inv.shop_id
+        ? supabaseAdmin.from("shops").select("name_en, name_ar").eq("id", inv.shop_id).maybeSingle()
+        : Promise.resolve({ data: null } as any),
+      inv.invited_by
+        ? supabaseAdmin.from("profiles").select("full_name").eq("id", inv.invited_by).maybeSingle()
+        : Promise.resolve({ data: null } as any),
+    ]);
+
+    let status: string = inv.status;
+    if (inv.status === "pending" && new Date(inv.expires_at) < new Date()) status = "expired";
+
+    return {
+      id: inv.id,
+      email: inv.email,
+      role: inv.role,
+      shop_id: inv.shop_id,
+      shop_name_en: shop?.name_en ?? null,
+      shop_name_ar: shop?.name_ar ?? null,
+      expires_at: inv.expires_at,
+      status,
+      invited_by_name: inviter?.full_name ?? null,
+    };
   });
 
 export const acceptInvite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { token: string }) => d)
   .handler(async ({ context, data }) => {
-    const { data: result, error } = await context.supabase.rpc("accept_invite", { _token: data.token });
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: result, error } = await supabaseAdmin.rpc("accept_invite", { _user_id: context.userId, _token: data.token });
     if (error) throw new Error(error.message);
     return result as { ok: boolean; error?: string; role?: string; shop_id?: string; expected?: string };
   });
