@@ -1,6 +1,7 @@
 import { Link, Outlet, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-provider";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   LayoutDashboard, Store, Users, Scissors, UserCircle, CalendarCheck,
   Star, BarChart3, Bell, Settings, ShieldAlert, LogOut, Search, Plus, Menu, X,
@@ -8,37 +9,35 @@ import {
 import { useServerFn } from "@tanstack/react-start";
 import { adminGlobalSearch } from "@/lib/admin.functions";
 import { cn } from "@/lib/utils";
+import { LanguageSwitcher } from "@/components/admin/language-switcher";
 
-type NavItem = { to: string; label: string; icon: any; exact?: boolean };
+type NavItem = { to: string; key: string; icon: any; exact?: boolean };
 const NAV: NavItem[] = [
-  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { to: "/admin/salons", label: "Salons", icon: Store },
-  { to: "/admin/owners", label: "Owners", icon: UserCircle },
-  { to: "/admin/barbers", label: "Barbers", icon: Scissors },
-  { to: "/admin/customers", label: "Customers", icon: Users },
-  { to: "/admin/bookings", label: "Bookings", icon: CalendarCheck },
-  { to: "/admin/reviews", label: "Reviews", icon: Star },
-  { to: "/admin/reports", label: "Reports", icon: BarChart3 },
-  { to: "/admin/notifications", label: "Notifications", icon: Bell },
-  { to: "/admin/settings", label: "Settings", icon: Settings },
-  { to: "/admin/audit-logs", label: "Audit Logs", icon: ShieldAlert },
+  { to: "/admin", key: "dashboard", icon: LayoutDashboard, exact: true },
+  { to: "/admin/salons", key: "salons", icon: Store },
+  { to: "/admin/owners", key: "owners", icon: UserCircle },
+  { to: "/admin/barbers", key: "barbers", icon: Scissors },
+  { to: "/admin/customers", key: "customers", icon: Users },
+  { to: "/admin/bookings", key: "bookings", icon: CalendarCheck },
+  { to: "/admin/reviews", key: "reviews", icon: Star },
+  { to: "/admin/reports", key: "reports", icon: BarChart3 },
+  { to: "/admin/notifications", key: "notifications", icon: Bell },
+  { to: "/admin/settings", key: "settings", icon: Settings },
+  { to: "/admin/audit-logs", key: "auditLogs", icon: ShieldAlert },
 ];
 
 export function AdminLayout({ requireRole = "super_admin" as "super_admin" | "owner" | "barber" }: { requireRole?: "super_admin" | "owner" | "barber" }) {
+  const { t } = useTranslation();
   const { ready, roles, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const allowed = roles.includes(requireRole);
 
-  useEffect(() => {
-    if (ready && !allowed) {
-      // Show access denied inline
-    }
-  }, [ready, allowed]);
+  useEffect(() => { if (ready && !allowed) { /* deny inline */ } }, [ready, allowed]);
 
   if (!ready) {
-    return <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">Loading…</div>;
+    return <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">{t("admin.common.loading")}</div>;
   }
   if (!allowed) {
     return (
@@ -55,13 +54,12 @@ export function AdminLayout({ requireRole = "super_admin" as "super_admin" | "ow
 
   return (
     <div className="flex min-h-screen w-full bg-background text-foreground">
-      {/* Sidebar */}
       <aside className={cn(
         "fixed inset-y-0 z-40 flex w-64 flex-col border-e border-hairline bg-surface/95 backdrop-blur transition-transform lg:static lg:translate-x-0",
         sidebarOpen ? "translate-x-0" : "-translate-x-full",
       )}>
         <div className="flex h-16 items-center justify-between border-b border-hairline px-5">
-          <Link to="/admin" className="font-display text-xl text-gold">Qassah Admin</Link>
+          <Link to="/admin" className="font-display text-xl text-gold">{t("admin.brand")}</Link>
           <button className="lg:hidden" onClick={() => setSidebarOpen(false)}><X className="size-5" /></button>
         </div>
         <nav className="flex-1 space-y-1 overflow-y-auto p-3">
@@ -79,17 +77,17 @@ export function AdminLayout({ requireRole = "super_admin" as "super_admin" | "ow
                 )}
               >
                 <Icon className="size-4" />
-                <span>{item.label}</span>
+                <span>{t(`admin.nav.${item.key}`)}</span>
               </Link>
             );
           })}
         </nav>
         <div className="border-t border-hairline p-3">
           <Link to="/profile" className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground hover:bg-surface hover:text-foreground">
-            <UserCircle className="size-4" /> {profile?.full_name || profile?.email || "Profile"}
+            <UserCircle className="size-4" /> {profile?.full_name || profile?.email || t("admin.nav.profile")}
           </Link>
           <button onClick={async () => { await signOut(); navigate({ to: "/auth", replace: true }); }} className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground hover:bg-surface hover:text-foreground">
-            <LogOut className="size-4" /> Logout
+            <LogOut className="size-4" /> {t("admin.nav.logout")}
           </button>
         </div>
       </aside>
@@ -107,6 +105,7 @@ export function AdminLayout({ requireRole = "super_admin" as "super_admin" | "ow
 }
 
 function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
+  const { t } = useTranslation();
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -116,10 +115,10 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
 
   useEffect(() => {
     if (!q || q.length < 2) { setResults(null); return; }
-    const t = setTimeout(async () => {
+    const timer = setTimeout(async () => {
       try { setResults(await search({ data: { q } })); setOpen(true); } catch {}
     }, 200);
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, [q, search]);
 
   return (
@@ -132,7 +131,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
           onChange={(e) => setQ(e.target.value)}
           onFocus={() => results && setOpen(true)}
           onBlur={() => setTimeout(() => setOpen(false), 200)}
-          placeholder="Search salons, owners, barbers, bookings…"
+          placeholder={t("admin.common.searchAll")}
           className="w-full rounded-full border border-hairline bg-surface ps-10 pe-4 py-2 text-sm outline-none focus:border-gold/60"
         />
         {open && results && (
@@ -140,7 +139,7 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
             {(["salons","barbers","users","bookings"] as const).map((key) => (
               results[key]?.length > 0 && (
                 <div key={key} className="mb-2">
-                  <div className="px-3 py-1 text-[10px] uppercase text-muted-foreground">{key}</div>
+                  <div className="px-3 py-1 text-[10px] uppercase text-muted-foreground">{t(`admin.nav.${key === "users" ? "customers" : key}`)}</div>
                   {results[key].map((r: any) => (
                     <button
                       key={r.id}
@@ -160,26 +159,28 @@ function TopBar({ onMenuClick }: { onMenuClick: () => void }) {
               )
             ))}
             {results.salons.length + results.barbers.length + results.users.length + results.bookings.length === 0 && (
-              <div className="px-3 py-4 text-center text-xs text-muted-foreground">No results</div>
+              <div className="px-3 py-4 text-center text-xs text-muted-foreground">{t("admin.common.empty")}</div>
             )}
           </div>
         )}
       </div>
+
+      <LanguageSwitcher />
 
       <div className="relative">
         <button
           onClick={() => setCreateOpen((v) => !v)}
           className="inline-flex items-center gap-2 rounded-full bg-gold px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-gold-glow"
         >
-          <Plus className="size-4" /> Create
+          <Plus className="size-4" /> {t("admin.common.create")}
         </button>
         {createOpen && (
           <div className="absolute end-0 top-full z-10 mt-2 w-56 overflow-hidden rounded-2xl border border-hairline bg-surface shadow-xl">
             {[
-              { label: "Create Salon", to: "/admin/salons/new" },
-              { label: "Invite Owner", to: "/admin/owners/new" },
-              { label: "Invite Barber", to: "/admin/barbers/new" },
-              { label: "Send Notification", to: "/admin/notifications" },
+              { label: t("admin.nav.salons"), to: "/admin/salons/new" },
+              { label: t("admin.pages.owners.invite"), to: "/admin/owners/new" },
+              { label: t("admin.pages.barbers.invite"), to: "/admin/barbers/new" },
+              { label: t("admin.nav.notifications"), to: "/admin/notifications" },
             ].map((m) => (
               <button
                 key={m.to}

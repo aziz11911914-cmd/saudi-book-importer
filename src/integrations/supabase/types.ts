@@ -811,6 +811,10 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          disabled_at: string | null
+          disabled_reason: string | null
           email: string | null
           first_name: string | null
           full_name: string | null
@@ -828,6 +832,10 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          disabled_at?: string | null
+          disabled_reason?: string | null
           email?: string | null
           first_name?: string | null
           full_name?: string | null
@@ -845,6 +853,10 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          disabled_at?: string | null
+          disabled_reason?: string | null
           email?: string | null
           first_name?: string | null
           full_name?: string | null
@@ -1639,7 +1651,12 @@ export type Database = {
       holiday_kind: "vacation" | "holiday" | "temporary" | "emergency"
       invitation_code_status: "pending" | "activated" | "revoked"
       invite_status: "pending" | "accepted" | "revoked" | "expired"
-      profile_status: "active" | "suspended"
+      profile_status:
+        | "active"
+        | "suspended"
+        | "disabled"
+        | "pending"
+        | "deleted"
       service_status: "active" | "hidden" | "unavailable" | "archived"
     }
     CompositeTypes: {
@@ -1788,7 +1805,7 @@ export const Constants = {
       holiday_kind: ["vacation", "holiday", "temporary", "emergency"],
       invitation_code_status: ["pending", "activated", "revoked"],
       invite_status: ["pending", "accepted", "revoked", "expired"],
-      profile_status: ["active", "suspended"],
+      profile_status: ["active", "suspended", "disabled", "pending", "deleted"],
       service_status: ["active", "hidden", "unavailable", "archived"],
     },
   },
