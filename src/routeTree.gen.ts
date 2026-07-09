@@ -57,9 +57,11 @@ import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/em
 import { Route as AuthenticatedAdminSalonsNewRouteImport } from './routes/_authenticated/admin.salons.new'
 import { Route as AuthenticatedAdminSalonsIdRouteImport } from './routes/_authenticated/admin.salons.$id'
 import { Route as AuthenticatedAdminOwnersNewRouteImport } from './routes/_authenticated/admin.owners.new'
+import { Route as AuthenticatedAdminOwnersCodeRouteImport } from './routes/_authenticated/admin.owners.code'
 import { Route as AuthenticatedAdminOwnersIdRouteImport } from './routes/_authenticated/admin.owners.$id'
 import { Route as AuthenticatedAdminCustomersIdRouteImport } from './routes/_authenticated/admin.customers.$id'
 import { Route as AuthenticatedAdminBarbersNewRouteImport } from './routes/_authenticated/admin.barbers.new'
+import { Route as AuthenticatedAdminBarbersCodeRouteImport } from './routes/_authenticated/admin.barbers.code'
 import { Route as AuthenticatedAdminBarbersIdRouteImport } from './routes/_authenticated/admin.barbers.$id'
 
 const SearchRoute = SearchRouteImport.update({
@@ -326,6 +328,12 @@ const AuthenticatedAdminOwnersNewRoute =
     path: '/owners/new',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminOwnersCodeRoute =
+  AuthenticatedAdminOwnersCodeRouteImport.update({
+    id: '/owners/code',
+    path: '/owners/code',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminOwnersIdRoute =
   AuthenticatedAdminOwnersIdRouteImport.update({
     id: '/owners/$id',
@@ -342,6 +350,12 @@ const AuthenticatedAdminBarbersNewRoute =
   AuthenticatedAdminBarbersNewRouteImport.update({
     id: '/barbers/new',
     path: '/barbers/new',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminBarbersCodeRoute =
+  AuthenticatedAdminBarbersCodeRouteImport.update({
+    id: '/barbers/code',
+    path: '/barbers/code',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminBarbersIdRoute =
@@ -390,9 +404,11 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/owner/': typeof AuthenticatedOwnerIndexRoute
   '/admin/barbers/$id': typeof AuthenticatedAdminBarbersIdRoute
+  '/admin/barbers/code': typeof AuthenticatedAdminBarbersCodeRoute
   '/admin/barbers/new': typeof AuthenticatedAdminBarbersNewRoute
   '/admin/customers/$id': typeof AuthenticatedAdminCustomersIdRoute
   '/admin/owners/$id': typeof AuthenticatedAdminOwnersIdRoute
+  '/admin/owners/code': typeof AuthenticatedAdminOwnersCodeRoute
   '/admin/owners/new': typeof AuthenticatedAdminOwnersNewRoute
   '/admin/salons/$id': typeof AuthenticatedAdminSalonsIdRoute
   '/admin/salons/new': typeof AuthenticatedAdminSalonsNewRoute
@@ -441,9 +457,11 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/owner': typeof AuthenticatedOwnerIndexRoute
   '/admin/barbers/$id': typeof AuthenticatedAdminBarbersIdRoute
+  '/admin/barbers/code': typeof AuthenticatedAdminBarbersCodeRoute
   '/admin/barbers/new': typeof AuthenticatedAdminBarbersNewRoute
   '/admin/customers/$id': typeof AuthenticatedAdminCustomersIdRoute
   '/admin/owners/$id': typeof AuthenticatedAdminOwnersIdRoute
+  '/admin/owners/code': typeof AuthenticatedAdminOwnersCodeRoute
   '/admin/owners/new': typeof AuthenticatedAdminOwnersNewRoute
   '/admin/salons/$id': typeof AuthenticatedAdminSalonsIdRoute
   '/admin/salons/new': typeof AuthenticatedAdminSalonsNewRoute
@@ -496,9 +514,11 @@ export interface FileRoutesById {
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/owner/': typeof AuthenticatedOwnerIndexRoute
   '/_authenticated/admin/barbers/$id': typeof AuthenticatedAdminBarbersIdRoute
+  '/_authenticated/admin/barbers/code': typeof AuthenticatedAdminBarbersCodeRoute
   '/_authenticated/admin/barbers/new': typeof AuthenticatedAdminBarbersNewRoute
   '/_authenticated/admin/customers/$id': typeof AuthenticatedAdminCustomersIdRoute
   '/_authenticated/admin/owners/$id': typeof AuthenticatedAdminOwnersIdRoute
+  '/_authenticated/admin/owners/code': typeof AuthenticatedAdminOwnersCodeRoute
   '/_authenticated/admin/owners/new': typeof AuthenticatedAdminOwnersNewRoute
   '/_authenticated/admin/salons/$id': typeof AuthenticatedAdminSalonsIdRoute
   '/_authenticated/admin/salons/new': typeof AuthenticatedAdminSalonsNewRoute
@@ -551,9 +571,11 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/owner/'
     | '/admin/barbers/$id'
+    | '/admin/barbers/code'
     | '/admin/barbers/new'
     | '/admin/customers/$id'
     | '/admin/owners/$id'
+    | '/admin/owners/code'
     | '/admin/owners/new'
     | '/admin/salons/$id'
     | '/admin/salons/new'
@@ -602,9 +624,11 @@ export interface FileRouteTypes {
     | '/admin'
     | '/owner'
     | '/admin/barbers/$id'
+    | '/admin/barbers/code'
     | '/admin/barbers/new'
     | '/admin/customers/$id'
     | '/admin/owners/$id'
+    | '/admin/owners/code'
     | '/admin/owners/new'
     | '/admin/salons/$id'
     | '/admin/salons/new'
@@ -656,9 +680,11 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/'
     | '/_authenticated/owner/'
     | '/_authenticated/admin/barbers/$id'
+    | '/_authenticated/admin/barbers/code'
     | '/_authenticated/admin/barbers/new'
     | '/_authenticated/admin/customers/$id'
     | '/_authenticated/admin/owners/$id'
+    | '/_authenticated/admin/owners/code'
     | '/_authenticated/admin/owners/new'
     | '/_authenticated/admin/salons/$id'
     | '/_authenticated/admin/salons/new'
@@ -1028,6 +1054,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminOwnersNewRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/owners/code': {
+      id: '/_authenticated/admin/owners/code'
+      path: '/owners/code'
+      fullPath: '/admin/owners/code'
+      preLoaderRoute: typeof AuthenticatedAdminOwnersCodeRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/owners/$id': {
       id: '/_authenticated/admin/owners/$id'
       path: '/owners/$id'
@@ -1049,6 +1082,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminBarbersNewRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/barbers/code': {
+      id: '/_authenticated/admin/barbers/code'
+      path: '/barbers/code'
+      fullPath: '/admin/barbers/code'
+      preLoaderRoute: typeof AuthenticatedAdminBarbersCodeRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/barbers/$id': {
       id: '/_authenticated/admin/barbers/$id'
       path: '/barbers/$id'
@@ -1068,9 +1108,11 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminBarbersIdRoute: typeof AuthenticatedAdminBarbersIdRoute
+  AuthenticatedAdminBarbersCodeRoute: typeof AuthenticatedAdminBarbersCodeRoute
   AuthenticatedAdminBarbersNewRoute: typeof AuthenticatedAdminBarbersNewRoute
   AuthenticatedAdminCustomersIdRoute: typeof AuthenticatedAdminCustomersIdRoute
   AuthenticatedAdminOwnersIdRoute: typeof AuthenticatedAdminOwnersIdRoute
+  AuthenticatedAdminOwnersCodeRoute: typeof AuthenticatedAdminOwnersCodeRoute
   AuthenticatedAdminOwnersNewRoute: typeof AuthenticatedAdminOwnersNewRoute
   AuthenticatedAdminSalonsIdRoute: typeof AuthenticatedAdminSalonsIdRoute
   AuthenticatedAdminSalonsNewRoute: typeof AuthenticatedAdminSalonsNewRoute
@@ -1089,9 +1131,11 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminBarbersIdRoute: AuthenticatedAdminBarbersIdRoute,
+  AuthenticatedAdminBarbersCodeRoute: AuthenticatedAdminBarbersCodeRoute,
   AuthenticatedAdminBarbersNewRoute: AuthenticatedAdminBarbersNewRoute,
   AuthenticatedAdminCustomersIdRoute: AuthenticatedAdminCustomersIdRoute,
   AuthenticatedAdminOwnersIdRoute: AuthenticatedAdminOwnersIdRoute,
+  AuthenticatedAdminOwnersCodeRoute: AuthenticatedAdminOwnersCodeRoute,
   AuthenticatedAdminOwnersNewRoute: AuthenticatedAdminOwnersNewRoute,
   AuthenticatedAdminSalonsIdRoute: AuthenticatedAdminSalonsIdRoute,
   AuthenticatedAdminSalonsNewRoute: AuthenticatedAdminSalonsNewRoute,
