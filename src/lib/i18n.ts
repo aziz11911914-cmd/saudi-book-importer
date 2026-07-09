@@ -287,6 +287,8 @@ const resources = {
         },
         language: { label: "English", ariaSwitch: "التبديل إلى الإنجليزية" },
       },
+    },
+  },
   en: {
     translation: {
       brand: "Qassah",
