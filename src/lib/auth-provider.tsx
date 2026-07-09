@@ -36,6 +36,12 @@ type AuthState = {
 
 const AuthContext = createContext<AuthState | null>(null);
 
+const withTimeout = <T,>(promise: Promise<T>, ms = 3500) =>
+  Promise.race<T>([
+    promise,
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error("timeout")), ms)),
+  ]);
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<AuthProfile | null>(null);
@@ -47,12 +53,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Apply any pending invites (assigns owner/barber role and links to shop) + bumps last_login_at
       try { await consumeMyInvites(); } catch {}
       const [{ data: p }, { data: r }] = await Promise.all([
-        supabase
+        withTimeout(supabase
           .from("profiles")
           .select("id,email,first_name,last_name,full_name,avatar_url,phone")
           .eq("id", userId)
-          .maybeSingle(),
-        supabase.from("user_roles").select("role").eq("user_id", userId),
+          .maybeSingle()),
+        withTimeout(supabase.from("user_roles").select("role").eq("user_id", userId)),
       ]);
       setProfile((p as AuthProfile) ?? null);
       setRoles(((r ?? []) as { role: AppRole }[]).map((x) => x.role));
@@ -63,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     try {
-      const { data } = await supabase.auth.getSession();
+      const { data } = await withTimeout(supabase.auth.getSession());
       setSession(data.session);
       if (data.session?.user) {
         await loadProfile(data.session.user.id);
@@ -80,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    supabase.auth.getSession()
+    withTimeout(supabase.auth.getSession())
       .then(async ({ data }) => {
         if (!mounted) return;
         setSession(data.session);
