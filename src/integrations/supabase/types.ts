@@ -1504,8 +1504,11 @@ export type Database = {
       }
     }
     Functions: {
-      accept_invite: { Args: { _token: string }; Returns: Json }
-      consume_invites_for_current_user: { Args: never; Returns: number }
+      accept_invite: {
+        Args: { _token: string; _user_id: string }
+        Returns: Json
+      }
+      consume_invites_for_user: { Args: { _user_id: string }; Returns: number }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -1520,20 +1523,6 @@ export type Database = {
         Returns: undefined
       }
       generate_unique_shop_slug: { Args: { _base: string }; Returns: string }
-      get_invite_by_token: {
-        Args: { _token: string }
-        Returns: {
-          email: string
-          expires_at: string
-          id: string
-          invited_by_name: string
-          role: Database["public"]["Enums"]["app_role"]
-          shop_id: string
-          shop_name_ar: string
-          shop_name_en: string
-          status: Database["public"]["Enums"]["invite_status"]
-        }[]
-      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
