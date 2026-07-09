@@ -129,7 +129,7 @@ function BarberCard({ barber, onChange }: { barber: any; onChange: () => void })
       </div>
       <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
         <span>★ {barber.rating_avg ? Number(barber.rating_avg).toFixed(1) : "—"} ({barber.rating_count ?? 0})</span>
-        <span className={`rounded-full px-2 py-0.5 ${cls}`}>{t(`admin.status.${barber.status}`, barber.status)}</span>
+        <span className={`rounded-full px-2 py-0.5 ${cls}`}>{String(t(`admin.status.${barber.status}`, { defaultValue: barber.status }))}</span>
       </div>
 
       <AlertDialog open={openDel} onOpenChange={setOpenDel}>
