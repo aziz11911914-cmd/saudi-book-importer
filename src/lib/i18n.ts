@@ -189,8 +189,10 @@ const resources = {
           notifications: "الإشعارات",
           settings: "الإعدادات",
           auditLogs: "سجلات التدقيق",
+          accountHistory: "سجل الحسابات",
           logout: "تسجيل الخروج",
           profile: "الملف الشخصي",
+
         },
         common: {
           search: "بحث…",
@@ -231,7 +233,10 @@ const resources = {
           disable: "تعطيل الحساب",
           activate: "تفعيل الحساب",
           delete: "حذف الحساب",
+          restore: "استعادة",
+          permanentDelete: "حذف نهائي",
         },
+
         status: {
           active: "نشط",
           suspended: "موقوف",
@@ -284,7 +289,16 @@ const resources = {
           customers: { title: "العملاء", subtitle: "جميع العملاء المسجّلين.", empty: "لا يوجد عملاء." },
           owners: { title: "الملاك", subtitle: "ملاك الصالونات وتعييناتهم.", empty: "لا يوجد ملاك بعد.", invite: "دعوة مالك", createWithCode: "إنشاء برمز دعوة" },
           barbers: { title: "الحلاقون", subtitle: "جميع الحلاقين عبر الصالونات.", empty: "لا يوجد حلاقون بعد.", invite: "دعوة حلاق", createWithCode: "إنشاء برمز دعوة" },
+          accountHistory: { title: "سجل الحسابات", subtitle: "الحسابات المعطّلة والمحذوفة.", empty: "لا توجد سجلات." },
         },
+        history: {
+          role: "الدور",
+          date: "التاريخ",
+          actor: "الأدمن المنفّذ",
+          confirmPermanentTitle: "حذف الحساب نهائياً؟",
+          confirmPermanentBody: "سيتم حذف الحساب وبياناته المرتبطة نهائياً ولا يمكن التراجع.",
+        },
+
         language: { label: "English", ariaSwitch: "التبديل إلى الإنجليزية" },
       },
     },
@@ -471,8 +485,10 @@ const resources = {
           notifications: "Notifications",
           settings: "Settings",
           auditLogs: "Audit Logs",
+          accountHistory: "Account History",
           logout: "Logout",
           profile: "Profile",
+
         },
         common: {
           search: "Search…",
@@ -513,7 +529,10 @@ const resources = {
           disable: "Disable Account",
           activate: "Activate Account",
           delete: "Delete Account",
+          restore: "Restore",
+          permanentDelete: "Delete Permanently",
         },
+
         status: {
           active: "Active",
           suspended: "Suspended",
@@ -566,7 +585,16 @@ const resources = {
           customers: { title: "Customers", subtitle: "All registered customers.", empty: "No customers." },
           owners: { title: "Owners", subtitle: "Salon owners and their assignments.", empty: "No owners yet.", invite: "Invite Owner", createWithCode: "Create with Invitation Code" },
           barbers: { title: "Barbers", subtitle: "All barbers across all salons.", empty: "No barbers yet.", invite: "Invite Barber", createWithCode: "Create with Invitation Code" },
+          accountHistory: { title: "Account History", subtitle: "Disabled and deleted accounts.", empty: "No records." },
         },
+        history: {
+          role: "Role",
+          date: "Date",
+          actor: "Performed by",
+          confirmPermanentTitle: "Permanently delete this account?",
+          confirmPermanentBody: "The account and its login will be permanently removed. This cannot be undone.",
+        },
+
         language: { label: "العربية", ariaSwitch: "Switch to Arabic" },
       },
     },
