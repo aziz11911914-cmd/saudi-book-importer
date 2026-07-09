@@ -3,6 +3,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { listBarbers } from "@/lib/admin.functions";
+import { listInvitationCodes, revokeInvitationCode } from "@/lib/invitation-codes.functions";
+import { CodesSection } from "./admin.owners.index";
 
 export const Route = createFileRoute("/_authenticated/admin/barbers/")({
   component: BarbersPage,
@@ -10,14 +12,20 @@ export const Route = createFileRoute("/_authenticated/admin/barbers/")({
 
 function BarbersPage() {
   const list = useServerFn(listBarbers);
+  const listCodes = useServerFn(listInvitationCodes);
+  const revoke = useServerFn(revokeInvitationCode);
   const [search, setSearch] = useState("");
   const { data, isLoading } = useQuery({ queryKey: ["admin-barbers", search], queryFn: () => list({ data: { search } }) });
+  const { data: codes, refetch: refetchCodes } = useQuery({ queryKey: ["barber-codes"], queryFn: () => listCodes({ data: { role: "barber" } }) });
 
   return (
     <div className="space-y-4">
-      <div className="flex items-end justify-between gap-3">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div><h1 className="font-display text-3xl">Barbers</h1><p className="text-sm text-muted-foreground">All barbers across all salons.</p></div>
-        <Link to="/admin/barbers/new" className="rounded-full bg-gold px-4 py-2 text-sm font-semibold text-primary-foreground">+ Invite Barber</Link>
+        <div className="flex flex-wrap gap-2">
+          <Link to="/admin/barbers/new" className="rounded-full bg-gold px-4 py-2 text-sm font-semibold text-primary-foreground">+ Invite Barber</Link>
+          <Link to="/admin/barbers/code" className="rounded-full border border-gold/60 px-4 py-2 text-sm font-semibold text-gold">Create with Invitation Code</Link>
+        </div>
       </div>
       <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search barbers…" className="w-full max-w-md rounded-full border border-hairline bg-surface px-4 py-2 text-sm outline-none focus:border-gold/60" />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -39,6 +47,8 @@ function BarbersPage() {
         ))}
         {!isLoading && (data?.length ?? 0) === 0 && <div className="text-muted-foreground">No barbers yet.</div>}
       </div>
+
+      <CodesSection title="Barber Invitation Codes" codes={codes ?? []} onRevoke={async (id) => { await revoke({ data: { id } }); refetchCodes(); }} />
     </div>
   );
 }
