@@ -10,7 +10,7 @@ export function MaintenanceBanner() {
     (async () => {
       const { data: sess } = await supabase.auth.getSession();
       if (!sess.session) return;
-      const { data } = await supabase.from("platform_maintenance_status").select("maintenance").eq("id", 1).maybeSingle();
+      const { data } = await supabase.from("platform_settings").select("maintenance").eq("id", 1).maybeSingle();
       if (alive) setM((data?.maintenance as any) ?? null);
     })();
     return () => { alive = false; };
