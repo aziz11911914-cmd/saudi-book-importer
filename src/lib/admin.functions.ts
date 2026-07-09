@@ -4,12 +4,23 @@ import { createClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 // ---------- helpers ----------
+function readableBackendError(error: any) {
+  const raw = String(error?.message ?? error ?? "");
+  if (raw.includes("Web server is down") || raw.includes("Error code 521") || raw.trim().startsWith("<!DOCTYPE")) {
+    return "The backend is temporarily unavailable. Please try again in a moment.";
+  }
+  if (raw.includes("Failed to fetch") || raw.includes("NetworkError")) {
+    return "The backend could not be reached. Please try again.";
+  }
+  return raw || "The backend request failed. Please try again.";
+}
+
 async function assertSuperAdmin(supabase: any, userId: string) {
   const { data, error } = await supabase
     .from("user_roles")
     .select("role")
     .eq("user_id", userId);
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(readableBackendError(error));
   const roles = (data ?? []).map((r: any) => r.role);
   if (!roles.includes("super_admin")) {
     throw new Response("Forbidden", { status: 403 });
