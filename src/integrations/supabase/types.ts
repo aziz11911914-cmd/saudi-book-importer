@@ -546,6 +546,66 @@ export type Database = {
         }
         Relationships: []
       }
+      invitation_codes: {
+        Row: {
+          activated_user_id: string | null
+          code: string
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          id: string
+          notes: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          shop_id: string | null
+          status: Database["public"]["Enums"]["invitation_code_status"]
+          updated_at: string
+          used_at: string | null
+        }
+        Insert: {
+          activated_user_id?: string | null
+          code: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          notes?: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          shop_id?: string | null
+          status?: Database["public"]["Enums"]["invitation_code_status"]
+          updated_at?: string
+          used_at?: string | null
+        }
+        Update: {
+          activated_user_id?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          notes?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          shop_id?: string | null
+          status?: Database["public"]["Enums"]["invitation_code_status"]
+          updated_at?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitation_codes_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invitation_codes_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invites: {
         Row: {
           accepted_at: string | null
@@ -1508,6 +1568,16 @@ export type Database = {
         Args: { _token: string; _user_id: string }
         Returns: Json
       }
+      activate_invitation_code: {
+        Args: {
+          _code: string
+          _email: string
+          _full_name: string
+          _phone: string
+          _user_id: string
+        }
+        Returns: Json
+      }
       consume_invites_for_user: { Args: { _user_id: string }; Returns: number }
       delete_email: {
         Args: { message_id: number; queue_name: string }
@@ -1567,6 +1637,7 @@ export type Database = {
       entity_status: "active" | "inactive" | "pending"
       favorite_target: "barber" | "shop"
       holiday_kind: "vacation" | "holiday" | "temporary" | "emergency"
+      invitation_code_status: "pending" | "activated" | "revoked"
       invite_status: "pending" | "accepted" | "revoked" | "expired"
       profile_status: "active" | "suspended"
       service_status: "active" | "hidden" | "unavailable" | "archived"
@@ -1715,6 +1786,7 @@ export const Constants = {
       entity_status: ["active", "inactive", "pending"],
       favorite_target: ["barber", "shop"],
       holiday_kind: ["vacation", "holiday", "temporary", "emergency"],
+      invitation_code_status: ["pending", "activated", "revoked"],
       invite_status: ["pending", "accepted", "revoked", "expired"],
       profile_status: ["active", "suspended"],
       service_status: ["active", "hidden", "unavailable", "archived"],
