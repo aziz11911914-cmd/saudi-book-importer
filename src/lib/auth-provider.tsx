@@ -43,26 +43,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
 
   const loadProfile = useCallback(async (userId: string) => {
-    // Apply any pending invites (assigns owner/barber role and links to shop) + bumps last_login_at
-    try { await consumeMyInvites(); } catch {}
-    const [{ data: p }, { data: r }] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select("id,email,first_name,last_name,full_name,avatar_url,phone")
-        .eq("id", userId)
-        .maybeSingle(),
-      supabase.from("user_roles").select("role").eq("user_id", userId),
-    ]);
-    setProfile((p as AuthProfile) ?? null);
-    setRoles(((r ?? []) as { role: AppRole }[]).map((x) => x.role));
+    try {
+      // Apply any pending invites (assigns owner/barber role and links to shop) + bumps last_login_at
+      try { await consumeMyInvites(); } catch {}
+      const [{ data: p }, { data: r }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("id,email,first_name,last_name,full_name,avatar_url,phone")
+          .eq("id", userId)
+          .maybeSingle(),
+        supabase.from("user_roles").select("role").eq("user_id", userId),
+      ]);
+      setProfile((p as AuthProfile) ?? null);
+      setRoles(((r ?? []) as { role: AppRole }[]).map((x) => x.role));
+    } catch {
+      // Keep the existing session mounted during short backend outages.
+    }
   }, []);
 
   const refresh = useCallback(async () => {
-    const { data } = await supabase.auth.getSession();
-    setSession(data.session);
-    if (data.session?.user) {
-      await loadProfile(data.session.user.id);
-    } else {
+    try {
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
+      if (data.session?.user) {
+        await loadProfile(data.session.user.id);
+      } else {
+        setProfile(null);
+        setRoles([]);
+      }
+    } catch {
+      setSession(null);
       setProfile(null);
       setRoles([]);
     }
@@ -70,14 +80,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!mounted) return;
-      setSession(data.session);
-      if (data.session?.user) {
-        await loadProfile(data.session.user.id);
-      }
-      setReady(true);
-    });
+    supabase.auth.getSession()
+      .then(async ({ data }) => {
+        if (!mounted) return;
+        setSession(data.session);
+        if (data.session?.user) {
+          await loadProfile(data.session.user.id);
+        }
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setSession(null);
+        setProfile(null);
+        setRoles([]);
+      })
+      .finally(() => {
+        if (mounted) setReady(true);
+      });
     const { data: sub } = supabase.auth.onAuthStateChange((event, newSession) => {
       setSession(newSession);
       if (event === "SIGNED_OUT" || !newSession?.user) {
