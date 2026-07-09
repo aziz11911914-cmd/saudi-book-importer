@@ -15,6 +15,7 @@ import { LocaleProvider } from "@/lib/locale-provider";
 import { AuthProvider } from "@/lib/auth-provider";
 import { supabase } from "@/integrations/supabase/client";
 import { MaintenanceBanner } from "@/components/maintenance-banner";
+import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -144,6 +145,7 @@ function RootComponent() {
         <AuthProvider>
           <MaintenanceBanner />
           <Outlet />
+          <Toaster />
         </AuthProvider>
       </LocaleProvider>
     </QueryClientProvider>
