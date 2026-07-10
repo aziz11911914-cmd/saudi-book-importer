@@ -57,9 +57,10 @@ export const getOwnerPublicPage = createServerFn({ method: "GET" })
           .order("display_order"),
         sb
           .from("barbers")
-          .select("id, display_name_en, display_name_ar, photo_url, status, rating_avg, sort_order")
+          .select("id, display_name_en, display_name_ar, photo_url, status, rating_avg, featured")
           .eq("shop_id", shop.id)
-          .order("sort_order", { ascending: true, nullsFirst: false }),
+          .order("featured", { ascending: false })
+          .order("display_name_en"),
         sb
           .from("reviews")
           .select("id, rating, comment, created_at, hidden_at, customer_id, profiles:customer_id(full_name)")
