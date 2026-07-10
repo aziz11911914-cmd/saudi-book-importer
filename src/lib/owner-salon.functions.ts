@@ -39,6 +39,61 @@ export const getOwnerSalon = createServerFn({ method: "GET" })
     };
   });
 
+// ------------ PUBLIC PAGE (aggregated) ------------
+export const getOwnerPublicPage = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const sb = context.supabase;
+    const shop = await loadOwnerShop(sb, context.userId);
+    const [hoursRes, photosRes, servicesRes, barbersRes, reviewsRes] =
+      await Promise.all([
+        sb.from("shop_hours").select("*").eq("shop_id", shop.id).order("day_of_week"),
+        sb.from("shop_photos").select("*").eq("shop_id", shop.id).order("sort"),
+        sb
+          .from("services")
+          .select("id, name_en, name_ar, price_sar, duration_min, image_url, status, display_order")
+          .eq("shop_id", shop.id)
+          .neq("status", "archived")
+          .order("display_order"),
+        sb
+          .from("barbers")
+          .select("id, display_name_en, display_name_ar, photo_url, status, rating_avg, sort_order")
+          .eq("shop_id", shop.id)
+          .order("sort_order", { ascending: true, nullsFirst: false }),
+        sb
+          .from("reviews")
+          .select("id, rating, comment, created_at, hidden_at, customer_id, profiles:customer_id(full_name)")
+          .eq("shop_id", shop.id)
+          .order("created_at", { ascending: false })
+          .limit(20),
+      ]);
+    return {
+      shop,
+      hours: hoursRes.data ?? [],
+      photos: photosRes.data ?? [],
+      services: servicesRes.data ?? [],
+      barbers: barbersRes.data ?? [],
+      reviews: reviewsRes.data ?? [],
+    };
+  });
+
+export const toggleReviewHidden = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; hidden: boolean }) =>
+    z.object({ id: z.string().uuid(), hidden: z.boolean() }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const sb = context.supabase;
+    const shop = await loadOwnerShop(sb, context.userId);
+    const { error } = await sb
+      .from("reviews")
+      .update({ hidden_at: data.hidden ? new Date().toISOString() : null })
+      .eq("id", data.id)
+      .eq("shop_id", shop.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 // ------------ UPDATE GENERAL ------------
 const updateShopSchema = z
   .object({
