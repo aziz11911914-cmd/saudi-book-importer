@@ -370,28 +370,66 @@ export const getUserDependencies = createServerFn({ method: "GET" })
     };
   });
 
-// Soft delete: mark profile as deleted, keep data + audit history
+// "Delete" is a ROLE CONVERSION to customer — no data is destroyed.
+// - Owner: removes owner role, unassigns any managed shops
+// - Barber: removes barber role, deactivates barber profile
+// - Profile stays active, all bookings/reviews kept
 export const softDeleteProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { id: string; reason?: string }) => d)
   .handler(async ({ context, data }) => {
     await assertSuperAdmin(context.supabase, context.userId);
-    if (data.id === context.userId) throw new Error("You cannot delete your own account.");
-    // Guard: preserve platform owner
+    if (data.id === context.userId) throw new Error("You cannot convert your own account.");
     const { data: emailRow } = await context.supabase.from("profiles").select("email").eq("id", data.id).maybeSingle();
     if ((emailRow?.email ?? "").toLowerCase() === "abdulazizalodan1@gmail.com") {
-      throw new Error("Cannot delete the platform owner account.");
+      throw new Error("Cannot modify the platform owner account.");
     }
-    const { error } = await context.supabase.from("profiles").update({
-      status: "deleted",
-      deleted_at: new Date().toISOString(),
-      deleted_by: context.userId,
-      disabled_reason: data.reason ?? null,
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Read prior roles
+    const { data: roleRows } = await supabaseAdmin
+      .from("user_roles").select("role").eq("user_id", data.id);
+    const prevRoles = (roleRows ?? []).map((r: any) => r.role as string);
+    const previousRole = prevRoles.includes("owner")
+      ? "owner"
+      : prevRoles.includes("barber")
+      ? "barber"
+      : (prevRoles.find((r) => r !== "customer") ?? "customer");
+
+    // Unlink shops managed by this user
+    if (prevRoles.includes("owner")) {
+      await supabaseAdmin.from("shops").update({ manager_id: null }).eq("manager_id", data.id);
+    }
+    // Deactivate barber profiles owned by this user
+    if (prevRoles.includes("barber")) {
+      await supabaseAdmin.from("barbers").update({ status: "inactive" as any }).eq("profile_id", data.id);
+    }
+    // Strip elevated roles (keep super_admin/customer, protected roles blocked by trigger)
+    await supabaseAdmin.from("user_roles").delete().eq("user_id", data.id).in("role", ["owner", "barber"] as any);
+    // Ensure they still have a customer role
+    await supabaseAdmin.from("user_roles").upsert(
+      { user_id: data.id, role: "customer" as any },
+      { onConflict: "user_id,role", ignoreDuplicates: true },
+    );
+
+    // Reset profile flags — they are a regular customer now
+    await context.supabase.from("profiles").update({
+      status: "active",
+      disabled_at: null,
+      disabled_reason: null,
+      deleted_at: null,
+      deleted_by: null,
     }).eq("id", data.id);
-    if (error) throw new Error(error.message);
-    await audit(context.supabase, context.userId, context.claims?.email ?? null, "profile.deleted", "profile", data.id, { reason: data.reason ?? null });
-    return { ok: true };
+
+    await audit(
+      context.supabase, context.userId, context.claims?.email ?? null,
+      "profile.converted_to_customer", "profile", data.id,
+      { reason: data.reason ?? null, previous_role: previousRole, current_role: "customer" },
+    );
+    return { ok: true, previous_role: previousRole, current_role: "customer" };
   });
+
 
 // Update profile info from admin
 const profilePatchSchema = z.object({
