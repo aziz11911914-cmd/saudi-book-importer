@@ -19,6 +19,7 @@ const NAV: NavItem[] = [
   { to: "/owner/portfolio", label: "Portfolio", icon: Image },
   { to: "/owner/reviews", label: "Reviews", icon: Star },
   { to: "/owner/analytics", label: "Analytics", icon: BarChart3 },
+  { to: "/owner/public-page", label: "Public Page", icon: Globe },
   { to: "/owner/salon", label: "Salon", icon: Store },
   { to: "/owner/settings", label: "Settings", icon: Settings },
   { to: "/owner/support", label: "Support", icon: LifeBuoy },
