@@ -57,11 +57,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const [{ data: p }, { data: r }] = await Promise.all([
         withTimeout(supabase
           .from("profiles")
-          .select("id,email,first_name,last_name,full_name,avatar_url,phone")
+          .select("id,email,first_name,last_name,full_name,avatar_url,phone,status")
           .eq("id", currentUser.id)
           .maybeSingle()),
         withTimeout(supabase.from("user_roles").select("role").eq("user_id", currentUser.id)),
       ]);
+      // Block disabled/suspended accounts from using the app.
+      const status = (p as any)?.status;
+      if (status === "disabled" || status === "suspended") {
+        await supabase.auth.signOut();
+        setSession(null);
+        setProfile(null);
+        setRoles([]);
+        if (typeof window !== "undefined") {
+          window.location.replace("/auth?disabled=1");
+        }
+        return;
+      }
       setProfile((p as AuthProfile) ?? null);
       setRoles(((r ?? []) as { role: AppRole }[]).map((x) => x.role));
     } catch {
@@ -79,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
   }, []);
+
 
   const refresh = useCallback(async () => {
     try {
