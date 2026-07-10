@@ -35,6 +35,7 @@ import { Route as AuthenticatedOwnerSettingsRouteImport } from './routes/_authen
 import { Route as AuthenticatedOwnerServicesRouteImport } from './routes/_authenticated/owner.services'
 import { Route as AuthenticatedOwnerSalonRouteImport } from './routes/_authenticated/owner.salon'
 import { Route as AuthenticatedOwnerReviewsRouteImport } from './routes/_authenticated/owner.reviews'
+import { Route as AuthenticatedOwnerPublicPageRouteImport } from './routes/_authenticated/owner.public-page'
 import { Route as AuthenticatedOwnerPortfolioRouteImport } from './routes/_authenticated/owner.portfolio'
 import { Route as AuthenticatedOwnerCustomersRouteImport } from './routes/_authenticated/owner.customers'
 import { Route as AuthenticatedOwnerCalendarRouteImport } from './routes/_authenticated/owner.calendar'
@@ -197,6 +198,12 @@ const AuthenticatedOwnerReviewsRoute =
   AuthenticatedOwnerReviewsRouteImport.update({
     id: '/reviews',
     path: '/reviews',
+    getParentRoute: () => AuthenticatedOwnerRoute,
+  } as any)
+const AuthenticatedOwnerPublicPageRoute =
+  AuthenticatedOwnerPublicPageRouteImport.update({
+    id: '/public-page',
+    path: '/public-page',
     getParentRoute: () => AuthenticatedOwnerRoute,
   } as any)
 const AuthenticatedOwnerPortfolioRoute =
@@ -402,6 +409,7 @@ export interface FileRoutesByFullPath {
   '/owner/calendar': typeof AuthenticatedOwnerCalendarRoute
   '/owner/customers': typeof AuthenticatedOwnerCustomersRoute
   '/owner/portfolio': typeof AuthenticatedOwnerPortfolioRoute
+  '/owner/public-page': typeof AuthenticatedOwnerPublicPageRoute
   '/owner/reviews': typeof AuthenticatedOwnerReviewsRoute
   '/owner/salon': typeof AuthenticatedOwnerSalonRoute
   '/owner/services': typeof AuthenticatedOwnerServicesRoute
@@ -456,6 +464,7 @@ export interface FileRoutesByTo {
   '/owner/calendar': typeof AuthenticatedOwnerCalendarRoute
   '/owner/customers': typeof AuthenticatedOwnerCustomersRoute
   '/owner/portfolio': typeof AuthenticatedOwnerPortfolioRoute
+  '/owner/public-page': typeof AuthenticatedOwnerPublicPageRoute
   '/owner/reviews': typeof AuthenticatedOwnerReviewsRoute
   '/owner/salon': typeof AuthenticatedOwnerSalonRoute
   '/owner/services': typeof AuthenticatedOwnerServicesRoute
@@ -514,6 +523,7 @@ export interface FileRoutesById {
   '/_authenticated/owner/calendar': typeof AuthenticatedOwnerCalendarRoute
   '/_authenticated/owner/customers': typeof AuthenticatedOwnerCustomersRoute
   '/_authenticated/owner/portfolio': typeof AuthenticatedOwnerPortfolioRoute
+  '/_authenticated/owner/public-page': typeof AuthenticatedOwnerPublicPageRoute
   '/_authenticated/owner/reviews': typeof AuthenticatedOwnerReviewsRoute
   '/_authenticated/owner/salon': typeof AuthenticatedOwnerSalonRoute
   '/_authenticated/owner/services': typeof AuthenticatedOwnerServicesRoute
@@ -572,6 +582,7 @@ export interface FileRouteTypes {
     | '/owner/calendar'
     | '/owner/customers'
     | '/owner/portfolio'
+    | '/owner/public-page'
     | '/owner/reviews'
     | '/owner/salon'
     | '/owner/services'
@@ -626,6 +637,7 @@ export interface FileRouteTypes {
     | '/owner/calendar'
     | '/owner/customers'
     | '/owner/portfolio'
+    | '/owner/public-page'
     | '/owner/reviews'
     | '/owner/salon'
     | '/owner/services'
@@ -683,6 +695,7 @@ export interface FileRouteTypes {
     | '/_authenticated/owner/calendar'
     | '/_authenticated/owner/customers'
     | '/_authenticated/owner/portfolio'
+    | '/_authenticated/owner/public-page'
     | '/_authenticated/owner/reviews'
     | '/_authenticated/owner/salon'
     | '/_authenticated/owner/services'
@@ -911,6 +924,13 @@ declare module '@tanstack/react-router' {
       path: '/reviews'
       fullPath: '/owner/reviews'
       preLoaderRoute: typeof AuthenticatedOwnerReviewsRouteImport
+      parentRoute: typeof AuthenticatedOwnerRoute
+    }
+    '/_authenticated/owner/public-page': {
+      id: '/_authenticated/owner/public-page'
+      path: '/public-page'
+      fullPath: '/owner/public-page'
+      preLoaderRoute: typeof AuthenticatedOwnerPublicPageRouteImport
       parentRoute: typeof AuthenticatedOwnerRoute
     }
     '/_authenticated/owner/portfolio': {
@@ -1177,6 +1197,7 @@ interface AuthenticatedOwnerRouteChildren {
   AuthenticatedOwnerCalendarRoute: typeof AuthenticatedOwnerCalendarRoute
   AuthenticatedOwnerCustomersRoute: typeof AuthenticatedOwnerCustomersRoute
   AuthenticatedOwnerPortfolioRoute: typeof AuthenticatedOwnerPortfolioRoute
+  AuthenticatedOwnerPublicPageRoute: typeof AuthenticatedOwnerPublicPageRoute
   AuthenticatedOwnerReviewsRoute: typeof AuthenticatedOwnerReviewsRoute
   AuthenticatedOwnerSalonRoute: typeof AuthenticatedOwnerSalonRoute
   AuthenticatedOwnerServicesRoute: typeof AuthenticatedOwnerServicesRoute
@@ -1192,6 +1213,7 @@ const AuthenticatedOwnerRouteChildren: AuthenticatedOwnerRouteChildren = {
   AuthenticatedOwnerCalendarRoute: AuthenticatedOwnerCalendarRoute,
   AuthenticatedOwnerCustomersRoute: AuthenticatedOwnerCustomersRoute,
   AuthenticatedOwnerPortfolioRoute: AuthenticatedOwnerPortfolioRoute,
+  AuthenticatedOwnerPublicPageRoute: AuthenticatedOwnerPublicPageRoute,
   AuthenticatedOwnerReviewsRoute: AuthenticatedOwnerReviewsRoute,
   AuthenticatedOwnerSalonRoute: AuthenticatedOwnerSalonRoute,
   AuthenticatedOwnerServicesRoute: AuthenticatedOwnerServicesRoute,

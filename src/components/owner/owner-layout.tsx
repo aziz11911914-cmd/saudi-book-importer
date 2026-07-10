@@ -4,7 +4,7 @@ import { useState } from "react";
 import {
   LayoutDashboard, CalendarCheck, Calendar, Users, Scissors, UserCircle,
   Sparkles, Image, Star, BarChart3, Store, Settings, LifeBuoy,
-  LogOut, ShieldAlert, Menu, X, Bell,
+  LogOut, ShieldAlert, Menu, X, Bell, Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +19,7 @@ const NAV: NavItem[] = [
   { to: "/owner/portfolio", label: "Portfolio", icon: Image },
   { to: "/owner/reviews", label: "Reviews", icon: Star },
   { to: "/owner/analytics", label: "Analytics", icon: BarChart3 },
+  { to: "/owner/public-page", label: "Public Page", icon: Globe },
   { to: "/owner/salon", label: "Salon", icon: Store },
   { to: "/owner/settings", label: "Settings", icon: Settings },
   { to: "/owner/support", label: "Support", icon: LifeBuoy },
