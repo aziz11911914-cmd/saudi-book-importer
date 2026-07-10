@@ -8,10 +8,8 @@ export function MaintenanceBanner() {
   useEffect(() => {
     let alive = true;
     (async () => {
-      const { data: sess } = await supabase.auth.getSession();
-      if (!sess.session) return;
-      const { data } = await supabase.from("platform_settings").select("maintenance").eq("id", 1).maybeSingle();
-      if (alive) setM((data?.maintenance as any) ?? null);
+      const { data } = await supabase.rpc("get_maintenance_status" as any);
+      if (alive) setM((data as any) ?? null);
     })();
     return () => { alive = false; };
   }, []);

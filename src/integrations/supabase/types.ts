@@ -1606,6 +1606,7 @@ export type Database = {
       }
       generate_unique_barber_slug: { Args: { _base: string }; Returns: string }
       generate_unique_shop_slug: { Args: { _base: string }; Returns: string }
+      get_maintenance_status: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
