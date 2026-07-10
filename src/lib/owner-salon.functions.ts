@@ -420,3 +420,145 @@ export const unarchiveSalon = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+// ------------ BARBERS (inline CRUD from public-page editor) ------------
+const barberSchema = z.object({
+  id: z.string().uuid().optional(),
+  display_name_en: z.string().min(1).max(120),
+  display_name_ar: z.string().min(1).max(120),
+  title_en: z.string().max(120).optional().nullable(),
+  title_ar: z.string().max(120).optional().nullable(),
+  photo_url: z.string().url().optional().nullable(),
+  featured: z.boolean().optional(),
+});
+
+function slugify(s: string) {
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+    .slice(0, 40) || "barber";
+}
+
+export const upsertOwnerBarber = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => barberSchema.parse(d))
+  .handler(async ({ context, data }) => {
+    const sb = context.supabase;
+    const shop = await loadOwnerShop(sb, context.userId);
+    if (data.id) {
+      const patch: Record<string, unknown> = {
+        display_name_en: data.display_name_en,
+        display_name_ar: data.display_name_ar,
+      };
+      if (data.title_en != null) patch.title_en = data.title_en || "Barber";
+      if (data.title_ar != null) patch.title_ar = data.title_ar || "حلاق";
+      if (data.photo_url !== undefined) patch.photo_url = data.photo_url;
+      if (data.featured !== undefined) patch.featured = data.featured;
+      const { error } = await sb
+        .from("barbers")
+        .update(patch as never)
+        .eq("id", data.id)
+        .eq("shop_id", shop.id);
+      if (error) throw new Error(error.message);
+      return { id: data.id };
+    }
+    const base = slugify(data.display_name_en);
+    const slug = `${base}-${Math.random().toString(36).slice(2, 7)}`;
+    const { data: row, error } = await sb
+      .from("barbers")
+      .insert({
+        shop_id: shop.id,
+        slug,
+        display_name_en: data.display_name_en,
+        display_name_ar: data.display_name_ar,
+        title_en: data.title_en || "Barber",
+        title_ar: data.title_ar || "حلاق",
+        photo_url: data.photo_url ?? null,
+        status: "active",
+      } as never)
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    return row;
+  });
+
+export const deleteOwnerBarber = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) =>
+    z.object({ id: z.string().uuid() }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const sb = context.supabase;
+    const shop = await loadOwnerShop(sb, context.userId);
+    const { error } = await sb
+      .from("barbers")
+      .update({ status: "inactive" as never })
+      .eq("id", data.id)
+      .eq("shop_id", shop.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// ------------ SERVICES (lightweight inline CRUD) ------------
+const inlineServiceSchema = z.object({
+  id: z.string().uuid().optional(),
+  name_en: z.string().min(1).max(120),
+  name_ar: z.string().min(1).max(120),
+  price_sar: z.number().min(0),
+  duration_min: z.number().int().min(1).max(600),
+});
+
+export const upsertOwnerService = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => inlineServiceSchema.parse(d))
+  .handler(async ({ context, data }) => {
+    const sb = context.supabase;
+    const shop = await loadOwnerShop(sb, context.userId);
+    if (data.id) {
+      const { error } = await sb
+        .from("services")
+        .update({
+          name_en: data.name_en,
+          name_ar: data.name_ar,
+          price_sar: data.price_sar,
+          duration_min: data.duration_min,
+        } as never)
+        .eq("id", data.id)
+        .eq("shop_id", shop.id);
+      if (error) throw new Error(error.message);
+      return { id: data.id };
+    }
+    const { data: row, error } = await sb
+      .from("services")
+      .insert({
+        shop_id: shop.id,
+        name_en: data.name_en,
+        name_ar: data.name_ar,
+        price_sar: data.price_sar,
+        duration_min: data.duration_min,
+        status: "active",
+        active: true,
+      } as never)
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    return row;
+  });
+
+export const deleteOwnerService = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) =>
+    z.object({ id: z.string().uuid() }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const sb = context.supabase;
+    const shop = await loadOwnerShop(sb, context.userId);
+    const { error } = await sb
+      .from("services")
+      .update({ status: "archived" as never, active: false })
+      .eq("id", data.id)
+      .eq("shop_id", shop.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
