@@ -4,7 +4,7 @@ import { useState } from "react";
 import {
   LayoutDashboard, CalendarCheck, Calendar, Users, Scissors, UserCircle,
   Sparkles, Image, Star, BarChart3, Store, Settings, LifeBuoy,
-  LogOut, ShieldAlert, Menu, X, Bell,
+  LogOut, ShieldAlert, Menu, X, Bell, Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
