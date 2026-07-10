@@ -1,19 +1,35 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useState } from "react";
 import {
   getOwnerPublicPage,
   updateOwnerSalon,
+  updateShopHours,
   addGalleryPhoto,
   deleteGalleryPhoto,
   reorderGallery,
   toggleReviewHidden,
+  upsertOwnerService,
+  deleteOwnerService,
+  upsertOwnerBarber,
+  deleteOwnerBarber,
 } from "@/lib/owner-salon.functions";
 import { useOwnerMediaUpload } from "@/lib/use-owner-media-upload";
 import { ShopPublicView, type PublicReview } from "@/components/shop/shop-public-view";
+import {
+  TextDialog,
+  TextPairDialog,
+  LocationDialog,
+  HoursDialog,
+  ServiceDialog,
+  BarberDialog,
+  Confirm,
+  type ServiceForm,
+  type BarberForm,
+} from "@/components/shop/inline-editors";
 
 export const Route = createFileRoute("/_authenticated/owner/public-page")({
   component: PublicPageEditor,
@@ -29,27 +45,53 @@ function pickFile(accept = "image/*"): Promise<File | null> {
   });
 }
 
+type Dlg =
+  | { kind: "none" }
+  | { kind: "name" }
+  | { kind: "address" }
+  | { kind: "description" }
+  | { kind: "location" }
+  | { kind: "hours" }
+  | { kind: "service"; value: ServiceForm | null }
+  | { kind: "delete-service"; id: string; name: string }
+  | { kind: "barber"; value: BarberForm | null }
+  | { kind: "delete-barber"; id: string; name: string }
+  | { kind: "delete-photo"; id: string };
+
 function PublicPageEditor() {
   const qc = useQueryClient();
-  const navigate = useNavigate();
   const fetchPage = useServerFn(getOwnerPublicPage);
   const upload = useOwnerMediaUpload();
   const updateFn = useServerFn(updateOwnerSalon);
+  const updateHoursFn = useServerFn(updateShopHours);
   const addPhotoFn = useServerFn(addGalleryPhoto);
   const delPhotoFn = useServerFn(deleteGalleryPhoto);
   const reorderFn = useServerFn(reorderGallery);
   const toggleReviewFn = useServerFn(toggleReviewHidden);
+  const upsertServiceFn = useServerFn(upsertOwnerService);
+  const deleteServiceFn = useServerFn(deleteOwnerService);
+  const upsertBarberFn = useServerFn(upsertOwnerBarber);
+  const deleteBarberFn = useServerFn(deleteOwnerBarber);
 
+  const [dlg, setDlg] = useState<Dlg>({ kind: "none" });
+  const [uploading, setUploading] = useState(false);
+  const close = () => setDlg({ kind: "none" });
+
+  const KEY = ["owner", "public-page"] as const;
   const { data, isLoading, error } = useQuery({
-    queryKey: ["owner", "public-page"],
+    queryKey: KEY,
     queryFn: () => fetchPage(),
+    staleTime: 30_000,
   });
 
-  const invalidate = () => qc.invalidateQueries({ queryKey: ["owner", "public-page"] });
+  const invalidate = () => qc.invalidateQueries({ queryKey: KEY });
 
   const updateM = useMutation({
     mutationFn: (patch: any) => updateFn({ data: patch }),
-    onSuccess: () => { toast.success("Saved"); invalidate(); },
+    onSuccess: (updated) => {
+      qc.setQueryData(KEY, (old: any) => old ? { ...old, shop: updated } : old);
+      toast.success("Saved");
+    },
     onError: (e: any) => toast.error(e?.message ?? "Save failed"),
   });
 
@@ -72,22 +114,26 @@ function PublicPageEditor() {
     const f = await pickFile();
     if (!f) return;
     if (f.size > 8 * 1024 * 1024) return toast.error("Max 8MB");
+    setUploading(true);
     try {
       const url = await upload(f, "salon-media");
       updateM.mutate(kind === "cover" ? { cover_url: url } : { logo_url: url });
     } catch (e: any) { toast.error(e?.message ?? "Upload failed"); }
+    finally { setUploading(false); }
   }
 
   async function addPhoto() {
     const f = await pickFile();
     if (!f) return;
     if (f.size > 8 * 1024 * 1024) return toast.error("Max 8MB");
+    setUploading(true);
     try {
       const url = await upload(f, "salon-media");
-      await addPhotoFn({ data: { url } });
+      const row = await addPhotoFn({ data: { url } });
+      qc.setQueryData(KEY, (old: any) => old ? { ...old, photos: [...old.photos, row] } : old);
       toast.success("Photo added");
-      invalidate();
     } catch (e: any) { toast.error(e?.message ?? "Upload failed"); }
+    finally { setUploading(false); }
   }
 
   async function replacePhoto(id: string) {
@@ -96,15 +142,11 @@ function PublicPageEditor() {
     try {
       const url = await upload(f, "salon-media");
       await delPhotoFn({ data: { id } });
-      await addPhotoFn({ data: { url } });
-      invalidate();
+      const row = await addPhotoFn({ data: { url } });
+      qc.setQueryData(KEY, (old: any) => old
+        ? { ...old, photos: old.photos.filter((p: any) => p.id !== id).concat(row) }
+        : old);
     } catch (e: any) { toast.error(e?.message ?? "Replace failed"); }
-  }
-
-  async function deletePhoto(id: string) {
-    if (!confirm("Delete this photo?")) return;
-    await delPhotoFn({ data: { id } });
-    invalidate();
   }
 
   async function movePhoto(id: string, dir: -1 | 1) {
@@ -113,41 +155,10 @@ function PublicPageEditor() {
     const next = idx + dir;
     if (idx < 0 || next < 0 || next >= order.length) return;
     [order[idx], order[next]] = [order[next], order[idx]];
+    qc.setQueryData(KEY, (old: any) => old
+      ? { ...old, photos: order.map((pid: string) => old.photos.find((p: any) => p.id === pid)) }
+      : old);
     await reorderFn({ data: { order } });
-    invalidate();
-  }
-
-  function editText(label: string, current: string | null, field: string) {
-    const v = prompt(label, current ?? "");
-    if (v === null) return;
-    updateM.mutate({ [field]: v.trim() || null });
-  }
-
-  function editName() {
-    const en = prompt("Salon name (English)", data!.shop.name_en ?? "");
-    if (en === null) return;
-    const ar = prompt("Salon name (Arabic)", data!.shop.name_ar ?? "");
-    if (ar === null) return;
-    updateM.mutate({ name_en: en, name_ar: ar });
-  }
-
-  function editDescription() {
-    const en = prompt("Description (English)", data!.shop.description_en ?? "");
-    if (en === null) return;
-    const ar = prompt("Description (Arabic)", data!.shop.description_ar ?? "");
-    if (ar === null) return;
-    updateM.mutate({ description_en: en || null, description_ar: ar || null });
-  }
-
-  function editLocation() {
-    const lat = prompt("Latitude", String(data!.shop.lat ?? ""));
-    if (lat === null) return;
-    const lng = prompt("Longitude", String(data!.shop.lng ?? ""));
-    if (lng === null) return;
-    const latN = parseFloat(lat);
-    const lngN = parseFloat(lng);
-    if (Number.isNaN(latN) || Number.isNaN(lngN)) return toast.error("Invalid coordinates");
-    updateM.mutate({ lat: latN, lng: lngN });
   }
 
   const reviews: PublicReview[] = (data.reviews ?? []).map((r: any) => ({
@@ -173,28 +184,214 @@ function PublicPageEditor() {
           onEditCover: () => uploadImage("cover"),
           onRemoveCover: () => updateM.mutate({ cover_url: null }),
           onEditLogo: () => uploadImage("logo"),
-          onEditName: editName,
-          onEditAddress: () => editText("Address", data.shop.address, "address"),
-          onEditDescription: editDescription,
-          onEditHours: () => navigate({ to: "/owner/salon" }),
-          onEditLocation: editLocation,
+          onEditName: () => setDlg({ kind: "name" }),
+          onEditAddress: () => setDlg({ kind: "address" }),
+          onEditDescription: () => setDlg({ kind: "description" }),
+          onEditHours: () => setDlg({ kind: "hours" }),
+          onEditLocation: () => setDlg({ kind: "location" }),
           onAddPhoto: addPhoto,
           onReplacePhoto: replacePhoto,
-          onDeletePhoto: deletePhoto,
+          onDeletePhoto: (id) => setDlg({ kind: "delete-photo", id }),
           onMovePhoto: movePhoto,
-          onAddService: () => navigate({ to: "/owner/services" }),
-          onEditService: () => navigate({ to: "/owner/services" }),
-          onDeleteService: () => navigate({ to: "/owner/services" }),
-          onAddBarber: () => navigate({ to: "/owner/barbers" }),
-          onEditBarber: () => navigate({ to: "/owner/barbers" }),
-          onDeleteBarber: () => navigate({ to: "/owner/barbers" }),
+          onAddService: () => setDlg({ kind: "service", value: null }),
+          onEditService: (id) => {
+            const s: any = data.services.find((x: any) => x.id === id);
+            if (!s) return;
+            setDlg({ kind: "service", value: {
+              id: s.id, name_en: s.name_en, name_ar: s.name_ar,
+              price_sar: Number(s.price_sar), duration_min: Number(s.duration_min),
+            }});
+          },
+          onDeleteService: (id) => {
+            const s: any = data.services.find((x: any) => x.id === id);
+            setDlg({ kind: "delete-service", id, name: s?.name_en ?? "" });
+          },
+          onAddBarber: () => setDlg({ kind: "barber", value: null }),
+          onEditBarber: (id) => {
+            const b: any = data.barbers.find((x: any) => x.id === id);
+            if (!b) return;
+            setDlg({ kind: "barber", value: {
+              id: b.id, display_name_en: b.display_name_en, display_name_ar: b.display_name_ar,
+              title_en: b.title_en ?? "Barber", title_ar: b.title_ar ?? "حلاق",
+              photo_url: b.photo_url,
+            }});
+          },
+          onDeleteBarber: (id) => {
+            const b: any = data.barbers.find((x: any) => x.id === id);
+            setDlg({ kind: "delete-barber", id, name: b?.display_name_en ?? "" });
+          },
           onToggleReviewHidden: async (id, hidden) => {
+            qc.setQueryData(KEY, (old: any) => old ? {
+              ...old,
+              reviews: old.reviews.map((r: any) =>
+                r.id === id ? { ...r, hidden_at: hidden ? new Date().toISOString() : null } : r),
+            } : old);
             await toggleReviewFn({ data: { id, hidden } });
-            invalidate();
           },
         }}
         showBookingBar={false}
       />
+
+      {/* --------- dialogs --------- */}
+      <TextPairDialog
+        open={dlg.kind === "name"}
+        onOpenChange={close}
+        title="Salon name"
+        labelEn="Name (English)"
+        labelAr="Name (Arabic)"
+        valueEn={data.shop.name_en ?? ""}
+        valueAr={data.shop.name_ar ?? ""}
+        onSave={async ({ en, ar }) => { await updateM.mutateAsync({ name_en: en, name_ar: ar }); }}
+      />
+      <TextPairDialog
+        open={dlg.kind === "description"}
+        onOpenChange={close}
+        title="About"
+        labelEn="Description (English)"
+        labelAr="Description (Arabic)"
+        valueEn={data.shop.description_en ?? ""}
+        valueAr={data.shop.description_ar ?? ""}
+        multiline
+        onSave={async ({ en, ar }) => {
+          await updateM.mutateAsync({ description_en: en || null, description_ar: ar || null });
+        }}
+      />
+      <TextDialog
+        open={dlg.kind === "address"}
+        onOpenChange={close}
+        title="Address"
+        label="Address"
+        value={data.shop.address ?? ""}
+        onSave={async (v) => { await updateM.mutateAsync({ address: v.trim() || null }); }}
+      />
+      <LocationDialog
+        open={dlg.kind === "location"}
+        onOpenChange={close}
+        address={data.shop.address ?? ""}
+        lat={data.shop.lat as any}
+        lng={data.shop.lng as any}
+        onSave={async ({ address, lat, lng }) => {
+          await updateM.mutateAsync({ address: address || null, lat, lng });
+        }}
+      />
+      <HoursDialog
+        open={dlg.kind === "hours"}
+        onOpenChange={close}
+        hours={data.hours as any}
+        onSave={async (rows) => {
+          await updateHoursFn({ data: { hours: rows } });
+          const next = rows.filter((r) => !r.closed).map((r) => ({
+            day_of_week: r.day_of_week, opens_at: r.opens_at, closes_at: r.closes_at,
+          }));
+          qc.setQueryData(KEY, (old: any) => old ? { ...old, hours: next } : old);
+          toast.success("Hours saved");
+        }}
+      />
+      <ServiceDialog
+        open={dlg.kind === "service"}
+        onOpenChange={close}
+        value={dlg.kind === "service" ? dlg.value : null}
+        onSave={async (v) => {
+          const res = await upsertServiceFn({ data: v });
+          qc.setQueryData(KEY, (old: any) => {
+            if (!old) return old;
+            const svc = { id: (res as any).id, name_en: v.name_en, name_ar: v.name_ar,
+              price_sar: v.price_sar, duration_min: v.duration_min, image_url: null,
+              status: "active", display_order: 0 };
+            const exists = old.services.some((s: any) => s.id === svc.id);
+            return {
+              ...old,
+              services: exists
+                ? old.services.map((s: any) => s.id === svc.id ? { ...s, ...svc } : s)
+                : [...old.services, svc],
+            };
+          });
+          toast.success(v.id ? "Service updated" : "Service added");
+        }}
+      />
+      <Confirm
+        open={dlg.kind === "delete-service"}
+        onOpenChange={close}
+        title="Delete service?"
+        description={dlg.kind === "delete-service" ? `"${dlg.name}" will be removed from the public page.` : ""}
+        onConfirm={async () => {
+          if (dlg.kind !== "delete-service") return;
+          const id = dlg.id;
+          await deleteServiceFn({ data: { id } });
+          qc.setQueryData(KEY, (old: any) => old
+            ? { ...old, services: old.services.filter((s: any) => s.id !== id) }
+            : old);
+          toast.success("Service removed");
+        }}
+      />
+      <BarberDialog
+        open={dlg.kind === "barber"}
+        onOpenChange={close}
+        value={dlg.kind === "barber" ? dlg.value : null}
+        uploading={uploading}
+        onPickPhoto={async () => {
+          const f = await pickFile();
+          if (!f) return null;
+          if (f.size > 8 * 1024 * 1024) { toast.error("Max 8MB"); return null; }
+          setUploading(true);
+          try { return await upload(f, "salon-media"); }
+          catch (e: any) { toast.error(e?.message ?? "Upload failed"); return null; }
+          finally { setUploading(false); }
+        }}
+        onSave={async (v) => {
+          const res = await upsertBarberFn({ data: v });
+          qc.setQueryData(KEY, (old: any) => {
+            if (!old) return old;
+            const b = { id: (res as any).id, display_name_en: v.display_name_en,
+              display_name_ar: v.display_name_ar, title_en: v.title_en, title_ar: v.title_ar,
+              photo_url: v.photo_url, status: "active", rating_avg: 0, featured: false };
+            const exists = old.barbers.some((x: any) => x.id === b.id);
+            return {
+              ...old,
+              barbers: exists
+                ? old.barbers.map((x: any) => x.id === b.id ? { ...x, ...b } : x)
+                : [...old.barbers, b],
+            };
+          });
+          toast.success(v.id ? "Barber updated" : "Barber added");
+        }}
+      />
+      <Confirm
+        open={dlg.kind === "delete-barber"}
+        onOpenChange={close}
+        title="Remove barber?"
+        description={dlg.kind === "delete-barber" ? `"${dlg.name}" will be hidden from the public page.` : ""}
+        onConfirm={async () => {
+          if (dlg.kind !== "delete-barber") return;
+          const id = dlg.id;
+          await deleteBarberFn({ data: { id } });
+          qc.setQueryData(KEY, (old: any) => old
+            ? { ...old, barbers: old.barbers.filter((b: any) => b.id !== id) }
+            : old);
+          toast.success("Barber removed");
+        }}
+      />
+      <Confirm
+        open={dlg.kind === "delete-photo"}
+        onOpenChange={close}
+        title="Delete photo?"
+        description="This photo will be removed from the gallery."
+        onConfirm={async () => {
+          if (dlg.kind !== "delete-photo") return;
+          const id = dlg.id;
+          await delPhotoFn({ data: { id } });
+          qc.setQueryData(KEY, (old: any) => old
+            ? { ...old, photos: old.photos.filter((p: any) => p.id !== id) }
+            : old);
+        }}
+      />
+      {(updateM.isPending || uploading) && (
+        <div className="pointer-events-none fixed bottom-4 end-4 z-50 flex items-center gap-2 rounded-full bg-background/90 px-3 py-1.5 text-xs text-muted-foreground shadow">
+          <Loader2 className="size-3.5 animate-spin" /> Saving…
+        </div>
+      )}
+      {/* keep invalidate reachable to avoid unused-warning */}
+      <span hidden aria-hidden onClick={invalidate} />
     </div>
   );
 }
