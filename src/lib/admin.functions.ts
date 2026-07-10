@@ -370,28 +370,66 @@ export const getUserDependencies = createServerFn({ method: "GET" })
     };
   });
 
-// Soft delete: mark profile as deleted, keep data + audit history
+// "Delete" is a ROLE CONVERSION to customer — no data is destroyed.
+// - Owner: removes owner role, unassigns any managed shops
+// - Barber: removes barber role, deactivates barber profile
+// - Profile stays active, all bookings/reviews kept
 export const softDeleteProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { id: string; reason?: string }) => d)
   .handler(async ({ context, data }) => {
     await assertSuperAdmin(context.supabase, context.userId);
-    if (data.id === context.userId) throw new Error("You cannot delete your own account.");
-    // Guard: preserve platform owner
+    if (data.id === context.userId) throw new Error("You cannot convert your own account.");
     const { data: emailRow } = await context.supabase.from("profiles").select("email").eq("id", data.id).maybeSingle();
     if ((emailRow?.email ?? "").toLowerCase() === "abdulazizalodan1@gmail.com") {
-      throw new Error("Cannot delete the platform owner account.");
+      throw new Error("Cannot modify the platform owner account.");
     }
-    const { error } = await context.supabase.from("profiles").update({
-      status: "deleted",
-      deleted_at: new Date().toISOString(),
-      deleted_by: context.userId,
-      disabled_reason: data.reason ?? null,
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Read prior roles
+    const { data: roleRows } = await supabaseAdmin
+      .from("user_roles").select("role").eq("user_id", data.id);
+    const prevRoles = (roleRows ?? []).map((r: any) => r.role as string);
+    const previousRole = prevRoles.includes("owner")
+      ? "owner"
+      : prevRoles.includes("barber")
+      ? "barber"
+      : (prevRoles.find((r) => r !== "customer") ?? "customer");
+
+    // Unlink shops managed by this user
+    if (prevRoles.includes("owner")) {
+      await supabaseAdmin.from("shops").update({ manager_id: null }).eq("manager_id", data.id);
+    }
+    // Deactivate barber profiles owned by this user
+    if (prevRoles.includes("barber")) {
+      await supabaseAdmin.from("barbers").update({ status: "inactive" as any }).eq("profile_id", data.id);
+    }
+    // Strip elevated roles (keep super_admin/customer, protected roles blocked by trigger)
+    await supabaseAdmin.from("user_roles").delete().eq("user_id", data.id).in("role", ["owner", "barber"] as any);
+    // Ensure they still have a customer role
+    await supabaseAdmin.from("user_roles").upsert(
+      { user_id: data.id, role: "customer" as any },
+      { onConflict: "user_id,role", ignoreDuplicates: true },
+    );
+
+    // Reset profile flags — they are a regular customer now
+    await context.supabase.from("profiles").update({
+      status: "active",
+      disabled_at: null,
+      disabled_reason: null,
+      deleted_at: null,
+      deleted_by: null,
     }).eq("id", data.id);
-    if (error) throw new Error(error.message);
-    await audit(context.supabase, context.userId, context.claims?.email ?? null, "profile.deleted", "profile", data.id, { reason: data.reason ?? null });
-    return { ok: true };
+
+    await audit(
+      context.supabase, context.userId, context.claims?.email ?? null,
+      "profile.converted_to_customer", "profile", data.id,
+      { reason: data.reason ?? null, previous_role: previousRole, current_role: "customer" },
+    );
+    return { ok: true, previous_role: previousRole, current_role: "customer" };
   });
+
 
 // Update profile info from admin
 const profilePatchSchema = z.object({
@@ -415,33 +453,43 @@ export const updateProfile = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-// ---------- account history (disabled + deleted) ----------
+// ---------- account history (event log) ----------
+// Builds a chronological log of disable / restore / activate / convert events
+// from audit_logs, joined with current profile + roles + assigned salon.
 export const listAccountHistory = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { status?: "disabled" | "deleted" | "all" } | undefined) => d ?? {})
+  .inputValidator((d: { status?: "disabled" | "deleted" | "converted" | "all" } | undefined) => d ?? {})
   .handler(async ({ context, data }) => {
     await assertSuperAdmin(context.supabase, context.userId);
     const sb = context.supabase;
-    const statuses = data.status && data.status !== "all" ? [data.status] : ["disabled", "deleted"];
-    const { data: rows, error } = await sb
-      .from("profiles")
-      .select("id, email, full_name, first_name, last_name, phone, status, disabled_at, disabled_reason, deleted_at, deleted_by, created_at")
-      .in("status", statuses as any)
-      .order("disabled_at", { ascending: false, nullsFirst: false });
+
+    const ACTIONS = [
+      "profile.disabled",
+      "profile.suspended",
+      "profile.active",
+      "profile.converted_to_customer",
+      "profile.deleted", // legacy
+    ];
+    const { data: events, error } = await sb
+      .from("audit_logs")
+      .select("id, actor_email, action, target_id, details, created_at")
+      .eq("target_type", "profile")
+      .in("action", ACTIONS)
+      .order("created_at", { ascending: false })
+      .limit(500);
     if (error) throw new Error(error.message);
-    const list = rows ?? [];
-    const ids = list.map((r: any) => r.id);
-    if (!ids.length) return [];
-    const [rolesRes, shopsRes, barbersRes, auditsRes] = await Promise.all([
+    const list = events ?? [];
+    if (!list.length) return [];
+
+    const ids = Array.from(new Set(list.map((e: any) => e.target_id).filter(Boolean)));
+    const [profRes, rolesRes, shopsRes, barbersRes] = await Promise.all([
+      sb.from("profiles").select("id, email, full_name, first_name, last_name, phone, status").in("id", ids),
       sb.from("user_roles").select("user_id, role").in("user_id", ids),
       sb.from("shops").select("id, name_en, name_ar, manager_id").in("manager_id", ids),
       sb.from("barbers").select("profile_id, shop_id, shops:shop_id(name_en, name_ar)").in("profile_id", ids),
-      sb.from("audit_logs")
-        .select("actor_email, action, target_id, created_at")
-        .in("target_id", ids)
-        .in("action", ["profile.disabled", "profile.suspended", "profile.deleted"])
-        .order("created_at", { ascending: false }),
     ]);
+    const profMap = new Map<string, any>();
+    (profRes.data ?? []).forEach((p: any) => profMap.set(p.id, p));
     const roleMap = new Map<string, string[]>();
     (rolesRes.data ?? []).forEach((r: any) => {
       const arr = roleMap.get(r.user_id) ?? [];
@@ -452,22 +500,45 @@ export const listAccountHistory = createServerFn({ method: "GET" })
     (shopsRes.data ?? []).forEach((s: any) => shopMap.set(s.manager_id, s));
     const barberMap = new Map<string, any>();
     (barbersRes.data ?? []).forEach((b: any) => { if (b.shops) barberMap.set(b.profile_id, b.shops); });
-    const actorMap = new Map<string, any>();
-    (auditsRes.data ?? []).forEach((a: any) => { if (!actorMap.has(a.target_id)) actorMap.set(a.target_id, a); });
-    return list.map((r: any) => {
-      const roles = roleMap.get(r.id) ?? [];
-      const role = roles.includes("owner") ? "owner" : roles.includes("barber") ? "barber" : roles.includes("customer") ? "customer" : (roles[0] ?? "—");
-      const salon = shopMap.get(r.id) ?? barberMap.get(r.id) ?? null;
-      const auditRow = actorMap.get(r.id);
+
+    const filter = data.status && data.status !== "all" ? data.status : null;
+
+    const rows = list.map((e: any) => {
+      const p = profMap.get(e.target_id);
+      const roles = roleMap.get(e.target_id) ?? [];
+      const currentRole =
+        roles.includes("super_admin") ? "super_admin"
+        : roles.includes("owner") ? "owner"
+        : roles.includes("barber") ? "barber"
+        : roles.includes("customer") ? "customer" : "—";
+      const salon = shopMap.get(e.target_id) ?? barberMap.get(e.target_id) ?? null;
+      const action = String(e.action).replace("profile.", "");
+      const previousRole = (e.details?.previous_role as string) ?? null;
       return {
-        ...r,
-        role,
+        id: e.id,
+        profile_id: e.target_id,
+        email: p?.email ?? null,
+        full_name: p?.full_name ?? null,
+        first_name: p?.first_name ?? null,
+        last_name: p?.last_name ?? null,
+        phone: p?.phone ?? null,
+        status: p?.status ?? "—",
+        current_role: currentRole,
+        previous_role: previousRole,
         salon,
-        actor_email: auditRow?.actor_email ?? null,
-        action_at: auditRow?.created_at ?? r.deleted_at ?? r.disabled_at,
+        action, // "disabled" | "suspended" | "active" | "converted_to_customer" | "deleted"
+        action_at: e.created_at,
+        actor_email: e.actor_email ?? null,
+        reason: (e.details?.reason as string) ?? null,
       };
     });
+
+    if (!filter) return rows;
+    if (filter === "converted") return rows.filter((r) => r.action === "converted_to_customer");
+    if (filter === "deleted") return rows.filter((r) => r.action === "deleted");
+    return rows.filter((r) => r.action === "disabled" || r.action === "suspended");
   });
+
 
 export const hardDeleteProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

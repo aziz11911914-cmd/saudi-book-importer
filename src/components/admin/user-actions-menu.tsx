@@ -160,19 +160,24 @@ export function UserActionsMenu({ user, viewHref, onChange }: Props) {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Delete */}
+      {/* Delete = convert account to Customer (no data destroyed) */}
       <AlertDialog open={openDelete} onOpenChange={setOpenDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-red-400">{t("admin.delete.title")}</AlertDialogTitle>
+            <AlertDialogTitle className="text-red-400">
+              {t("admin.delete.convertTitle", "Convert account to Customer?")}
+            </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-2">
-                <p>{t("admin.delete.body")}</p>
+                <p>
+                  {t(
+                    "admin.delete.convertBody",
+                    "This does not permanently delete anything. The account keeps its login and profile, but Owner/Barber role, permissions and salon assignment are removed. All bookings and reviews are preserved.",
+                  )}
+                </p>
                 {deps ? (
                   <ul className="list-disc space-y-1 ps-5 text-xs text-muted-foreground">
-                    {deps.bookings > 0 && <li>{t("admin.delete.hasBookings", { count: deps.bookings })}</li>}
                     {deps.activeBookings > 0 && <li className="text-amber-400">{t("admin.delete.hasActive", { count: deps.activeBookings })}</li>}
-                    {deps.reviews > 0 && <li>{t("admin.delete.hasReviews", { count: deps.reviews })}</li>}
                     {deps.shops > 0 && <li>{t("admin.delete.hasShops", { count: deps.shops })}</li>}
                     {deps.barbers > 0 && <li>{t("admin.delete.hasBarbers", { count: deps.barbers })}</li>}
                   </ul>
@@ -193,11 +198,12 @@ export function UserActionsMenu({ user, viewHref, onChange }: Props) {
               ).then(() => setOpenDelete(false)); }}
             >
               {busy === "delete" && <Loader2 className="me-2 size-4 animate-spin" />}
-              {t("admin.delete.confirm")}
+              {t("admin.delete.convertConfirm", "Convert to Customer")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
 
       {/* Edit */}
       <Dialog open={openEdit} onOpenChange={setOpenEdit}>
