@@ -291,7 +291,7 @@ export function ShopPublicView({
           </div>
           <div className="mt-4 inline-flex items-center gap-1.5 rounded-2xl border border-hairline bg-background/50 px-4 py-2 text-xs text-muted-foreground">
             <MapPin className="size-3" />
-            {shop.address ?? `${shop.district ?? ""}${shop.district && shop.city ? ", " : ""}${shop.city ?? ""}` || (editMode ? t("owner.publicPage.addAddress", "Add address") : "")}
+            {shop.address || `${shop.district ?? ""}${shop.district && shop.city ? ", " : ""}${shop.city ?? ""}` || (editMode ? t("owner.publicPage.addAddress", "Add address") : "")}
             {editMode && (
               <EditChip onClick={edit?.onEditAddress} className="ms-2">
                 <Pencil className="size-3" />
