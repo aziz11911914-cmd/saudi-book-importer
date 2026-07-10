@@ -249,8 +249,11 @@ export const listBarbers = createServerFn({ method: "GET" })
     const sortDir = data.sortDir ?? "desc";
     let q = context.supabase
       .from("barbers")
-      .select("id, display_name_en, display_name_ar, photo_url, status, rating_avg, rating_count, shop_id, profile_id, created_at, shops:shop_id(name_en, name_ar)", { count: "exact" });
-    if (data.search) q = q.or(`display_name_en.ilike.%${data.search}%,display_name_ar.ilike.%${data.search}%`);
+      .select("id, display_name_en, display_name_ar, photo_url, status, rating_avg, rating_count, shop_id, profile_id, created_at, shops:shop_id(name_en, name_ar)", { count: "planned" });
+    if (data.search && data.search.trim()) {
+      const s = data.search.trim();
+      q = q.or(`display_name_en.ilike.%${s}%,display_name_ar.ilike.%${s}%`);
+    }
     if (data.shopId) q = q.eq("shop_id", data.shopId);
     if (data.status && data.status !== "all") q = q.eq("status", data.status as any);
     q = q.order(sortBy as any, { ascending: sortDir === "asc" }).range((page - 1) * pageSize, page * pageSize - 1);

@@ -1,0 +1,2 @@
+CREATE POLICY "Super admins read all barbers" ON public.barbers FOR SELECT TO authenticated USING (public.is_super_admin());
+CREATE POLICY "Super admins read all shops" ON public.shops FOR SELECT TO authenticated USING (public.is_super_admin());
