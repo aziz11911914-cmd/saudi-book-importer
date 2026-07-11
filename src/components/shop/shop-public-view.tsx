@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Clock, MapPin, Phone, Star, Pencil, Upload, Trash2, Plus, X, Eye, EyeOff,
   ChevronUp, ChevronDown, Image as ImageIcon, Loader2, AlertTriangle,
@@ -11,15 +11,18 @@ import { ReviewsList, type DemoReview } from "@/components/reviews-list";
 import { useLocale } from "@/lib/locale-provider";
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useStorageUrl } from "@/lib/storage-url";
 
 /* ------------- Safe image with load / error handling ---------------- */
 function SafeImg({ src, className, alt = "" }: { src: string; className?: string; alt?: string }) {
   const [state, setState] = useState<"loading" | "loaded" | "error">("loading");
+  const resolved = useStorageUrl(src);
+  useEffect(() => { setState("loading"); }, [resolved]);
   return (
     <div className={cn("relative size-full", className)}>
-      {state !== "error" ? (
+      {state !== "error" && resolved ? (
         <img
-          src={src}
+          src={resolved}
           alt={alt}
           onLoad={() => setState("loaded")}
           onError={() => setState("error")}
@@ -28,16 +31,29 @@ function SafeImg({ src, className, alt = "" }: { src: string; className?: string
             state === "loading" ? "opacity-0" : "opacity-100",
           )}
         />
-      ) : (
+      ) : state === "error" ? (
         <div className="grid size-full place-items-center bg-surface text-muted-foreground">
           <AlertTriangle className="size-5" />
         </div>
-      )}
-      {state === "loading" && (
+      ) : null}
+      {(state === "loading" || !resolved) && (
         <div className="absolute inset-0 grid animate-pulse place-items-center bg-surface text-muted-foreground">
           <ImageIcon className="size-5 opacity-50" />
         </div>
       )}
+    </div>
+  );
+}
+
+/* Background-image div that resolves private storage URLs to signed URLs */
+function BgImg({ src, className, children }: { src: string | null | undefined; className?: string; children?: ReactNode }) {
+  const resolved = useStorageUrl(src);
+  return (
+    <div
+      className={className}
+      style={resolved ? { backgroundImage: `url(${resolved})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+    >
+      {children}
     </div>
   );
 }
@@ -235,9 +251,9 @@ export function ShopPublicView({
 
       {/* Cover */}
       <section className="relative group">
-        <div
-          className="h-72 bg-cover bg-center sm:h-96"
-          style={{ backgroundImage: `url(${gallery[0] ?? ""})` }}
+        <BgImg
+          src={gallery[0] ?? null}
+          className="h-72 sm:h-96"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
         {gallery.length > 1 && (
@@ -267,7 +283,7 @@ export function ShopPublicView({
               <div className="relative">
                 <div className="size-14 shrink-0 overflow-hidden rounded-2xl border border-hairline bg-background">
                   {shop.logo_url ? (
-                    <img src={shop.logo_url} alt="" className="h-full w-full object-cover" />
+                    <SafeImg src={shop.logo_url} />
                   ) : (
                     <div className="grid h-full w-full place-items-center text-muted-foreground">
                       <ImageIcon className="size-6" />
@@ -578,9 +594,9 @@ export function ShopPublicView({
                 const inner = (
                   <div className="group block overflow-hidden rounded-2xl border border-hairline bg-surface transition-all hover:border-gold/40">
                     <div className="relative">
-                      <div
-                        className="aspect-square bg-cover bg-center"
-                        style={{ backgroundImage: `url(${b.photo_url ?? ""})` }}
+                      <BgImg
+                        src={b.photo_url}
+                        className="aspect-square"
                       />
                       <span className="absolute bottom-2 start-2 inline-flex items-center gap-1 rounded-full bg-background/85 px-2 py-0.5 text-[10px] text-gold backdrop-blur">
                         <Star className="size-3" fill="currentColor" />

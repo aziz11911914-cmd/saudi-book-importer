@@ -563,3 +563,245 @@ export const deleteOwnerService = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+// ------------ OWNER BARBERS (full CRUD + list) ------------
+export const listOwnerBarbers = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (d: { search?: string; status?: "all" | "active" | "inactive" | "pending" } | undefined) =>
+      d ?? {},
+  )
+  .handler(async ({ context, data }) => {
+    const sb = context.supabase;
+    const shop = await loadOwnerShop(sb, context.userId);
+    let q = sb
+      .from("barbers")
+      .select(
+        "id, display_name_en, display_name_ar, title_en, title_ar, photo_url, status, rating_avg, rating_count, created_at, slug",
+      )
+      .eq("shop_id", shop.id)
+      .order("created_at", { ascending: false });
+    if (data.search && data.search.trim()) {
+      const s = data.search.trim();
+      q = q.or(`display_name_en.ilike.%${s}%,display_name_ar.ilike.%${s}%`);
+    }
+    if (data.status && data.status !== "all") q = q.eq("status", data.status as never);
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+    return { rows: rows ?? [], shop_id: shop.id };
+  });
+
+export const setOwnerBarberStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; status: "active" | "inactive" }) =>
+    z
+      .object({ id: z.string().uuid(), status: z.enum(["active", "inactive"]) })
+      .parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const sb = context.supabase;
+    const shop = await loadOwnerShop(sb, context.userId);
+    const { error } = await sb
+      .from("barbers")
+      .update({ status: data.status as never })
+      .eq("id", data.id)
+      .eq("shop_id", shop.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const createOwnerBarberCode = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const sb = context.supabase;
+    const shop = await loadOwnerShop(sb, context.userId);
+    const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    function suffix() {
+      const b = new Uint8Array(6);
+      crypto.getRandomValues(b);
+      let out = "";
+      for (let i = 0; i < 6; i++) out += ALPHABET[b[i] % ALPHABET.length];
+      return out;
+    }
+    const expiresAt = new Date(Date.now() + 30 * 24 * 3600_000).toISOString();
+    for (let i = 0; i < 6; i++) {
+      const code = `BAR-${suffix()}`;
+      const { data: row, error } = await sb
+        .from("invitation_codes")
+        .insert({
+          code,
+          role: "barber",
+          shop_id: shop.id,
+          expires_at: expiresAt,
+          created_by: context.userId,
+        } as never)
+        .select("id, code, role, shop_id, status, expires_at, created_at")
+        .single();
+      if (!error) return row;
+      if (!String(error.message).toLowerCase().includes("duplicate")) {
+        throw new Error(error.message);
+      }
+    }
+    throw new Error("Failed to create invitation code");
+  });
+
+export const listOwnerBarberCodes = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const sb = context.supabase;
+    const shop = await loadOwnerShop(sb, context.userId);
+    const { data, error } = await sb
+      .from("invitation_codes")
+      .select("id, code, role, status, expires_at, used_at, created_at")
+      .eq("shop_id", shop.id)
+      .eq("role", "barber")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+export const revokeOwnerBarberCode = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const sb = context.supabase;
+    const shop = await loadOwnerShop(sb, context.userId);
+    const { error } = await sb
+      .from("invitation_codes")
+      .update({ status: "revoked" as never })
+      .eq("id", data.id)
+      .eq("shop_id", shop.id)
+      .eq("status", "pending");
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// ------------ OWNER CUSTOMERS ------------
+export const listOwnerCustomers = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { search?: string; status?: "all" | "active" | "blocked" } | undefined) => d ?? {})
+  .handler(async ({ context, data }) => {
+    const sb = context.supabase;
+    const shop = await loadOwnerShop(sb, context.userId);
+    const { data: bookings, error } = await sb
+      .from("bookings")
+      .select("customer_id, price_sar, status, starts_at")
+      .eq("shop_id", shop.id);
+    if (error) throw new Error(error.message);
+    const byCustomer = new Map<string, { visits: number; completed: number; spent: number; last: string | null }>();
+    for (const b of bookings ?? []) {
+      const id = (b as any).customer_id as string;
+      if (!id) continue;
+      const cur = byCustomer.get(id) ?? { visits: 0, completed: 0, spent: 0, last: null };
+      cur.visits += 1;
+      if ((b as any).status === "completed") {
+        cur.completed += 1;
+        cur.spent += Number((b as any).price_sar ?? 0);
+      }
+      const t = (b as any).starts_at as string;
+      if (!cur.last || (t && t > cur.last)) cur.last = t;
+      byCustomer.set(id, cur);
+    }
+    const ids = Array.from(byCustomer.keys());
+    if (ids.length === 0) return { rows: [] };
+    const [{ data: profiles }, { data: flags }] = await Promise.all([
+      sb
+        .from("profiles")
+        .select("id, full_name, email, phone, status, created_at")
+        .in("id", ids),
+      sb
+        .from("owner_customer_flags")
+        .select("customer_id, notes, blocked_at")
+        .eq("shop_id", shop.id)
+        .in("customer_id", ids),
+    ]);
+    const flagMap = new Map<string, { notes: string | null; blocked_at: string | null }>(
+      (flags ?? []).map((f: any) => [f.customer_id, { notes: f.notes, blocked_at: f.blocked_at }]),
+    );
+    let rows = (profiles ?? []).map((p: any) => {
+      const stats = byCustomer.get(p.id)!;
+      const flag = flagMap.get(p.id);
+      return {
+        ...p,
+        visits: stats.visits,
+        completed: stats.completed,
+        spent: stats.spent,
+        last_visit: stats.last,
+        notes: flag?.notes ?? null,
+        blocked_at: flag?.blocked_at ?? null,
+      };
+    });
+    if (data.search && data.search.trim()) {
+      const s = data.search.trim().toLowerCase();
+      rows = rows.filter(
+        (r) =>
+          (r.full_name ?? "").toLowerCase().includes(s) ||
+          (r.email ?? "").toLowerCase().includes(s) ||
+          (r.phone ?? "").toLowerCase().includes(s),
+      );
+    }
+    if (data.status === "blocked") rows = rows.filter((r) => r.blocked_at);
+    if (data.status === "active") rows = rows.filter((r) => !r.blocked_at);
+    rows.sort((a, b) => (b.last_visit ?? "").localeCompare(a.last_visit ?? ""));
+    return { rows };
+  });
+
+export const getOwnerCustomer = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const sb = context.supabase;
+    const shop = await loadOwnerShop(sb, context.userId);
+    const [{ data: profile }, { data: bookings }, { data: reviews }, { data: flag }] =
+      await Promise.all([
+        sb.from("profiles").select("id, full_name, email, phone, status, created_at").eq("id", data.id).maybeSingle(),
+        sb
+          .from("bookings")
+          .select("id, booking_ref, status, starts_at, price_sar, service_id, barber_id")
+          .eq("shop_id", shop.id)
+          .eq("customer_id", data.id)
+          .order("starts_at", { ascending: false }),
+        sb
+          .from("reviews")
+          .select("id, rating, comment, created_at")
+          .eq("shop_id", shop.id)
+          .eq("customer_id", data.id)
+          .order("created_at", { ascending: false }),
+        sb
+          .from("owner_customer_flags")
+          .select("notes, blocked_at")
+          .eq("shop_id", shop.id)
+          .eq("customer_id", data.id)
+          .maybeSingle(),
+      ]);
+    if (!profile) throw new Response("Not found", { status: 404 });
+    return { profile, bookings: bookings ?? [], reviews: reviews ?? [], flag: flag ?? { notes: null, blocked_at: null } };
+  });
+
+export const upsertOwnerCustomerFlag = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { customer_id: string; notes?: string | null; blocked?: boolean }) =>
+    z
+      .object({
+        customer_id: z.string().uuid(),
+        notes: z.string().max(2000).optional().nullable(),
+        blocked: z.boolean().optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const sb = context.supabase;
+    const shop = await loadOwnerShop(sb, context.userId);
+    const patch: Record<string, unknown> = {
+      shop_id: shop.id,
+      customer_id: data.customer_id,
+    };
+    if (data.notes !== undefined) patch.notes = data.notes;
+    if (data.blocked !== undefined) patch.blocked_at = data.blocked ? new Date().toISOString() : null;
+    const { error } = await sb
+      .from("owner_customer_flags")
+      .upsert(patch as never, { onConflict: "shop_id,customer_id" });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
