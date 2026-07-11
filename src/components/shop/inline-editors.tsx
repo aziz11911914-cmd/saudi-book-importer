@@ -53,11 +53,11 @@ function Shell({
         <div className="space-y-4 py-1">{children}</div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>
-            {t("common.cancel", "Cancel")}
+            {t("owner.editors.cancel")}
           </Button>
           <Button onClick={onSave} disabled={saving}>
             {saving && <Loader2 className="me-2 size-4 animate-spin" />}
-            {saveLabel ?? t("common.save", "Save")}
+            {saveLabel ?? t("owner.editors.save")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -127,6 +127,7 @@ export function LocationDialog({
   lng: number | null;
   onSave: (v: { address: string; lat: number | null; lng: number | null }) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const [a, setA] = useState(address);
   const [la, setLa] = useState(lat != null ? String(lat) : "");
   const [ln, setLn] = useState(lng != null ? String(lng) : "");
@@ -135,7 +136,7 @@ export function LocationDialog({
     if (open) { setA(address); setLa(lat != null ? String(lat) : ""); setLn(lng != null ? String(lng) : ""); }
   }, [open, address, lat, lng]);
   return (
-    <Shell open={open} onOpenChange={onOpenChange} title="Location" saving={saving}
+    <Shell open={open} onOpenChange={onOpenChange} title={t("owner.editors.location")} saving={saving}
       onSave={async () => {
         const latN = la.trim() === "" ? null : parseFloat(la);
         const lngN = ln.trim() === "" ? null : parseFloat(ln);
@@ -144,12 +145,12 @@ export function LocationDialog({
         try { await onSave({ address: a, lat: latN, lng: lngN }); onOpenChange(false); }
         finally { setSaving(false); }
       }}>
-      <div className="space-y-2"><Label>Address</Label><Input value={a} onChange={(e) => setA(e.target.value)} /></div>
+      <div className="space-y-2"><Label>{t("owner.editors.address")}</Label><Input value={a} onChange={(e) => setA(e.target.value)} /></div>
       <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-2"><Label>Latitude</Label><Input inputMode="decimal" value={la} onChange={(e) => setLa(e.target.value)} /></div>
-        <div className="space-y-2"><Label>Longitude</Label><Input inputMode="decimal" value={ln} onChange={(e) => setLn(e.target.value)} /></div>
+        <div className="space-y-2"><Label>{t("owner.editors.latitude")}</Label><Input inputMode="decimal" value={la} onChange={(e) => setLa(e.target.value)} /></div>
+        <div className="space-y-2"><Label>{t("owner.editors.longitude")}</Label><Input inputMode="decimal" value={ln} onChange={(e) => setLn(e.target.value)} /></div>
       </div>
-      <p className="text-xs text-muted-foreground">Tip: copy coordinates from Google Maps (right-click → "What's here").</p>
+      <p className="text-xs text-muted-foreground">{t("owner.editors.mapsTip")}</p>
     </Shell>
   );
 }
@@ -182,7 +183,7 @@ export function HoursDialog({
   useEffect(() => { if (open) setRows(build()); /* eslint-disable-next-line */ }, [open, hours]);
   const days = t("days.long", { returnObjects: true }) as string[];
   return (
-    <Shell open={open} onOpenChange={onOpenChange} title="Working hours" saving={saving}
+    <Shell open={open} onOpenChange={onOpenChange} title={t("owner.editors.workingHours")} saving={saving}
       onSave={async () => { setSaving(true); try { await onSave(rows); onOpenChange(false); } finally { setSaving(false); } }}>
       <div className="space-y-2">
         {rows.map((r, i) => (
@@ -221,20 +222,23 @@ export function ServiceDialog({
   value: ServiceForm | null;
   onSave: (v: ServiceForm) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const [f, setF] = useState<ServiceForm>({ name_en: "", name_ar: "", price_sar: 0, duration_min: 30 });
   const [saving, setSaving] = useState(false);
   useEffect(() => {
     if (open) setF(value ?? { name_en: "", name_ar: "", price_sar: 0, duration_min: 30 });
   }, [open, value]);
   return (
-    <Shell open={open} onOpenChange={onOpenChange} title={value?.id ? "Edit service" : "Add service"} saving={saving}
+    <Shell open={open} onOpenChange={onOpenChange}
+      title={value?.id ? t("owner.editors.serviceEdit") : t("owner.editors.serviceAdd")}
+      saving={saving}
       onSave={async () => { setSaving(true); try { await onSave(f); onOpenChange(false); } finally { setSaving(false); } }}>
-      <div className="space-y-2"><Label>Name (English)</Label><Input value={f.name_en} onChange={(e) => setF({ ...f, name_en: e.target.value })} /></div>
-      <div className="space-y-2"><Label>Name (Arabic)</Label><Input dir="rtl" value={f.name_ar} onChange={(e) => setF({ ...f, name_ar: e.target.value })} /></div>
+      <div className="space-y-2"><Label>{t("owner.editors.nameEn")}</Label><Input value={f.name_en} onChange={(e) => setF({ ...f, name_en: e.target.value })} /></div>
+      <div className="space-y-2"><Label>{t("owner.editors.nameAr")}</Label><Input dir="rtl" value={f.name_ar} onChange={(e) => setF({ ...f, name_ar: e.target.value })} /></div>
       <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-2"><Label>Price (SAR)</Label><Input type="number" min={0} value={f.price_sar}
+        <div className="space-y-2"><Label>{t("owner.editors.servicePrice")}</Label><Input type="number" min={0} value={f.price_sar}
           onChange={(e) => setF({ ...f, price_sar: Number(e.target.value) })} /></div>
-        <div className="space-y-2"><Label>Duration (min)</Label><Input type="number" min={1} value={f.duration_min}
+        <div className="space-y-2"><Label>{t("owner.editors.serviceDuration")}</Label><Input type="number" min={1} value={f.duration_min}
           onChange={(e) => setF({ ...f, duration_min: Number(e.target.value) })} /></div>
       </div>
     </Shell>
@@ -262,6 +266,7 @@ export function BarberDialog({
   onPickPhoto: () => Promise<string | null>;
   uploading?: boolean;
 }) {
+  const { t } = useTranslation();
   const [f, setF] = useState<BarberForm>({
     display_name_en: "", display_name_ar: "", title_en: "Barber", title_ar: "حلاق", photo_url: null,
   });
@@ -270,25 +275,27 @@ export function BarberDialog({
     if (open) setF(value ?? { display_name_en: "", display_name_ar: "", title_en: "Barber", title_ar: "حلاق", photo_url: null });
   }, [open, value]);
   return (
-    <Shell open={open} onOpenChange={onOpenChange} title={value?.id ? "Edit barber" : "Add barber"} saving={saving}
+    <Shell open={open} onOpenChange={onOpenChange}
+      title={value?.id ? t("owner.editors.barberEdit") : t("owner.editors.barberAdd")}
+      saving={saving}
       onSave={async () => { setSaving(true); try { await onSave(f); onOpenChange(false); } finally { setSaving(false); } }}>
       <div className="flex items-center gap-3">
         <div className="size-16 overflow-hidden rounded-full border border-hairline bg-surface">
           {f.photo_url
             ? <img src={f.photo_url} alt="" className="h-full w-full object-cover" />
-            : <div className="grid h-full w-full place-items-center text-xs text-muted-foreground">No photo</div>}
+            : <div className="grid h-full w-full place-items-center text-xs text-muted-foreground">{t("owner.editors.noPhoto")}</div>}
         </div>
         <Button variant="outline" size="sm" disabled={uploading}
           onClick={async () => { const url = await onPickPhoto(); if (url) setF((x) => ({ ...x, photo_url: url })); }}>
           {uploading && <Loader2 className="me-2 size-4 animate-spin" />}
-          {f.photo_url ? "Change photo" : "Upload photo"}
+          {f.photo_url ? t("owner.editors.changePhoto") : t("owner.editors.uploadPhoto")}
         </Button>
       </div>
-      <div className="space-y-2"><Label>Name (English)</Label><Input value={f.display_name_en} onChange={(e) => setF({ ...f, display_name_en: e.target.value })} /></div>
-      <div className="space-y-2"><Label>Name (Arabic)</Label><Input dir="rtl" value={f.display_name_ar} onChange={(e) => setF({ ...f, display_name_ar: e.target.value })} /></div>
+      <div className="space-y-2"><Label>{t("owner.editors.nameEn")}</Label><Input value={f.display_name_en} onChange={(e) => setF({ ...f, display_name_en: e.target.value })} /></div>
+      <div className="space-y-2"><Label>{t("owner.editors.nameAr")}</Label><Input dir="rtl" value={f.display_name_ar} onChange={(e) => setF({ ...f, display_name_ar: e.target.value })} /></div>
       <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-2"><Label>Title (English)</Label><Input value={f.title_en} onChange={(e) => setF({ ...f, title_en: e.target.value })} /></div>
-        <div className="space-y-2"><Label>Title (Arabic)</Label><Input dir="rtl" value={f.title_ar} onChange={(e) => setF({ ...f, title_ar: e.target.value })} /></div>
+        <div className="space-y-2"><Label>{t("owner.editors.titleEn")}</Label><Input value={f.title_en} onChange={(e) => setF({ ...f, title_en: e.target.value })} /></div>
+        <div className="space-y-2"><Label>{t("owner.editors.titleAr")}</Label><Input dir="rtl" value={f.title_ar} onChange={(e) => setF({ ...f, title_ar: e.target.value })} /></div>
       </div>
     </Shell>
   );
@@ -297,7 +304,7 @@ export function BarberDialog({
 /* --------------------------- confirm dialog ---------------------------- */
 
 export function Confirm({
-  open, onOpenChange, title, description, confirmLabel = "Delete", onConfirm,
+  open, onOpenChange, title, description, confirmLabel, onConfirm,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -306,6 +313,7 @@ export function Confirm({
   confirmLabel?: string;
   onConfirm: () => void | Promise<void>;
 }) {
+  const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   return (
     <AlertDialog open={open} onOpenChange={(v) => (!busy ? onOpenChange(v) : null)}>
@@ -315,7 +323,7 @@ export function Confirm({
           {description && <AlertDialogDescription>{description}</AlertDialogDescription>}
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={busy}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={busy}>{t("owner.editors.cancel")}</AlertDialogCancel>
           <AlertDialogAction
             onClick={async (e) => {
               e.preventDefault();
@@ -325,7 +333,7 @@ export function Confirm({
             disabled={busy}
           >
             {busy && <Loader2 className="me-2 size-4 animate-spin" />}
-            {confirmLabel}
+            {confirmLabel ?? t("owner.editors.delete")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

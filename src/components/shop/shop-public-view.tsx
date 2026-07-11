@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useMemo, useState, type ReactNode } from "react";
 import {
   Clock, MapPin, Phone, Star, Pencil, Upload, Trash2, Plus, X, Eye, EyeOff,
-  ChevronUp, ChevronDown, Image as ImageIcon,
+  ChevronUp, ChevronDown, Image as ImageIcon, Loader2, AlertTriangle,
 } from "lucide-react";
 import { StarRating } from "@/components/star-rating";
 import { MapPreview } from "@/components/map-preview";
@@ -11,6 +11,36 @@ import { ReviewsList, type DemoReview } from "@/components/reviews-list";
 import { useLocale } from "@/lib/locale-provider";
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
+
+/* ------------- Safe image with load / error handling ---------------- */
+function SafeImg({ src, className, alt = "" }: { src: string; className?: string; alt?: string }) {
+  const [state, setState] = useState<"loading" | "loaded" | "error">("loading");
+  return (
+    <div className={cn("relative size-full", className)}>
+      {state !== "error" ? (
+        <img
+          src={src}
+          alt={alt}
+          onLoad={() => setState("loaded")}
+          onError={() => setState("error")}
+          className={cn(
+            "size-full object-cover transition-opacity duration-200",
+            state === "loading" ? "opacity-0" : "opacity-100",
+          )}
+        />
+      ) : (
+        <div className="grid size-full place-items-center bg-surface text-muted-foreground">
+          <AlertTriangle className="size-5" />
+        </div>
+      )}
+      {state === "loading" && (
+        <div className="absolute inset-0 grid animate-pulse place-items-center bg-surface text-muted-foreground">
+          <ImageIcon className="size-5 opacity-50" />
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ------------------------------------------------------------------ */
 /* Shared data shape (both customer + owner routes normalize into this) */
@@ -36,7 +66,7 @@ export type PublicShop = {
 };
 
 export type PublicHour = { day_of_week: number; opens_at: string; closes_at: string };
-export type PublicPhoto = { id: string; url: string; sort: number };
+export type PublicPhoto = { id: string; url: string; sort: number; pending?: boolean };
 export type PublicService = {
   id: string;
   name_en: string;
@@ -168,7 +198,7 @@ export function ShopPublicView({
 
   // Apply sample fallbacks in edit mode so the page always looks completed.
   const effectiveCover = shop.cover_url || (editMode ? SAMPLE_COVER : null);
-  const effectivePhotos = photos.length > 0
+  const effectivePhotos: PublicPhoto[] = photos.length > 0
     ? photos
     : editMode
       ? SAMPLE_GALLERY.map((url, i) => ({ id: `sample-${i}`, url, sort: i }))
@@ -340,9 +370,14 @@ export function ShopPublicView({
                     key={photo?.id ?? i}
                     className="group relative aspect-square overflow-hidden rounded-md bg-surface"
                   >
-                    <img src={url} alt="" className="size-full object-cover" />
+                    <SafeImg src={url} />
                     {editMode && isSample && <PlaceholderTag />}
-                    {editMode && !isSample && photo && (
+                    {photo?.pending && (
+                      <div className="absolute inset-0 grid place-items-center bg-black/50 text-white">
+                        <Loader2 className="size-5 animate-spin" />
+                      </div>
+                    )}
+                    {editMode && !isSample && photo && !photo.pending && (
                       <div className="absolute inset-0 flex flex-col justify-between bg-black/40 p-2 opacity-0 transition group-hover:opacity-100">
                         <div className="flex justify-between">
                           <div className="flex gap-1">

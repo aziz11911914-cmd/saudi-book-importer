@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   getOwnerPublicPage,
   updateOwnerSalon,
@@ -60,6 +61,7 @@ type Dlg =
 
 function PublicPageEditor() {
   const qc = useQueryClient();
+  const { t } = useTranslation();
   const fetchPage = useServerFn(getOwnerPublicPage);
   const upload = useOwnerMediaUpload();
   const updateFn = useServerFn(updateOwnerSalon);
@@ -90,9 +92,9 @@ function PublicPageEditor() {
     mutationFn: (patch: any) => updateFn({ data: patch }),
     onSuccess: (updated) => {
       qc.setQueryData(KEY, (old: any) => old ? { ...old, shop: updated } : old);
-      toast.success("Saved");
+      toast.success(t("owner.publicPage.saved"));
     },
-    onError: (e: any) => toast.error(e?.message ?? "Save failed"),
+    onError: (e: any) => toast.error(e?.message ?? t("owner.publicPage.uploadFailed")),
   });
 
   if (isLoading) {
@@ -110,10 +112,15 @@ function PublicPageEditor() {
     );
   }
 
+  const MAX = 8 * 1024 * 1024;
+  const ACCEPT = "image/jpeg,image/jpg,image/png,image/webp";
+  const isImage = (f: File) => /^image\/(jpeg|jpg|png|webp)$/i.test(f.type);
+
   async function uploadImage(kind: "cover" | "logo") {
-    const f = await pickFile();
+    const f = await pickFile(ACCEPT);
     if (!f) return;
-    if (f.size > 8 * 1024 * 1024) return toast.error("Max 8MB");
+    if (!isImage(f)) return toast.error("Only JPG, PNG or WEBP");
+    if (f.size > MAX) return toast.error("Max 8MB");
     setUploading(true);
     try {
       const url = await upload(f, "salon-media");
@@ -123,22 +130,40 @@ function PublicPageEditor() {
   }
 
   async function addPhoto() {
-    const f = await pickFile();
+    const f = await pickFile(ACCEPT);
     if (!f) return;
-    if (f.size > 8 * 1024 * 1024) return toast.error("Max 8MB");
-    setUploading(true);
+    if (!isImage(f)) return toast.error("Only JPG, PNG or WEBP");
+    if (f.size > MAX) return toast.error("Max 8MB");
+    const tempId = `temp-${Date.now()}`;
+    const tempUrl = URL.createObjectURL(f);
+    qc.setQueryData(KEY, (old: any) => old
+      ? { ...old, photos: [...old.photos, { id: tempId, url: tempUrl, sort: old.photos.length, pending: true }] }
+      : old);
     try {
       const url = await upload(f, "salon-media");
       const row = await addPhotoFn({ data: { url } });
-      qc.setQueryData(KEY, (old: any) => old ? { ...old, photos: [...old.photos, row] } : old);
-      toast.success("Photo added");
-    } catch (e: any) { toast.error(e?.message ?? "Upload failed"); }
-    finally { setUploading(false); }
+      qc.setQueryData(KEY, (old: any) => old
+        ? { ...old, photos: old.photos.map((p: any) => p.id === tempId ? row : p) }
+        : old);
+    } catch (e: any) {
+      qc.setQueryData(KEY, (old: any) => old
+        ? { ...old, photos: old.photos.filter((p: any) => p.id !== tempId) }
+        : old);
+      toast.error(e?.message ?? "Upload failed");
+    } finally {
+      URL.revokeObjectURL(tempUrl);
+    }
   }
 
   async function replacePhoto(id: string) {
-    const f = await pickFile();
+    const f = await pickFile(ACCEPT);
     if (!f) return;
+    if (!isImage(f)) return toast.error("Only JPG, PNG or WEBP");
+    if (f.size > MAX) return toast.error("Max 8MB");
+    const tempUrl = URL.createObjectURL(f);
+    qc.setQueryData(KEY, (old: any) => old
+      ? { ...old, photos: old.photos.map((p: any) => p.id === id ? { ...p, url: tempUrl, pending: true } : p) }
+      : old);
     try {
       const url = await upload(f, "salon-media");
       await delPhotoFn({ data: { id } });
@@ -146,7 +171,14 @@ function PublicPageEditor() {
       qc.setQueryData(KEY, (old: any) => old
         ? { ...old, photos: old.photos.filter((p: any) => p.id !== id).concat(row) }
         : old);
-    } catch (e: any) { toast.error(e?.message ?? "Replace failed"); }
+    } catch (e: any) {
+      qc.setQueryData(KEY, (old: any) => old
+        ? { ...old, photos: old.photos.map((p: any) => p.id === id ? { ...p, pending: false } : p) }
+        : old);
+      toast.error(e?.message ?? "Replace failed");
+    } finally {
+      URL.revokeObjectURL(tempUrl);
+    }
   }
 
   async function movePhoto(id: string, dir: -1 | 1) {
@@ -236,9 +268,9 @@ function PublicPageEditor() {
       <TextPairDialog
         open={dlg.kind === "name"}
         onOpenChange={close}
-        title="Salon name"
-        labelEn="Name (English)"
-        labelAr="Name (Arabic)"
+        title={t("owner.editors.salonName")}
+        labelEn={t("owner.editors.nameEn")}
+        labelAr={t("owner.editors.nameAr")}
         valueEn={data.shop.name_en ?? ""}
         valueAr={data.shop.name_ar ?? ""}
         onSave={async ({ en, ar }) => { await updateM.mutateAsync({ name_en: en, name_ar: ar }); }}
@@ -246,9 +278,9 @@ function PublicPageEditor() {
       <TextPairDialog
         open={dlg.kind === "description"}
         onOpenChange={close}
-        title="About"
-        labelEn="Description (English)"
-        labelAr="Description (Arabic)"
+        title={t("owner.editors.about")}
+        labelEn={t("owner.editors.descEn")}
+        labelAr={t("owner.editors.descAr")}
         valueEn={data.shop.description_en ?? ""}
         valueAr={data.shop.description_ar ?? ""}
         multiline
@@ -259,8 +291,8 @@ function PublicPageEditor() {
       <TextDialog
         open={dlg.kind === "address"}
         onOpenChange={close}
-        title="Address"
-        label="Address"
+        title={t("owner.editors.address")}
+        label={t("owner.editors.address")}
         value={data.shop.address ?? ""}
         onSave={async (v) => { await updateM.mutateAsync({ address: v.trim() || null }); }}
       />
@@ -284,7 +316,7 @@ function PublicPageEditor() {
             day_of_week: r.day_of_week, opens_at: r.opens_at, closes_at: r.closes_at,
           }));
           qc.setQueryData(KEY, (old: any) => old ? { ...old, hours: next } : old);
-          toast.success("Hours saved");
+          toast.success(t("owner.publicPage.saved"));
         }}
       />
       <ServiceDialog
@@ -306,14 +338,14 @@ function PublicPageEditor() {
                 : [...old.services, svc],
             };
           });
-          toast.success(v.id ? "Service updated" : "Service added");
+          toast.success(t("owner.publicPage.saved"));
         }}
       />
       <Confirm
         open={dlg.kind === "delete-service"}
         onOpenChange={close}
-        title="Delete service?"
-        description={dlg.kind === "delete-service" ? `"${dlg.name}" will be removed from the public page.` : ""}
+        title={t("owner.editors.deleteService")}
+        description={dlg.kind === "delete-service" ? t("owner.editors.deleteServiceBody", { name: dlg.name }) : ""}
         onConfirm={async () => {
           if (dlg.kind !== "delete-service") return;
           const id = dlg.id;
@@ -321,7 +353,7 @@ function PublicPageEditor() {
           qc.setQueryData(KEY, (old: any) => old
             ? { ...old, services: old.services.filter((s: any) => s.id !== id) }
             : old);
-          toast.success("Service removed");
+          toast.success(t("owner.publicPage.saved"));
         }}
       />
       <BarberDialog
@@ -330,12 +362,13 @@ function PublicPageEditor() {
         value={dlg.kind === "barber" ? dlg.value : null}
         uploading={uploading}
         onPickPhoto={async () => {
-          const f = await pickFile();
+          const f = await pickFile(ACCEPT);
           if (!f) return null;
-          if (f.size > 8 * 1024 * 1024) { toast.error("Max 8MB"); return null; }
+          if (!isImage(f)) { toast.error(t("owner.publicPage.onlyImages")); return null; }
+          if (f.size > MAX) { toast.error(t("owner.publicPage.maxSize")); return null; }
           setUploading(true);
           try { return await upload(f, "salon-media"); }
-          catch (e: any) { toast.error(e?.message ?? "Upload failed"); return null; }
+          catch (e: any) { toast.error(e?.message ?? t("owner.publicPage.uploadFailed")); return null; }
           finally { setUploading(false); }
         }}
         onSave={async (v) => {
@@ -353,14 +386,15 @@ function PublicPageEditor() {
                 : [...old.barbers, b],
             };
           });
-          toast.success(v.id ? "Barber updated" : "Barber added");
+          toast.success(t("owner.publicPage.saved"));
         }}
       />
       <Confirm
         open={dlg.kind === "delete-barber"}
         onOpenChange={close}
-        title="Remove barber?"
-        description={dlg.kind === "delete-barber" ? `"${dlg.name}" will be hidden from the public page.` : ""}
+        title={t("owner.editors.removeBarber")}
+        confirmLabel={t("owner.editors.removeConfirm")}
+        description={dlg.kind === "delete-barber" ? t("owner.editors.removeBarberBody", { name: dlg.name }) : ""}
         onConfirm={async () => {
           if (dlg.kind !== "delete-barber") return;
           const id = dlg.id;
@@ -368,14 +402,14 @@ function PublicPageEditor() {
           qc.setQueryData(KEY, (old: any) => old
             ? { ...old, barbers: old.barbers.filter((b: any) => b.id !== id) }
             : old);
-          toast.success("Barber removed");
+          toast.success(t("owner.publicPage.saved"));
         }}
       />
       <Confirm
         open={dlg.kind === "delete-photo"}
         onOpenChange={close}
-        title="Delete photo?"
-        description="This photo will be removed from the gallery."
+        title={t("owner.editors.deletePhoto")}
+        description={t("owner.editors.deletePhotoBody")}
         onConfirm={async () => {
           if (dlg.kind !== "delete-photo") return;
           const id = dlg.id;
@@ -387,7 +421,7 @@ function PublicPageEditor() {
       />
       {(updateM.isPending || uploading) && (
         <div className="pointer-events-none fixed bottom-4 end-4 z-50 flex items-center gap-2 rounded-full bg-background/90 px-3 py-1.5 text-xs text-muted-foreground shadow">
-          <Loader2 className="size-3.5 animate-spin" /> Saving…
+          <Loader2 className="size-3.5 animate-spin" /> {t("owner.publicPage.saving")}
         </div>
       )}
       {/* keep invalidate reachable to avoid unused-warning */}
