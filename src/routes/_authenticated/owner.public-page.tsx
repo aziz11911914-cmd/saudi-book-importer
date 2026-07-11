@@ -61,6 +61,7 @@ type Dlg =
 
 function PublicPageEditor() {
   const qc = useQueryClient();
+  const { t } = useTranslation();
   const fetchPage = useServerFn(getOwnerPublicPage);
   const upload = useOwnerMediaUpload();
   const updateFn = useServerFn(updateOwnerSalon);
@@ -91,9 +92,9 @@ function PublicPageEditor() {
     mutationFn: (patch: any) => updateFn({ data: patch }),
     onSuccess: (updated) => {
       qc.setQueryData(KEY, (old: any) => old ? { ...old, shop: updated } : old);
-      toast.success("Saved");
+      toast.success(t("owner.publicPage.saved"));
     },
-    onError: (e: any) => toast.error(e?.message ?? "Save failed"),
+    onError: (e: any) => toast.error(e?.message ?? t("owner.publicPage.uploadFailed")),
   });
 
   if (isLoading) {
