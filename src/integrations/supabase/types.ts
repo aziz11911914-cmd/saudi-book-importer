@@ -693,6 +693,55 @@ export type Database = {
         }
         Relationships: []
       }
+      owner_customer_flags: {
+        Row: {
+          blocked_at: string | null
+          created_at: string
+          customer_id: string
+          notes: string | null
+          shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          blocked_at?: string | null
+          created_at?: string
+          customer_id: string
+          notes?: string | null
+          shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          blocked_at?: string | null
+          created_at?: string
+          customer_id?: string
+          notes?: string | null
+          shop_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "owner_customer_flags_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "owner_customer_flags_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "owner_customer_flags_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_settings: {
         Row: {
           authentication: Json
