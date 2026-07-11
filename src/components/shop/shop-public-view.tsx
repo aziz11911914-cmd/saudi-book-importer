@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Clock, MapPin, Phone, Star, Pencil, Upload, Trash2, Plus, X, Eye, EyeOff,
   ChevronUp, ChevronDown, Image as ImageIcon, Loader2, AlertTriangle,
@@ -251,9 +251,9 @@ export function ShopPublicView({
 
       {/* Cover */}
       <section className="relative group">
-        <div
-          className="h-72 bg-cover bg-center sm:h-96"
-          style={{ backgroundImage: `url(${gallery[0] ?? ""})` }}
+        <BgImg
+          src={gallery[0] ?? null}
+          className="h-72 sm:h-96"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
         {gallery.length > 1 && (
@@ -283,7 +283,7 @@ export function ShopPublicView({
               <div className="relative">
                 <div className="size-14 shrink-0 overflow-hidden rounded-2xl border border-hairline bg-background">
                   {shop.logo_url ? (
-                    <img src={shop.logo_url} alt="" className="h-full w-full object-cover" />
+                    <SafeImg src={shop.logo_url} />
                   ) : (
                     <div className="grid h-full w-full place-items-center text-muted-foreground">
                       <ImageIcon className="size-6" />
@@ -594,9 +594,9 @@ export function ShopPublicView({
                 const inner = (
                   <div className="group block overflow-hidden rounded-2xl border border-hairline bg-surface transition-all hover:border-gold/40">
                     <div className="relative">
-                      <div
-                        className="aspect-square bg-cover bg-center"
-                        style={{ backgroundImage: `url(${b.photo_url ?? ""})` }}
+                      <BgImg
+                        src={b.photo_url}
+                        className="aspect-square"
                       />
                       <span className="absolute bottom-2 start-2 inline-flex items-center gap-1 rounded-full bg-background/85 px-2 py-0.5 text-[10px] text-gold backdrop-blur">
                         <Star className="size-3" fill="currentColor" />
