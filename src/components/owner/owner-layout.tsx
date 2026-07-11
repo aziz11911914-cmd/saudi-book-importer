@@ -1,4 +1,5 @@
 import { Link, Outlet, useRouterState, useNavigate } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/auth-provider";
 import { useState } from "react";
 import {
@@ -7,33 +8,35 @@ import {
   LogOut, ShieldAlert, Menu, X, Bell, Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LanguageSwitcher } from "@/components/admin/language-switcher";
 
-type NavItem = { to: string; label: string; icon: any; exact?: boolean };
+type NavItem = { to: string; key: string; icon: any; exact?: boolean };
 const NAV: NavItem[] = [
-  { to: "/owner", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { to: "/owner/bookings", label: "Bookings", icon: CalendarCheck },
-  { to: "/owner/calendar", label: "Calendar", icon: Calendar },
-  { to: "/owner/customers", label: "Customers", icon: Users },
-  { to: "/owner/barbers", label: "Barbers", icon: Scissors },
-  { to: "/owner/services", label: "Services", icon: Sparkles },
-  { to: "/owner/portfolio", label: "Portfolio", icon: Image },
-  { to: "/owner/reviews", label: "Reviews", icon: Star },
-  { to: "/owner/analytics", label: "Analytics", icon: BarChart3 },
-  { to: "/owner/public-page", label: "Public Page", icon: Globe },
-  { to: "/owner/salon", label: "Salon", icon: Store },
-  { to: "/owner/settings", label: "Settings", icon: Settings },
-  { to: "/owner/support", label: "Support", icon: LifeBuoy },
+  { to: "/owner", key: "dashboard", icon: LayoutDashboard, exact: true },
+  { to: "/owner/bookings", key: "bookings", icon: CalendarCheck },
+  { to: "/owner/calendar", key: "calendar", icon: Calendar },
+  { to: "/owner/customers", key: "customers", icon: Users },
+  { to: "/owner/barbers", key: "barbers", icon: Scissors },
+  { to: "/owner/services", key: "services", icon: Sparkles },
+  { to: "/owner/portfolio", key: "portfolio", icon: Image },
+  { to: "/owner/reviews", key: "reviews", icon: Star },
+  { to: "/owner/analytics", key: "analytics", icon: BarChart3 },
+  { to: "/owner/public-page", key: "publicPage", icon: Globe },
+  { to: "/owner/salon", key: "salon", icon: Store },
+  { to: "/owner/settings", key: "settings", icon: Settings },
+  { to: "/owner/support", key: "support", icon: LifeBuoy },
 ];
 
 export function OwnerLayout() {
   const { ready, roles, profile, signOut } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const allowed = roles.includes("owner") || roles.includes("super_admin");
 
   if (!ready) {
-    return <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">Loading…</div>;
+    return <div className="grid min-h-screen place-items-center bg-background text-muted-foreground">{t("admin.common.loading")}</div>;
   }
   if (!allowed) {
     return (
@@ -55,8 +58,8 @@ export function OwnerLayout() {
         sidebarOpen ? "translate-x-0" : "-translate-x-full",
       )}>
         <div className="flex h-16 items-center justify-between border-b border-hairline px-5">
-          <Link to="/owner" className="font-display text-xl text-gold">Qassah Owner</Link>
-          <button className="lg:hidden" onClick={() => setSidebarOpen(false)} aria-label="Close sidebar">
+          <Link to="/owner" className="font-display text-xl text-gold">{t("owner.brand")}</Link>
+          <button className="lg:hidden" onClick={() => setSidebarOpen(false)} aria-label={t("admin.common.close")}>
             <X className="size-5" />
           </button>
         </div>
@@ -75,20 +78,20 @@ export function OwnerLayout() {
                 )}
               >
                 <Icon className="size-4" />
-                <span>{item.label}</span>
+                <span>{t(`owner.nav.${item.key}`)}</span>
               </Link>
             );
           })}
         </nav>
         <div className="border-t border-hairline p-3">
           <Link to="/profile" className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground hover:bg-surface hover:text-foreground">
-            <UserCircle className="size-4" /> {profile?.full_name || profile?.email || "Profile"}
+            <UserCircle className="size-4" /> {profile?.full_name || profile?.email || t("owner.nav.profile")}
           </Link>
           <button
             onClick={async () => { await signOut(); navigate({ to: "/auth", replace: true }); }}
             className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm text-muted-foreground hover:bg-surface hover:text-foreground"
           >
-            <LogOut className="size-4" /> Logout
+            <LogOut className="size-4" /> {t("owner.nav.logout")}
           </button>
         </div>
       </aside>
@@ -97,14 +100,15 @@ export function OwnerLayout() {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-hairline bg-background/80 px-4 backdrop-blur sm:px-6">
-          <button className="lg:hidden" onClick={() => setSidebarOpen(true)} aria-label="Open sidebar">
+          <button className="lg:hidden" onClick={() => setSidebarOpen(true)} aria-label={t("admin.common.filter")}>
             <Menu className="size-5" />
           </button>
           <div className="flex-1" />
+          <LanguageSwitcher />
           <Link
             to="/owner"
             className="relative rounded-full p-2 text-muted-foreground hover:bg-surface hover:text-foreground"
-            aria-label="Notifications"
+            aria-label={t("owner.nav.notifications")}
           >
             <Bell className="size-5" />
           </Link>
