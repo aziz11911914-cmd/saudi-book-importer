@@ -92,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const first = (meta.first_name as string | undefined) ?? null;
       const last = (meta.last_name as string | undefined) ?? null;
       const full =
-        (meta.full_name as string | undefined) ??
+        (meta.full_name as string | undefined) ||
         [first, last].filter(Boolean).join(" ") ||
         null;
       if (profileLoaded || first || last || full) {
