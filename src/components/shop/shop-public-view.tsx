@@ -11,15 +11,18 @@ import { ReviewsList, type DemoReview } from "@/components/reviews-list";
 import { useLocale } from "@/lib/locale-provider";
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useStorageUrl } from "@/lib/storage-url";
 
 /* ------------- Safe image with load / error handling ---------------- */
 function SafeImg({ src, className, alt = "" }: { src: string; className?: string; alt?: string }) {
   const [state, setState] = useState<"loading" | "loaded" | "error">("loading");
+  const resolved = useStorageUrl(src);
+  useEffect(() => { setState("loading"); }, [resolved]);
   return (
     <div className={cn("relative size-full", className)}>
-      {state !== "error" ? (
+      {state !== "error" && resolved ? (
         <img
-          src={src}
+          src={resolved}
           alt={alt}
           onLoad={() => setState("loaded")}
           onError={() => setState("error")}
@@ -28,16 +31,29 @@ function SafeImg({ src, className, alt = "" }: { src: string; className?: string
             state === "loading" ? "opacity-0" : "opacity-100",
           )}
         />
-      ) : (
+      ) : state === "error" ? (
         <div className="grid size-full place-items-center bg-surface text-muted-foreground">
           <AlertTriangle className="size-5" />
         </div>
-      )}
-      {state === "loading" && (
+      ) : null}
+      {(state === "loading" || !resolved) && (
         <div className="absolute inset-0 grid animate-pulse place-items-center bg-surface text-muted-foreground">
           <ImageIcon className="size-5 opacity-50" />
         </div>
       )}
+    </div>
+  );
+}
+
+/* Background-image div that resolves private storage URLs to signed URLs */
+function BgImg({ src, className, children }: { src: string | null | undefined; className?: string; children?: ReactNode }) {
+  const resolved = useStorageUrl(src);
+  return (
+    <div
+      className={className}
+      style={resolved ? { backgroundImage: `url(${resolved})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+    >
+      {children}
     </div>
   );
 }
