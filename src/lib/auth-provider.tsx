@@ -51,18 +51,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
 
   const loadProfile = useCallback(async (currentUser: User) => {
+    // Apply any pending invites (assigns owner/barber role and links to shop) + bumps last_login_at
+    try { await withTimeout(consumeMyInvites()); } catch {}
+
+    // Load profile and roles independently so a failure in one doesn't
+    // clobber the other (previously a roles-query failure caused profile
+    // to reset to null, which made returning users repeat onboarding).
+    let loadedProfile: AuthProfile | null = null;
+    let profileLoaded = false;
     try {
-      // Apply any pending invites (assigns owner/barber role and links to shop) + bumps last_login_at
-      try { await withTimeout(consumeMyInvites()); } catch {}
-      const [{ data: p }, { data: r }] = await Promise.all([
-        withTimeout(supabase
+      const { data: p } = await withTimeout(
+        supabase
           .from("profiles")
           .select("id,email,first_name,last_name,full_name,avatar_url,phone,status")
           .eq("id", currentUser.id)
-          .maybeSingle()),
-        withTimeout(supabase.from("user_roles").select("role").eq("user_id", currentUser.id)),
-      ]);
-      // Block disabled/suspended accounts from using the app.
+          .maybeSingle(),
+      );
+      profileLoaded = true;
       const status = (p as any)?.status;
       if (status === "disabled" || status === "suspended") {
         await supabase.auth.signOut();
@@ -74,20 +79,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         return;
       }
-      setProfile((p as AuthProfile) ?? null);
+      loadedProfile = (p as AuthProfile) ?? null;
+    } catch {
+      // ignore; fall through to metadata fallback
+    }
+
+    // Fallback: derive a profile from the auth user's metadata so existing
+    // users with a valid session are never treated as "new" (which would
+    // trigger the onboarding step again) when the profile read fails.
+    if (!loadedProfile) {
+      const meta = (currentUser.user_metadata ?? {}) as Record<string, unknown>;
+      const first = (meta.first_name as string | undefined) ?? null;
+      const last = (meta.last_name as string | undefined) ?? null;
+      const full =
+        (meta.full_name as string | undefined) ??
+        [first, last].filter(Boolean).join(" ") ||
+        null;
+      if (profileLoaded || first || last || full) {
+        loadedProfile = {
+          id: currentUser.id,
+          email: currentUser.email ?? null,
+          first_name: first,
+          last_name: last,
+          full_name: full || null,
+          avatar_url: (meta.avatar_url as string | undefined) ?? null,
+          phone: (meta.phone as string | undefined) ?? null,
+        };
+      }
+    }
+    setProfile(loadedProfile);
+
+    try {
+      const { data: r } = await withTimeout(
+        supabase.from("user_roles").select("role").eq("user_id", currentUser.id),
+      );
       setRoles(((r ?? []) as { role: AppRole }[]).map((x) => x.role));
     } catch {
       if (currentUser?.email?.toLowerCase() === PLATFORM_ADMIN_EMAIL) {
-        setProfile({
-          id: currentUser.id,
-          email: currentUser.email,
-          first_name: null,
-          last_name: null,
-          full_name: "Qassah Admin",
-          avatar_url: null,
-          phone: null,
-        });
         setRoles(["super_admin" as AppRole]);
+      } else {
+        setRoles([]);
       }
     }
   }, []);
