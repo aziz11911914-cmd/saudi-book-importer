@@ -198,7 +198,7 @@ export function ShopPublicView({
 
   // Apply sample fallbacks in edit mode so the page always looks completed.
   const effectiveCover = shop.cover_url || (editMode ? SAMPLE_COVER : null);
-  const effectivePhotos = photos.length > 0
+  const effectivePhotos: PublicPhoto[] = photos.length > 0
     ? photos
     : editMode
       ? SAMPLE_GALLERY.map((url, i) => ({ id: `sample-${i}`, url, sort: i }))
