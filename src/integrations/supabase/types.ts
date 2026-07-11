@@ -1482,6 +1482,18 @@ export type Database = {
       }
     }
     Views: {
+      maintenance_status_v: {
+        Row: {
+          maintenance: Json | null
+        }
+        Insert: {
+          maintenance?: Json | null
+        }
+        Update: {
+          maintenance?: Json | null
+        }
+        Relationships: []
+      }
       shops_public: {
         Row: {
           accept_reviews: boolean | null
