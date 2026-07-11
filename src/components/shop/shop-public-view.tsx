@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useMemo, useState, type ReactNode } from "react";
 import {
   Clock, MapPin, Phone, Star, Pencil, Upload, Trash2, Plus, X, Eye, EyeOff,
-  ChevronUp, ChevronDown, Image as ImageIcon,
+  ChevronUp, ChevronDown, Image as ImageIcon, Loader2, AlertTriangle,
 } from "lucide-react";
 import { StarRating } from "@/components/star-rating";
 import { MapPreview } from "@/components/map-preview";
@@ -11,6 +11,36 @@ import { ReviewsList, type DemoReview } from "@/components/reviews-list";
 import { useLocale } from "@/lib/locale-provider";
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
+
+/* ------------- Safe image with load / error handling ---------------- */
+function SafeImg({ src, className, alt = "" }: { src: string; className?: string; alt?: string }) {
+  const [state, setState] = useState<"loading" | "loaded" | "error">("loading");
+  return (
+    <div className={cn("relative size-full", className)}>
+      {state !== "error" ? (
+        <img
+          src={src}
+          alt={alt}
+          onLoad={() => setState("loaded")}
+          onError={() => setState("error")}
+          className={cn(
+            "size-full object-cover transition-opacity duration-200",
+            state === "loading" ? "opacity-0" : "opacity-100",
+          )}
+        />
+      ) : (
+        <div className="grid size-full place-items-center bg-surface text-muted-foreground">
+          <AlertTriangle className="size-5" />
+        </div>
+      )}
+      {state === "loading" && (
+        <div className="absolute inset-0 grid animate-pulse place-items-center bg-surface text-muted-foreground">
+          <ImageIcon className="size-5 opacity-50" />
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ------------------------------------------------------------------ */
 /* Shared data shape (both customer + owner routes normalize into this) */
