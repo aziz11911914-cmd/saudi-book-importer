@@ -370,9 +370,14 @@ export function ShopPublicView({
                     key={photo?.id ?? i}
                     className="group relative aspect-square overflow-hidden rounded-md bg-surface"
                   >
-                    <img src={url} alt="" className="size-full object-cover" />
+                    <SafeImg src={url} />
                     {editMode && isSample && <PlaceholderTag />}
-                    {editMode && !isSample && photo && (
+                    {photo?.pending && (
+                      <div className="absolute inset-0 grid place-items-center bg-black/50 text-white">
+                        <Loader2 className="size-5 animate-spin" />
+                      </div>
+                    )}
+                    {editMode && !isSample && photo && !photo.pending && (
                       <div className="absolute inset-0 flex flex-col justify-between bg-black/40 p-2 opacity-0 transition group-hover:opacity-100">
                         <div className="flex justify-between">
                           <div className="flex gap-1">
