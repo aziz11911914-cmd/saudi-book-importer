@@ -148,7 +148,7 @@ function OwnerBarbersPage() {
 
 function BarberCard({ barber, onChange }: { barber: any; onChange: () => void }) {
   const { t } = useTranslation();
-  const { tt } = useLocale();
+  const { t: tt } = useLocale();
   const setStatus = useServerFn(setOwnerBarberStatus);
   const del = useServerFn(deleteOwnerBarber);
   const upsert = useServerFn(upsertOwnerBarber);
@@ -242,7 +242,7 @@ function BarberCard({ barber, onChange }: { barber: any; onChange: () => void })
         open={openEdit}
         onClose={() => setOpenEdit(false)}
         barber={barber}
-        onSave={async (patch) => {
+        onSave={async (patch: any) => {
           await run(() => upsert({ data: { id: barber.id, ...patch } as any }), t("admin.common.success"));
           setOpenEdit(false);
         }}
