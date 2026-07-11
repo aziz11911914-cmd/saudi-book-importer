@@ -8,8 +8,8 @@ export function MaintenanceBanner() {
   useEffect(() => {
     let alive = true;
     (async () => {
-      const { data } = await supabase.rpc("get_maintenance_status" as any);
-      if (alive) setM((data as any) ?? null);
+      const { data } = await (supabase.from as any)("maintenance_status_v").select("maintenance").maybeSingle();
+      if (alive) setM((data?.maintenance as any) ?? null);
     })();
     return () => { alive = false; };
   }, []);
