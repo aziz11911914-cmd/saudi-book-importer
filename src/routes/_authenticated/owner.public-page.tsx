@@ -110,10 +110,15 @@ function PublicPageEditor() {
     );
   }
 
+  const MAX = 8 * 1024 * 1024;
+  const ACCEPT = "image/jpeg,image/jpg,image/png,image/webp";
+  const isImage = (f: File) => /^image\/(jpeg|jpg|png|webp)$/i.test(f.type);
+
   async function uploadImage(kind: "cover" | "logo") {
-    const f = await pickFile();
+    const f = await pickFile(ACCEPT);
     if (!f) return;
-    if (f.size > 8 * 1024 * 1024) return toast.error("Max 8MB");
+    if (!isImage(f)) return toast.error("Only JPG, PNG or WEBP");
+    if (f.size > MAX) return toast.error("Max 8MB");
     setUploading(true);
     try {
       const url = await upload(f, "salon-media");
@@ -123,22 +128,40 @@ function PublicPageEditor() {
   }
 
   async function addPhoto() {
-    const f = await pickFile();
+    const f = await pickFile(ACCEPT);
     if (!f) return;
-    if (f.size > 8 * 1024 * 1024) return toast.error("Max 8MB");
-    setUploading(true);
+    if (!isImage(f)) return toast.error("Only JPG, PNG or WEBP");
+    if (f.size > MAX) return toast.error("Max 8MB");
+    const tempId = `temp-${Date.now()}`;
+    const tempUrl = URL.createObjectURL(f);
+    qc.setQueryData(KEY, (old: any) => old
+      ? { ...old, photos: [...old.photos, { id: tempId, url: tempUrl, sort: old.photos.length, pending: true }] }
+      : old);
     try {
       const url = await upload(f, "salon-media");
       const row = await addPhotoFn({ data: { url } });
-      qc.setQueryData(KEY, (old: any) => old ? { ...old, photos: [...old.photos, row] } : old);
-      toast.success("Photo added");
-    } catch (e: any) { toast.error(e?.message ?? "Upload failed"); }
-    finally { setUploading(false); }
+      qc.setQueryData(KEY, (old: any) => old
+        ? { ...old, photos: old.photos.map((p: any) => p.id === tempId ? row : p) }
+        : old);
+    } catch (e: any) {
+      qc.setQueryData(KEY, (old: any) => old
+        ? { ...old, photos: old.photos.filter((p: any) => p.id !== tempId) }
+        : old);
+      toast.error(e?.message ?? "Upload failed");
+    } finally {
+      URL.revokeObjectURL(tempUrl);
+    }
   }
 
   async function replacePhoto(id: string) {
-    const f = await pickFile();
+    const f = await pickFile(ACCEPT);
     if (!f) return;
+    if (!isImage(f)) return toast.error("Only JPG, PNG or WEBP");
+    if (f.size > MAX) return toast.error("Max 8MB");
+    const tempUrl = URL.createObjectURL(f);
+    qc.setQueryData(KEY, (old: any) => old
+      ? { ...old, photos: old.photos.map((p: any) => p.id === id ? { ...p, url: tempUrl, pending: true } : p) }
+      : old);
     try {
       const url = await upload(f, "salon-media");
       await delPhotoFn({ data: { id } });
@@ -146,7 +169,14 @@ function PublicPageEditor() {
       qc.setQueryData(KEY, (old: any) => old
         ? { ...old, photos: old.photos.filter((p: any) => p.id !== id).concat(row) }
         : old);
-    } catch (e: any) { toast.error(e?.message ?? "Replace failed"); }
+    } catch (e: any) {
+      qc.setQueryData(KEY, (old: any) => old
+        ? { ...old, photos: old.photos.map((p: any) => p.id === id ? { ...p, pending: false } : p) }
+        : old);
+      toast.error(e?.message ?? "Replace failed");
+    } finally {
+      URL.revokeObjectURL(tempUrl);
+    }
   }
 
   async function movePhoto(id: string, dir: -1 | 1) {
