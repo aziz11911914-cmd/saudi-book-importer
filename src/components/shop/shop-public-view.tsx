@@ -36,7 +36,7 @@ export type PublicShop = {
 };
 
 export type PublicHour = { day_of_week: number; opens_at: string; closes_at: string };
-export type PublicPhoto = { id: string; url: string; sort: number };
+export type PublicPhoto = { id: string; url: string; sort: number; pending?: boolean };
 export type PublicService = {
   id: string;
   name_en: string;
