@@ -81,7 +81,7 @@ export function computeSlots({
   ignoreBookingId?: string;
 }): string[] {
   const dow = riyadhDayOfWeek(dateISO);
-  const windows = availability.filter((a) => a.day_of_week === dow);
+  const windows = availability.filter((a) => a.day_of_week === dow && !a.is_off);
   if (!windows.length) return [];
 
   const existing = getBookingsForBarberOnDate(barberId, dateISO).filter(
@@ -93,7 +93,11 @@ export function computeSlots({
   for (const w of windows) {
     const start = hhmmToMinutes(w.starts_at.slice(0, 5));
     const end = hhmmToMinutes(w.ends_at.slice(0, 5));
+    const brkStart = w.break_start ? hhmmToMinutes(w.break_start.slice(0, 5)) : null;
+    const brkEnd = w.break_end ? hhmmToMinutes(w.break_end.slice(0, 5)) : null;
     for (let t = start; t + durationMin <= end; t += STEP_MIN) {
+      // Skip slots that overlap the break window.
+      if (brkStart !== null && brkEnd !== null && t < brkEnd && t + durationMin > brkStart) continue;
       const hhmm = minutesToHHMM(t);
       const startISO = riyadhLocalToUtcISO(dateISO, hhmm);
       const startMs = new Date(startISO).getTime();
