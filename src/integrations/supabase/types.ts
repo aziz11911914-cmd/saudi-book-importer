@@ -95,23 +95,32 @@ export type Database = {
       barber_availability: {
         Row: {
           barber_id: string
+          break_end: string | null
+          break_start: string | null
           day_of_week: number
           ends_at: string
           id: string
+          is_off: boolean
           starts_at: string
         }
         Insert: {
           barber_id: string
+          break_end?: string | null
+          break_start?: string | null
           day_of_week: number
           ends_at: string
           id?: string
+          is_off?: boolean
           starts_at: string
         }
         Update: {
           barber_id?: string
+          break_end?: string | null
+          break_start?: string | null
           day_of_week?: number
           ends_at?: string
           id?: string
+          is_off?: boolean
           starts_at?: string
         }
         Relationships: [
@@ -218,6 +227,7 @@ export type Database = {
       }
       barbers: {
         Row: {
+          appointment_duration_min: number
           appointments_completed: number
           bio_ar: string | null
           bio_en: string | null
@@ -240,6 +250,7 @@ export type Database = {
           years_experience: number
         }
         Insert: {
+          appointment_duration_min?: number
           appointments_completed?: number
           bio_ar?: string | null
           bio_en?: string | null
@@ -262,6 +273,7 @@ export type Database = {
           years_experience?: number
         }
         Update: {
+          appointment_duration_min?: number
           appointments_completed?: number
           bio_ar?: string | null
           bio_en?: string | null
