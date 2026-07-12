@@ -301,6 +301,48 @@ const resources = {
 
         language: { label: "English", ariaSwitch: "التبديل إلى الإنجليزية" },
       },
+      barber: {
+        brand: "قَصّة",
+        nav: {
+          dashboard: "لوحة القيادة",
+          bookings: "الحجوزات",
+          profile: "صفحتي",
+          settings: "الإعدادات",
+          logout: "تسجيل الخروج",
+        },
+        dashboard: {
+          title: "لوحة القيادة",
+          subtitle: "نظرة عامة على يومك.",
+          today: "حجوزات اليوم",
+          upcoming: "قادمة",
+          completed: "مكتملة",
+          todaySchedule: "جدول اليوم",
+          upcomingTitle: "المواعيد القادمة",
+          emptyToday: "لا توجد حجوزات اليوم.",
+          emptyUpcoming: "لا توجد مواعيد قادمة.",
+          viewAll: "عرض الكل",
+        },
+        bookings: {
+          title: "الحجوزات",
+          filters: { today: "اليوم", upcoming: "قادمة", completed: "مكتملة", cancelled: "ملغاة" },
+        },
+        actions: { complete: "إكمال", cancel: "إلغاء", noShow: "لم يحضر", edit: "تعديل", save: "حفظ" },
+        days: { sun: "الأحد", mon: "الاثنين", tue: "الثلاثاء", wed: "الأربعاء", thu: "الخميس", fri: "الجمعة", sat: "السبت" },
+        settings: {
+          title: "الإعدادات",
+          subtitle: "إعداد أيام العمل وساعات العمل والاستراحة ومدة الموعد.",
+          durationTitle: "مدة الموعد",
+          durationLabel: "مدة كل موعد",
+          hoursTitle: "أيام وساعات العمل",
+          off: "إجازة",
+          open: "من",
+          close: "إلى",
+          breakStart: "بداية الاستراحة",
+          breakEnd: "نهاية الاستراحة",
+          save: "حفظ",
+          saved: "تم الحفظ",
+        },
+      },
       owner: {
         brand: "قَصّة أونر",
         nav: {
