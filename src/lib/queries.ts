@@ -249,10 +249,17 @@ export async function fetchPortfolioFeed(
 export async function fetchBarberAvailability(barberId: string) {
   const { data, error } = await supabase
     .from("barber_availability")
-    .select("day_of_week, starts_at, ends_at")
+    .select("day_of_week, starts_at, ends_at, break_start, break_end, is_off")
     .eq("barber_id", barberId);
   if (error) throw error;
-  return (data ?? []) as { day_of_week: number; starts_at: string; ends_at: string }[];
+  return (data ?? []) as {
+    day_of_week: number;
+    starts_at: string;
+    ends_at: string;
+    break_start: string | null;
+    break_end: string | null;
+    is_off: boolean | null;
+  }[];
 }
 
 export async function fetchAllShops(): Promise<Shop[]> {
