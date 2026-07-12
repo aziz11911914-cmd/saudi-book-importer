@@ -62,10 +62,10 @@ export const updateBarberBio = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertCanEditBarber(context.supabase, context.userId, data.barberId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const patch: Record<string, unknown> = {};
+    const patch: { bio_en?: string | null; bio_ar?: string | null } = {};
     if (data.bio_en !== undefined) patch.bio_en = data.bio_en;
     if (data.bio_ar !== undefined) patch.bio_ar = data.bio_ar;
-    const { error } = await supabaseAdmin.from("barbers").update(patch).eq("id", data.barberId);
+    const { error } = await (supabaseAdmin.from("barbers").update(patch as never)).eq("id", data.barberId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
