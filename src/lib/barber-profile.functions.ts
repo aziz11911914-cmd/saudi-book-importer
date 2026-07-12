@@ -165,13 +165,13 @@ export const updateBarberServiceDetails = createServerFn({ method: "POST" })
       data.barberId,
     );
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const patch: Record<string, unknown> = {};
+    const patch: { price_sar?: number; duration_min?: number } = {};
     if (data.price_sar !== undefined) patch.price_sar = data.price_sar;
     if (data.duration_min !== undefined) patch.duration_min = data.duration_min;
     if (!Object.keys(patch).length) return { ok: true };
     const { error } = await supabaseAdmin
       .from("services")
-      .update(patch)
+      .update(patch as never)
       .eq("id", data.serviceId)
       .eq("shop_id", barber.shop_id);
     if (error) throw new Error(error.message);
