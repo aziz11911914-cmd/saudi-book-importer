@@ -92,7 +92,7 @@ export const setBarberImage = createServerFn({ method: "POST" })
       const m = prevUrl.match(/salon-media\/([^?]+)/);
       if (m) await supabaseAdmin.storage.from("salon-media").remove([m[1]]).catch(() => null);
     }
-    const patch: Record<string, unknown> = { [data.field]: data.url };
+    const patch = { [data.field]: data.url } as { photo_url?: string | null; cover_url?: string | null };
     const { error } = await supabaseAdmin.from("barbers").update(patch).eq("id", data.barberId);
     if (error) throw new Error(error.message);
     return { ok: true };
