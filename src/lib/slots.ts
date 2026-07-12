@@ -5,6 +5,9 @@ export type Availability = {
   day_of_week: number; // 0=Sun .. 6=Sat
   starts_at: string; // "HH:MM:SS"
   ends_at: string;
+  break_start?: string | null;
+  break_end?: string | null;
+  is_off?: boolean | null;
 };
 
 const RIYADH_OFFSET = "+03:00";
