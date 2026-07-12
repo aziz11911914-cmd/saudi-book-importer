@@ -1,63 +1,73 @@
-## Owner Dashboard — Phased Build Plan
 
-The specification is ~4,000 lines covering 8 major sections (Dashboard, Salon Management, Services, Barbers, Bookings & Calendar, Customers & Reviews, Analytics, Settings). Building all of it in one turn would be irresponsible — each section is itself a multi-page module touching dozens of tables, RLS policies, and UI flows. I will deliver it section by section, verifying each before moving on, exactly as the spec requires.
+# Barber Module — Single Profile, Three Roles
 
-### Foundation (built once, used by every section)
+## Goal
+One profile page at `src/routes/barbers.$barberId.tsx` renders for customer / barber / owner. Same layout, same components. Edit controls appear inline only when `canEdit` is true.
 
-1. **Owner shell & routing**
-   - New protected layout `src/routes/_authenticated/owner.tsx` with sidebar (Dashboard, Bookings, Calendar, Customers, Barbers, Services, Portfolio, Reviews, Analytics, Salon, Settings, Support, Logout).
-   - `role-routing` already sends owners to `/owner`; extend it to `/owner` as the new dashboard home.
-   - Header: greeting, salon name, date/time, last sync, notifications, profile menu.
-   - Route guard: `requireSupabaseAuth` + `has_role(uid,'owner')`; redirect non-owners.
+## Architecture
 
-2. **Owner data layer (`src/lib/owner.functions.ts`)**
-   - All reads/writes go through `createServerFn` + `requireSupabaseAuth`.
-   - Helper `getOwnerShopId(userId)` reused everywhere — every query is scoped to that shop.
-   - RLS audit: confirm `shops`, `barbers`, `bookings`, `services`, `reviews`, `invites`, `shop_hours`, `portfolio_photos`, `notifications` policies allow owner access only when `manager_id = auth.uid()`. Add missing policies via migration if needed.
+### 1. Permission model
+Add a `useBarberPermissions(barberId)` hook that returns:
+- `canEdit: boolean` — true if current user is the barber (`barbers.profile_id === user.id`) OR an owner of the shop (`shops.manager_id === user.id`) OR super_admin.
+- `role: "customer" | "self" | "owner" | "admin"`
 
-### Section 1 — Dashboard (this turn's deliverable)
+### 2. Refactor `barbers.$barberId.tsx`
+Keep the existing UI untouched. Wrap editable regions with an `<Editable>` component that:
+- When `!canEdit`: renders children as-is (pixel-identical to current customer view).
+- When `canEdit`: renders children + a small floating pencil button; click swaps to inline editor (input/textarea/upload), Save/Cancel, optimistic React Query update.
 
-Route: `/_authenticated/owner/index.tsx`
+Editable regions:
+- Profile photo (upload/remove)
+- Bio (about tab textarea EN + AR)
+- Title / display name
+- Years experience
+- Specialties (add/remove chips)
+- Services — per row: enable toggle + inline edit fields; owner sees "+ Add service"
+- Portfolio — "+ Add photo" tile + delete-on-hover per photo
 
-- **KPI cards** (live SQL):
-  1. Today's Bookings + delta vs yesterday
-  2. Occupancy rate = booked-minutes / available-minutes today
-  3. Available barbers breakdown (Working / Busy / Break / Off)
-  4. Pending reviews (no owner reply)
-  5. New customers this week (distinct customer_id first booked in last 7d)
-  6. Revenue — placeholder card marked "Coming soon" (architecture only)
-- **Today's Schedule** timeline with status chips; click opens `BookingDrawer` (no navigation) showing customer, phone, service, duration, price, barber, notes, status, quick actions (confirm / cancel / no-show / reschedule).
-- **Quick Actions** bar: Create Booking, Invite Barber, Add Service, Edit Salon, Open Calendar.
-- **Recent Activity** from `audit_logs` filtered to this shop.
-- **Pending Invitations** list (copy link, resend, cancel) from `invites`.
-- **Recent Reviews** with Reply button (opens drawer).
-- **Barber Status** cards (photo, name, status, current booking, today's count).
-- **Today Performance**: Completed / Upcoming / Cancelled / No-show / Avg rating.
-- Auto-refresh: TanStack Query `refetchInterval: 30s` + Supabase realtime channel on `bookings` invalidating queries.
+### 3. Server functions
+Add `src/lib/barber-profile.functions.ts`:
+- `updateBarberField({ id, patch })` — validates `canEdit`, updates allowed fields.
+- `uploadBarberPhoto` / `removeBarberPhoto`
+- `toggleBarberService({ barberId, serviceId, enabled })`
+- `upsertService` / `deleteService` (owner-only for CRUD; barber can only toggle)
+- `addPortfolioPhoto` / `deletePortfolioPhoto`
+- `updateAvailability({ barberId, workingDays, workingHours, break, appointmentDurationMin })`
 
-Verification checklist before Section 2:
-- All KPIs read real data — no mocks.
-- RLS denies access when signed in as another owner.
-- Sidebar navigation renders; non-owner roles get redirected.
-- Mobile (375px), tablet, desktop layouts pass visual check via Playwright screenshot.
-- No console errors; build & typecheck pass.
+All use `requireSupabaseAuth` + server-side permission check.
 
-### Sections 2–8 (subsequent turns, one per turn)
+### 4. Barber dashboard (`/_authenticated/barber`)
+Replace stats-only page with 4-item sidebar layout mirroring owner-layout:
+- **Dashboard** (`/barber`) — Today's bookings, Upcoming, Completed count, Today's schedule, Current availability summary. Each booking: Complete / Cancel / No-show buttons.
+- **Bookings** (`/barber/bookings`) — filters Today/Upcoming/Completed/Cancelled; columns customer/service/price/time/status + actions.
+- **My Profile** (`/barber/profile`) — renders the SAME `<BarberProfilePage>` component with the current user's barber id (edit mode active).
+- **Settings** (`/barber/settings`) — availability config (working days, hours, break, appointment duration). Booking engine reads these to generate slots.
 
-Each will land as its own approved scope with the same verification gate:
+Remove Analytics / Customers / Reviews / Portfolio pages from barber nav.
 
-2. **Salon Management** — 10 sub-sections, image uploads (needs new `salon-media` storage bucket), auto-save, working hours, holidays, visibility, danger zone.
-3. **Services** — categories table (new migration), services CRUD with image, barber assignment matrix, bulk actions, analytics rollups.
-4. **Barbers & Team** — invitation flow (reuses existing `invites`), profiles, working hours, vacations, assigned services, portfolio uploads, performance.
-5. **Bookings & Calendar** — list + day/week/month calendar, drag-to-reschedule, conflict detection, status transitions.
-6. **Customers & Reviews** — customer list scoped to owner's bookings, review replies, customer detail drawer.
-7. **Analytics** — charts (Recharts) for bookings, revenue placeholders, top services, top barbers, retention.
-8. **Settings** — notifications, locale, team permissions stub, support contact.
+### 5. Availability model
+`barber_availability` already exists (5 cols). Extend/reuse to store:
+- `weekday` (0–6), `start_time`, `end_time`, `break_start`, `break_end`, `is_off`
+Plus a new `barbers.appointment_duration_min` column (default 30).
 
-### Open questions before I start Section 1
+Slot generation in existing `src/lib/slots.ts` reads these and emits slots — no manual slot creation.
 
-1. **Revenue card** — the spec says "future-ready, do not calculate payments yet." Confirm: render a card with "Coming soon" badge and no number? (My default.)
-2. **Realtime** — Supabase realtime adds load. OK to use Postgres changes channel on `bookings`/`reviews`/`invites` scoped to the owner's shop, fallback to 30s polling?
-3. **Notifications icon** — should it open a panel reading from the existing `notifications` table, or just route to `/owner/notifications` for now?
+## Out of scope
+- Do NOT redesign the customer profile.
+- Do NOT create parallel profile components.
+- Do NOT touch reviews (read-only for all roles).
 
-I'll proceed with sensible defaults (Coming-soon revenue, realtime + polling, notification icon → panel reading `notifications`) unless you say otherwise. Approve this plan and I'll ship Section 1.
+## Files touched
+- `src/routes/barbers.$barberId.tsx` (wrap regions with `<Editable>`)
+- NEW `src/components/barber/editable.tsx`
+- NEW `src/lib/use-barber-permissions.ts`
+- NEW `src/lib/barber-profile.functions.ts`
+- NEW `src/components/barber/barber-layout.tsx` (sidebar)
+- REWRITE `src/routes/_authenticated/barber.tsx` → dashboard
+- NEW `src/routes/_authenticated/barber.bookings.tsx`
+- NEW `src/routes/_authenticated/barber.profile.tsx` (renders barber profile with self id)
+- NEW `src/routes/_authenticated/barber.settings.tsx`
+- Migration: `alter table barbers add column appointment_duration_min int default 30`; ensure `barber_availability` has break columns + RLS for self-edit.
+
+## Approval
+This is a large change (~15 files, 1 migration). Confirm before I start, or tell me which slice to build first (recommend: permission hook + inline-edit wiring on the existing profile page, then dashboard).
