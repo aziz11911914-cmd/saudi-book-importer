@@ -232,6 +232,7 @@ export type Database = {
           bio_ar: string | null
           bio_en: string | null
           clients_served: number
+          cover_url: string | null
           created_at: string
           display_name_ar: string
           display_name_en: string
@@ -255,6 +256,7 @@ export type Database = {
           bio_ar?: string | null
           bio_en?: string | null
           clients_served?: number
+          cover_url?: string | null
           created_at?: string
           display_name_ar: string
           display_name_en: string
@@ -278,6 +280,7 @@ export type Database = {
           bio_ar?: string | null
           bio_en?: string | null
           clients_served?: number
+          cover_url?: string | null
           created_at?: string
           display_name_ar?: string
           display_name_en?: string
