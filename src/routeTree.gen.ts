@@ -27,6 +27,7 @@ import { Route as AuthenticatedOwnerRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedBarberRouteImport } from './routes/_authenticated/barber'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedOwnerIndexRouteImport } from './routes/_authenticated/owner.index'
+import { Route as AuthenticatedBarberIndexRouteImport } from './routes/_authenticated/barber.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as BookingsBookingIdRescheduleRouteImport } from './routes/bookings.$bookingId.reschedule'
 import { Route as BookShopShopSlugRouteImport } from './routes/book.shop.$shopSlug'
@@ -42,6 +43,9 @@ import { Route as AuthenticatedOwnerCalendarRouteImport } from './routes/_authen
 import { Route as AuthenticatedOwnerBookingsRouteImport } from './routes/_authenticated/owner.bookings'
 import { Route as AuthenticatedOwnerBarbersRouteImport } from './routes/_authenticated/owner.barbers'
 import { Route as AuthenticatedOwnerAnalyticsRouteImport } from './routes/_authenticated/owner.analytics'
+import { Route as AuthenticatedBarberSettingsRouteImport } from './routes/_authenticated/barber.settings'
+import { Route as AuthenticatedBarberProfileRouteImport } from './routes/_authenticated/barber.profile'
+import { Route as AuthenticatedBarberBookingsRouteImport } from './routes/_authenticated/barber.bookings'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
 import { Route as AuthenticatedAdminReviewsRouteImport } from './routes/_authenticated/admin.reviews'
 import { Route as AuthenticatedAdminReportsRouteImport } from './routes/_authenticated/admin.reports'
@@ -155,6 +159,12 @@ const AuthenticatedOwnerIndexRoute = AuthenticatedOwnerIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedOwnerRoute,
 } as any)
+const AuthenticatedBarberIndexRoute =
+  AuthenticatedBarberIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedBarberRoute,
+  } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -241,6 +251,24 @@ const AuthenticatedOwnerAnalyticsRoute =
     id: '/analytics',
     path: '/analytics',
     getParentRoute: () => AuthenticatedOwnerRoute,
+  } as any)
+const AuthenticatedBarberSettingsRoute =
+  AuthenticatedBarberSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedBarberRoute,
+  } as any)
+const AuthenticatedBarberProfileRoute =
+  AuthenticatedBarberProfileRouteImport.update({
+    id: '/profile',
+    path: '/profile',
+    getParentRoute: () => AuthenticatedBarberRoute,
+  } as any)
+const AuthenticatedBarberBookingsRoute =
+  AuthenticatedBarberBookingsRouteImport.update({
+    id: '/bookings',
+    path: '/bookings',
+    getParentRoute: () => AuthenticatedBarberRoute,
   } as any)
 const AuthenticatedAdminSettingsRoute =
   AuthenticatedAdminSettingsRouteImport.update({
@@ -384,7 +412,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/search': typeof SearchRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
-  '/barber': typeof AuthenticatedBarberRoute
+  '/barber': typeof AuthenticatedBarberRouteWithChildren
   '/owner': typeof AuthenticatedOwnerRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -403,6 +431,9 @@ export interface FileRoutesByFullPath {
   '/admin/reports': typeof AuthenticatedAdminReportsRoute
   '/admin/reviews': typeof AuthenticatedAdminReviewsRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/barber/bookings': typeof AuthenticatedBarberBookingsRoute
+  '/barber/profile': typeof AuthenticatedBarberProfileRoute
+  '/barber/settings': typeof AuthenticatedBarberSettingsRoute
   '/owner/analytics': typeof AuthenticatedOwnerAnalyticsRoute
   '/owner/barbers': typeof AuthenticatedOwnerBarbersRoute
   '/owner/bookings': typeof AuthenticatedOwnerBookingsRoute
@@ -418,6 +449,7 @@ export interface FileRoutesByFullPath {
   '/book/shop/$shopSlug': typeof BookShopShopSlugRoute
   '/bookings/$bookingId/reschedule': typeof BookingsBookingIdRescheduleRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/barber/': typeof AuthenticatedBarberIndexRoute
   '/owner/': typeof AuthenticatedOwnerIndexRoute
   '/admin/barbers/$id': typeof AuthenticatedAdminBarbersIdRoute
   '/admin/barbers/code': typeof AuthenticatedAdminBarbersCodeRoute
@@ -440,7 +472,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/search': typeof SearchRoute
-  '/barber': typeof AuthenticatedBarberRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/barbers/$barberId': typeof BarbersBarberIdRoute
@@ -458,6 +489,9 @@ export interface FileRoutesByTo {
   '/admin/reports': typeof AuthenticatedAdminReportsRoute
   '/admin/reviews': typeof AuthenticatedAdminReviewsRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/barber/bookings': typeof AuthenticatedBarberBookingsRoute
+  '/barber/profile': typeof AuthenticatedBarberProfileRoute
+  '/barber/settings': typeof AuthenticatedBarberSettingsRoute
   '/owner/analytics': typeof AuthenticatedOwnerAnalyticsRoute
   '/owner/barbers': typeof AuthenticatedOwnerBarbersRoute
   '/owner/bookings': typeof AuthenticatedOwnerBookingsRoute
@@ -473,6 +507,7 @@ export interface FileRoutesByTo {
   '/book/shop/$shopSlug': typeof BookShopShopSlugRoute
   '/bookings/$bookingId/reschedule': typeof BookingsBookingIdRescheduleRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/barber': typeof AuthenticatedBarberIndexRoute
   '/owner': typeof AuthenticatedOwnerIndexRoute
   '/admin/barbers/$id': typeof AuthenticatedAdminBarbersIdRoute
   '/admin/barbers/code': typeof AuthenticatedAdminBarbersCodeRoute
@@ -498,7 +533,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/search': typeof SearchRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
-  '/_authenticated/barber': typeof AuthenticatedBarberRoute
+  '/_authenticated/barber': typeof AuthenticatedBarberRouteWithChildren
   '/_authenticated/owner': typeof AuthenticatedOwnerRouteWithChildren
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -517,6 +552,9 @@ export interface FileRoutesById {
   '/_authenticated/admin/reports': typeof AuthenticatedAdminReportsRoute
   '/_authenticated/admin/reviews': typeof AuthenticatedAdminReviewsRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/_authenticated/barber/bookings': typeof AuthenticatedBarberBookingsRoute
+  '/_authenticated/barber/profile': typeof AuthenticatedBarberProfileRoute
+  '/_authenticated/barber/settings': typeof AuthenticatedBarberSettingsRoute
   '/_authenticated/owner/analytics': typeof AuthenticatedOwnerAnalyticsRoute
   '/_authenticated/owner/barbers': typeof AuthenticatedOwnerBarbersRoute
   '/_authenticated/owner/bookings': typeof AuthenticatedOwnerBookingsRoute
@@ -532,6 +570,7 @@ export interface FileRoutesById {
   '/book/shop/$shopSlug': typeof BookShopShopSlugRoute
   '/bookings/$bookingId/reschedule': typeof BookingsBookingIdRescheduleRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/barber/': typeof AuthenticatedBarberIndexRoute
   '/_authenticated/owner/': typeof AuthenticatedOwnerIndexRoute
   '/_authenticated/admin/barbers/$id': typeof AuthenticatedAdminBarbersIdRoute
   '/_authenticated/admin/barbers/code': typeof AuthenticatedAdminBarbersCodeRoute
@@ -576,6 +615,9 @@ export interface FileRouteTypes {
     | '/admin/reports'
     | '/admin/reviews'
     | '/admin/settings'
+    | '/barber/bookings'
+    | '/barber/profile'
+    | '/barber/settings'
     | '/owner/analytics'
     | '/owner/barbers'
     | '/owner/bookings'
@@ -591,6 +633,7 @@ export interface FileRouteTypes {
     | '/book/shop/$shopSlug'
     | '/bookings/$bookingId/reschedule'
     | '/admin/'
+    | '/barber/'
     | '/owner/'
     | '/admin/barbers/$id'
     | '/admin/barbers/code'
@@ -613,7 +656,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/search'
-    | '/barber'
     | '/profile'
     | '/settings'
     | '/barbers/$barberId'
@@ -631,6 +673,9 @@ export interface FileRouteTypes {
     | '/admin/reports'
     | '/admin/reviews'
     | '/admin/settings'
+    | '/barber/bookings'
+    | '/barber/profile'
+    | '/barber/settings'
     | '/owner/analytics'
     | '/owner/barbers'
     | '/owner/bookings'
@@ -646,6 +691,7 @@ export interface FileRouteTypes {
     | '/book/shop/$shopSlug'
     | '/bookings/$bookingId/reschedule'
     | '/admin'
+    | '/barber'
     | '/owner'
     | '/admin/barbers/$id'
     | '/admin/barbers/code'
@@ -689,6 +735,9 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/reports'
     | '/_authenticated/admin/reviews'
     | '/_authenticated/admin/settings'
+    | '/_authenticated/barber/bookings'
+    | '/_authenticated/barber/profile'
+    | '/_authenticated/barber/settings'
     | '/_authenticated/owner/analytics'
     | '/_authenticated/owner/barbers'
     | '/_authenticated/owner/bookings'
@@ -704,6 +753,7 @@ export interface FileRouteTypes {
     | '/book/shop/$shopSlug'
     | '/bookings/$bookingId/reschedule'
     | '/_authenticated/admin/'
+    | '/_authenticated/barber/'
     | '/_authenticated/owner/'
     | '/_authenticated/admin/barbers/$id'
     | '/_authenticated/admin/barbers/code'
@@ -870,6 +920,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOwnerIndexRouteImport
       parentRoute: typeof AuthenticatedOwnerRoute
     }
+    '/_authenticated/barber/': {
+      id: '/_authenticated/barber/'
+      path: '/'
+      fullPath: '/barber/'
+      preLoaderRoute: typeof AuthenticatedBarberIndexRouteImport
+      parentRoute: typeof AuthenticatedBarberRoute
+    }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
       path: '/'
@@ -974,6 +1031,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/owner/analytics'
       preLoaderRoute: typeof AuthenticatedOwnerAnalyticsRouteImport
       parentRoute: typeof AuthenticatedOwnerRoute
+    }
+    '/_authenticated/barber/settings': {
+      id: '/_authenticated/barber/settings'
+      path: '/settings'
+      fullPath: '/barber/settings'
+      preLoaderRoute: typeof AuthenticatedBarberSettingsRouteImport
+      parentRoute: typeof AuthenticatedBarberRoute
+    }
+    '/_authenticated/barber/profile': {
+      id: '/_authenticated/barber/profile'
+      path: '/profile'
+      fullPath: '/barber/profile'
+      preLoaderRoute: typeof AuthenticatedBarberProfileRouteImport
+      parentRoute: typeof AuthenticatedBarberRoute
+    }
+    '/_authenticated/barber/bookings': {
+      id: '/_authenticated/barber/bookings'
+      path: '/bookings'
+      fullPath: '/barber/bookings'
+      preLoaderRoute: typeof AuthenticatedBarberBookingsRouteImport
+      parentRoute: typeof AuthenticatedBarberRoute
     }
     '/_authenticated/admin/settings': {
       id: '/_authenticated/admin/settings'
@@ -1190,6 +1268,23 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
 const AuthenticatedAdminRouteWithChildren =
   AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
 
+interface AuthenticatedBarberRouteChildren {
+  AuthenticatedBarberBookingsRoute: typeof AuthenticatedBarberBookingsRoute
+  AuthenticatedBarberProfileRoute: typeof AuthenticatedBarberProfileRoute
+  AuthenticatedBarberSettingsRoute: typeof AuthenticatedBarberSettingsRoute
+  AuthenticatedBarberIndexRoute: typeof AuthenticatedBarberIndexRoute
+}
+
+const AuthenticatedBarberRouteChildren: AuthenticatedBarberRouteChildren = {
+  AuthenticatedBarberBookingsRoute: AuthenticatedBarberBookingsRoute,
+  AuthenticatedBarberProfileRoute: AuthenticatedBarberProfileRoute,
+  AuthenticatedBarberSettingsRoute: AuthenticatedBarberSettingsRoute,
+  AuthenticatedBarberIndexRoute: AuthenticatedBarberIndexRoute,
+}
+
+const AuthenticatedBarberRouteWithChildren =
+  AuthenticatedBarberRoute._addFileChildren(AuthenticatedBarberRouteChildren)
+
 interface AuthenticatedOwnerRouteChildren {
   AuthenticatedOwnerAnalyticsRoute: typeof AuthenticatedOwnerAnalyticsRoute
   AuthenticatedOwnerBarbersRoute: typeof AuthenticatedOwnerBarbersRoute
@@ -1227,7 +1322,7 @@ const AuthenticatedOwnerRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
-  AuthenticatedBarberRoute: typeof AuthenticatedBarberRoute
+  AuthenticatedBarberRoute: typeof AuthenticatedBarberRouteWithChildren
   AuthenticatedOwnerRoute: typeof AuthenticatedOwnerRouteWithChildren
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -1235,7 +1330,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
-  AuthenticatedBarberRoute: AuthenticatedBarberRoute,
+  AuthenticatedBarberRoute: AuthenticatedBarberRouteWithChildren,
   AuthenticatedOwnerRoute: AuthenticatedOwnerRouteWithChildren,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,

@@ -72,7 +72,7 @@ function BarberDashboard() {
     return { todays: t, upcoming: u.slice(0, 5), completed: c };
   }, [bookings, today, nowMs]);
 
-  async function updateStatus(id: string, status: string) {
+  async function updateStatus(id: string, status: "completed" | "cancelled" | "no_show") {
     setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, status } : b)));
     await supabase.from("bookings").update({ status }).eq("id", id);
   }
@@ -160,7 +160,7 @@ export function BookingRow({
   onUpdate,
 }: {
   b: Booking;
-  onUpdate: (id: string, status: string) => void;
+  onUpdate: (id: string, status: "completed" | "cancelled" | "no_show") => void;
 }) {
   const { t } = useTranslation();
   const time = new Date(b.starts_at).toLocaleString(undefined, {

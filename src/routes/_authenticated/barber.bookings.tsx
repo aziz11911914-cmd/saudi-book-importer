@@ -63,7 +63,7 @@ function BarberBookings() {
     });
   }, [bookings, filter, today, nowMs]);
 
-  async function updateStatus(id: string, status: string) {
+  async function updateStatus(id: string, status: "completed" | "cancelled" | "no_show") {
     setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, status } : b)));
     await supabase.from("bookings").update({ status }).eq("id", id);
   }
