@@ -72,7 +72,7 @@ function BarberBookings() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-3xl">{t("barber.bookings.title")}</h1>
+      <h1 className="font-display text-3xl">{t("barber.bookingsPage.title")}</h1>
       <div className="flex flex-wrap gap-2">
         {(["today", "upcoming", "completed", "cancelled"] as Filter[]).map((f) => (
           <button
@@ -85,7 +85,7 @@ function BarberBookings() {
                 : "border-hairline text-muted-foreground hover:text-foreground",
             )}
           >
-            {t(`barber.bookings.filters.${f}`)}
+            {t(`barber.bookingsPage.filters.${f}`)}
           </button>
         ))}
       </div>
